@@ -252,3 +252,6 @@ dist
 
 # Build directory
 build/
+
+# Google API creds
+gapi-service-account-creds.json
