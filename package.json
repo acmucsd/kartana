@@ -1,0 +1,12 @@
+{
+  "name": "event-notion-pipeline",
+  "version": "0.0.1",
+  "description": "Synchronizer between Google Sheets and Notion for ACM UCSD Events Team.",
+  "main": "src/index.ts",
+  "repository": "git@github.com:acmucsd/event-notion-pipeline.git",
+  "author": "Matei-Alexandru Gardus <matei@gard.us>",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^4.4.4"
+  }
+}
