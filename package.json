@@ -6,7 +6,21 @@
   "repository": "git@github.com:acmucsd/event-notion-pipeline.git",
   "author": "Matei-Alexandru Gardus <matei@gard.us>",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "lint": "eslint ./ --ext .ts",
+    "lint:fix": "eslint ./ --ext .ts --fix"
+  },
   "dependencies": {
     "typescript": "^4.4.4"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
+    "eslint": "^8.1.0",
+    "eslint-config-airbnb-typescript": "^14.0.1",
+    "eslint-plugin-import": "^2.25.2"
   }
 }
