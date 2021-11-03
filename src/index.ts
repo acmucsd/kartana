@@ -24,6 +24,7 @@ const getGoogleSheetsAPI = async () => {
   const googleSheets = google.sheets({ version: 'v4', auth: authClientObject });
   return googleSheets;
 };
+
 /**
  * Make sure that the current assigned database has a proper schema for us
  * to run the sync script on.
@@ -38,6 +39,24 @@ const validateNotionDatabase = (database: GetDatabaseResponse) => {
       diff: databaseDiff, 
     });
   }
+};
+
+
+const getUnassignedLists = async (api: sheets_v4.Sheets, sheetID: string) => {
+  const idIndex = googleSheetSchema[0].indexOf('BOT_ID');
+  const rows = await api.spreadsheets.values.get({
+    spreadsheetId: sheetID,
+    range: 'AM2:AM',
+  });
+
+  Logger.debug(JSON.stringify(rows.data));
+
+  return rows.data.values.map((value) => {
+    if (value[0] === 'MANUAL' || value[0] !== '') {
+      return 'ASSIGNED';
+    }
+    return value;
+  });
 };
 
 const validateGoogleSheet = async (api: sheets_v4.Sheets, sheetID: string) => {
@@ -63,11 +82,15 @@ const validateGoogleSheet = async (api: sheets_v4.Sheets, sheetID: string) => {
   const databaseId = process.env.NOTION_CALENDAR_ID;
   const database = await notion.databases.retrieve({ database_id: databaseId });
 
-  Logger.debug('Validating Notion database schema.');
+  Logger.debug('Validating Notion database schema...');
   validateNotionDatabase(database);
 
   Logger.debug('Validating Google Sheets schema...');
-  validateGoogleSheet(googleSheetsAPI, process.env.GOOGLE_SHEET_ID);
+  await validateGoogleSheet(googleSheetsAPI, process.env.GOOGLE_SHEET_ID);
 
-  Logger.info('Pipeline ready!');
+  Logger.info('Pipeline ready! Running.');
+  Logger.debug('Checking for unassigned events...');
+  const unassignedEvents = await getUnassignedLists(googleSheetsAPI, process.env.GOOGLE_SHEET_ID);
+  Logger.debug(`unassigned stuff: ${JSON.stringify(unassignedEvents)}`);
+  Logger.info(`${unassignedEvents.filter((value) => value !== 'ASSIGNED').length} events unassigned!`);
 })();
