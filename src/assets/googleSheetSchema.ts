@@ -1,4 +1,4 @@
-export const googleSheetSchema = [[
+export const googleSheetSchema = [
   'Event name',
   'Event director(s)',
   'What kind of event is this?',
@@ -37,6 +37,5 @@ export const googleSheetSchema = [[
   'Email Address',
   'BACKUP ONLINE VENUE: Would you like your backup online venue to be a standard Zoom room or Discord?',
   'What ACMURL do you want for the Facebook event page?',
-  'BOT_ID',
-  'BOT_CHECKSUM',
-]];
+  'Imported to Notion',
+];

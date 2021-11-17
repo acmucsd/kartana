@@ -4,32 +4,28 @@ import Logger from './utils/Logger';
 import { notionCalSchema, googleSheetSchema } from './assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
-import { google, sheets_v4 } from 'googleapis';
+import { parse } from 'papaparse';
+import { differenceWith, isEqual, without } from 'lodash';
+import got from 'got';
 
 
 config();
 
-// Notion Client Login
+/**
+ * Logs into Notion.
+ * 
+ * @returns The Notion Client object.
+ */
 const getNotionAPI = async () => {
   return new Client({ auth: process.env.NOTION_INTEGRATION_TOKEN });
 };
 
-// Google Sheets Client Login
-const getGoogleSheetsAPI = async () => {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: process.env.GOOGLE_SHEETS_KEY_FILE,
-    scopes: 'https://www.googleapis.com/auth/spreadsheets', 
-  });
-  const authClientObject = await auth.getClient();
-  const googleSheets = google.sheets({ version: 'v4', auth: authClientObject });
-  return googleSheets;
-};
-
 /**
- * Make sure that the current assigned database has a proper schema for us
+ * Make sure that the current assigned Notion database has a proper schema for us
  * to run the sync script on.
  * 
- * This function is run before any modifications to the database are made.
+ * This function should be run before any modifications to the database are made.
+ * @param database The Notion Database we are running modifications on.
  */
 const validateNotionDatabase = (database: GetDatabaseResponse) => {
   const databaseDiff = diff(database.properties, notionCalSchema);
@@ -38,46 +34,48 @@ const validateNotionDatabase = (database: GetDatabaseResponse) => {
       type: 'error',
       diff: databaseDiff, 
     });
+    return;
   }
 };
 
-
-const getUnassignedLists = async (api: sheets_v4.Sheets, sheetID: string) => {
-  const idIndex = googleSheetSchema[0].indexOf('BOT_ID');
-  const rows = await api.spreadsheets.values.get({
-    spreadsheetId: sheetID,
-    range: 'AM2:AM',
-  });
-
-  Logger.debug(JSON.stringify(rows.data));
-
-  return rows.data.values.map((value) => {
-    if (value[0] === 'MANUAL' || value[0] !== '') {
-      return 'ASSIGNED';
-    }
-    return value;
-  });
-};
-
-const validateGoogleSheet = async (api: sheets_v4.Sheets, sheetID: string) => {
-  const response = await api.spreadsheets.values.get({
-    spreadsheetId: sheetID,
-    range: '1:1',
-  });
-
-  const databaseDiff = diff(response.data.values, googleSheetSchema);
-  if (databaseDiff.length !== 0) {
-    Logger.error('Google Sheet schema is mismatched! Halting!', {
+/**
+ * Validates the headers in the host form CSV to ensure they match the downloaded schema.
+ * 
+ * This should be run before any other modifications to the Notion database are made.
+ * @param headers The headers from the Google Sheet CSV download of the host form.
+ */
+const validateGoogleSheetsSchema = (headers) => {
+  const strippedHeaders = without(headers, '');
+  if (!isEqual(strippedHeaders, googleSheetSchema)) {
+    Logger.error('Google Sheets schema is mismatched! Halting!', {
       type: 'error',
-      diff: databaseDiff, 
+      diff: differenceWith(googleSheetSchema, strippedHeaders, isEqual),
     });
+    return;
   }
+};
+
+/**
+ * Gets a parsed version of the CSV download from the host form Google Sheet.
+ * 
+ * @returns A PapaParse object, where "data" contains a keyed set of objects for each
+ * event and "meta" contains info about the CSV file itself.
+ */
+const getHostForm = async () => {
+  const documentID = process.env.GOOGLE_SHEETS_DOC_ID;
+  const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME;
+  const googleSheetURL = `https://docs.google.com/spreadsheets/d/${documentID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+  const googleSheetCSV = await got.get(googleSheetURL).text() as any;
+  return parse(googleSheetCSV, {
+    header: true,
+  });
 };
 
 (async () => {
   Logger.info('Booting...');
   const notion = await getNotionAPI();
-  const googleSheetsAPI = await getGoogleSheetsAPI();
+  Logger.info('Downloading Google Sheet...');
+  const hostForm = await getHostForm();
   Logger.debug('Validating schemas for data sources...');
   const databaseId = process.env.NOTION_CALENDAR_ID;
   const database = await notion.databases.retrieve({ database_id: databaseId });
@@ -86,11 +84,7 @@ const validateGoogleSheet = async (api: sheets_v4.Sheets, sheetID: string) => {
   validateNotionDatabase(database);
 
   Logger.debug('Validating Google Sheets schema...');
-  await validateGoogleSheet(googleSheetsAPI, process.env.GOOGLE_SHEET_ID);
+  validateGoogleSheetsSchema(hostForm.meta.fields);
 
   Logger.info('Pipeline ready! Running.');
-  Logger.debug('Checking for unassigned events...');
-  const unassignedEvents = await getUnassignedLists(googleSheetsAPI, process.env.GOOGLE_SHEET_ID);
-  Logger.debug(`unassigned stuff: ${JSON.stringify(unassignedEvents)}`);
-  Logger.info(`${unassignedEvents.filter((value) => value !== 'ASSIGNED').length} events unassigned!`);
 })();
