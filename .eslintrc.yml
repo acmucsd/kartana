@@ -3,6 +3,7 @@ extends:
   - "airbnb-typescript/base"
 parserOptions:
   project: './tsconfig.json'
+ignorePatterns: 'build/*'
 env:
   browser: true
   node: true
