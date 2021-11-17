@@ -87,4 +87,9 @@ const getHostForm = async () => {
   validateGoogleSheetsSchema(hostForm.meta.fields);
 
   Logger.info('Pipeline ready! Running.');
+  Logger.info(`${hostForm.data.length} events detected. Checking for new events...`);
+  const newEvents = hostForm.data.filter((formResponse) =>
+    formResponse['Imported to Notion'] === 'FALSE' && without(Object.values(formResponse), '', 'FALSE').length !== 0,
+  );
+  Logger.info(`${newEvents.length} new events detected.`);
 })();
