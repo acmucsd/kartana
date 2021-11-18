@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { EventLocation, HostFormResponse, NotionUser } from "./types";
+import { notionLocationTag, EventLocation, EventType, HostFormResponse, isEventType, NotionUser } from "./types";
 
 export default class NotionEvent {
   private name: string;
@@ -9,22 +9,7 @@ export default class NotionEvent {
   | 'Funding Completed'
   | 'Funding CANCELLED';
 
-  private type: 'Competition'
-  | 'Workshop'
-  | 'Industry Panel'
-  | 'Social'
-  | 'Seminar'
-  | 'GBM'
-  | 'Meeting'
-  | 'Non-Event'
-  | 'Unconfirmed Details'
-  | 'CANCELLED'
-  | 'Other (See Comments)'
-  | 'Talk'
-  | 'Side Projects Showcase'
-  | 'Projects Kickoff'
-  | 'Kickoff'
-  | 'Info Session';
+  private type: EventType;
 
   private prStatus: 'PR Not Requested'
   | 'PR TODO'
@@ -36,9 +21,12 @@ export default class NotionEvent {
   private TAPStatus: 'TAP N/A'
   | 'TAP TODO'
   | 'TAP In Progress'
-  | 'TAP Completed';
+  | 'TAP Pending Approval'
+  | 'TAP Approved'
+  | 'TAP Denied'
+  | 'TAP CANCELLED';
 
-  private fundingManager: NotionUser;
+  private fundingManager: NotionUser | null;
 
   private marketingDescription: string;
 
@@ -101,4 +89,27 @@ export default class NotionEvent {
   private fbACMURL: URL;
   private dateTimeNotes: string;
   private historianOnsite: NotionUser;
+
+  constructor(formResponse: HostFormResponse) {
+    this.name = formResponse["Event name"];
+    this.fundingStatus = formResponse['Will your event require funding?'] === 'Yes' ? 'Funding TODO' : 'Funding Not Requested';
+    this.type = isEventType(formResponse['What kind of event is this?'])
+      ? formResponse['What kind of event is this?']
+      : 'Other (See Comments)';
+    this.TAPStatus = needsTAPForm(formResponse['Where is your event taking place?']);
+    this.prStatus = formResponse['Will your event require marketing?'] === 'No, do not market my event at all. (Meetings, etc.)'
+      ? 'PR Not Requested'
+      : 'PR TODO';
+    this.fundingManager = null;
+    this.marketingDescription = formResponse['Any additional comments or requests?'];
+    this.additionalFinanceInfo = formResponse['Anything else you would like to let the Finance Team know about your event?'];
+    this.location = notionLocationTag[formResponse['First choice for venue']] || 'Other (See Details)';
+    this.locationBackup1 = notionLocationTag[formResponse['Second choice for venue']] || 'Other (See Details)';
+    this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
+};
+
+const needsTAPForm = (argument: string): 'TAP N/A' | 'TAP TODO' => {
+  return (argument === "My event is on Zoom, but I'll use a normal room"
+  || argument === "My event is on Discord only"
+  || argument === "My event is off campus") ? 'TAP N/A' : 'TAP TODO';
 };
