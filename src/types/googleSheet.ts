@@ -1,5 +1,5 @@
 export interface HostFormResponse {
-    'Event name': string;
+  'Event name': string;
   'Event director(s)'
   'What kind of event is this?': string;
   'Which of the following organizations are involved in this event?': string;
@@ -37,4 +37,4 @@ export interface HostFormResponse {
   'BACKUP ONLINE VENUE: Would you like your backup online venue to be a standard Zoom room or Discord?': string;
   'What ACMURL do you want for the Facebook event page?': string;
   'Imported to Notion': string;
-};
+}

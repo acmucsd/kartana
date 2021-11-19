@@ -5,7 +5,7 @@ import { notionCalSchema, googleSheetSchema } from './assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { parse } from 'papaparse';
-import { differenceWith, isEqual, without } from 'lodash';
+import { differenceWith, head, isEqual, uniq, without } from 'lodash';
 import got from 'got';
 
 
@@ -91,5 +91,8 @@ const getHostForm = async () => {
   const newEvents = hostForm.data.filter((formResponse) =>
     formResponse['Imported to Notion'] === 'FALSE' && without(Object.values(formResponse), '', 'FALSE').length !== 0,
   );
+  console.log(head(hostForm.data.map((form) => form['Preferred start time'])));
+  console.log(head(hostForm.data.map((form) => form['Preferred end time'])));
+  console.log(head(hostForm.data.map((form) => form['Preferred date'])));
   Logger.info(`${newEvents.length} new events detected.`);
 })();

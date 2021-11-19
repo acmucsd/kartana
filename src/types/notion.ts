@@ -1,32 +1,32 @@
-import { GetUserResponse } from "@notionhq/client/build/src/api-endpoints";
+import { GetUserResponse } from '@notionhq/client/build/src/api-endpoints';
 
 export type NotionUser = GetUserResponse;
 
-export type EventLocation = "Zoom (See Details)"
-| "Zoom Webinar (See Details)"
-| "Discord (See Details)"
-| "Qualcomm Room"
-| "Henry Booker Room"
-| "Fung Auditorium"
-| "CSE 1202"
-| "PC Eleanor Roosevelt Room"
-| "PC Marshall Room"
-| "PC Muir College Room"
-| "PC Warren Room"
-| "PC Revelle Room"
-| "PC Red Shoe Room"
-| "PC Snake Path Room"
-| "PC East Ballroom"
-| "PC West Ballroom"
-| "Multi-Purpose Room"
-| "Warren Mall"
-| "Warren Bear"
-| "Warren College SAC"
-| "Sixth College Lodge"
-| "Library Walk"
-| "Lecture Hall (See Details)"
-| "Off Campus"
-| "Other (See Details)";
+export type EventLocation = 'Zoom (See Details)'
+| 'Zoom Webinar (See Details)'
+| 'Discord (See Details)'
+| 'Qualcomm Room'
+| 'Henry Booker Room'
+| 'Fung Auditorium'
+| 'CSE 1202'
+| 'PC Eleanor Roosevelt Room'
+| 'PC Marshall Room'
+| 'PC Muir College Room'
+| 'PC Warren Room'
+| 'PC Revelle Room'
+| 'PC Red Shoe Room'
+| 'PC Snake Path Room'
+| 'PC East Ballroom'
+| 'PC West Ballroom'
+| 'Multi-Purpose Room'
+| 'Warren Mall'
+| 'Warren Bear'
+| 'Warren College SAC'
+| 'Sixth College Lodge'
+| 'Library Walk'
+| 'Lecture Hall (See Details)'
+| 'Off Campus'
+| 'Other (See Details)';
 
 export const notionLocationTag = {
   'Price Center West Ballroom': 'PC West Ballroom',
@@ -83,4 +83,52 @@ export const isEventType = (type: string): type is EventType => {
     || type === 'Projects Kickoff'
     || type === 'Kickoff'
     || type === 'Info Session';
-}
+};
+
+export type StudentOrg = 'ACM General'
+| 'ACM AI'
+| 'ACM Cyber'
+| 'ACM Design'
+| 'ACM Hack'
+| 'ACM Innovate'
+| 'TSE'
+| 'TESC'
+| 'IEEE'
+| 'WIC'
+| 'HKN'
+| 'DS3'
+| 'EDGE'
+| 'PIB'
+| 'ECE UCSD'
+| 'ECE USC'
+| 'Tau Beta Pi'
+| 'QC'
+| 'SASE'
+| 'Contrary Capital'
+| 'Phi Beta Lambda'
+| 'Quantum Computing at UCSD';
+
+export const isStudentOrg = (org: string): org is StudentOrg => {
+  return org === 'ACM General'
+  || org === 'ACM AI'
+  || org === 'ACM Cyber'
+  || org === 'ACM Design'
+  || org === 'ACM Hack'
+  || org === 'ACM Innovate'
+  || org === 'TSE'
+  || org === 'TESC'
+  || org === 'IEEE'
+  || org === 'WIC'
+  || org === 'HKN'
+  || org === 'DS3'
+  || org === 'EDGE'
+  || org === 'PIB'
+  || org === 'ECE UCSD'
+  || org === 'ECE USC'
+  || org === 'Tau Beta Pi'
+  || org === 'QC'
+  || org === 'SASE'
+  || org === 'Contrary Capital'
+  || org === 'Phi Beta Lambda'
+  || org === 'Quantum Computing at UCSD';
+};
