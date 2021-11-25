@@ -1,5 +1,14 @@
-import { Interval } from 'luxon';
-import { notionLocationTag, EventLocation, EventType, HostFormResponse, isEventType, NotionUser, StudentOrg, isStudentOrg } from './types';
+import { DateTime, Interval } from 'luxon';
+import {
+  notionLocationTag,
+  EventLocation,
+  EventType,
+  HostFormResponse,
+  isEventType,
+  NotionUser,
+  StudentOrg,
+  isStudentOrg,
+} from './types';
 
 const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
   return (response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room"
@@ -29,6 +38,12 @@ const filterOrgsResponse = (response: HostFormResponse): StudentOrg[] => {
     .filter((studentOrg) => isStudentOrg(studentOrg)) as StudentOrg[];
 };
 
+const getEventInterval = (response: HostFormResponse): Interval => {
+  return Interval.fromDateTimes(
+    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'MM/dd/YYYY h:mm:ss a'),
+    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'MM/dd/YYYY h:mm:ss a'),
+  );
+};
 
 export default class NotionEvent {
   private name: string;
@@ -143,5 +158,14 @@ export default class NotionEvent {
     this.fbLink = new URL('https://facebook.com/acmucsd');
     this.organizations = filterOrgsResponse(formResponse);
     this.prManager = null;
+    this.date = getEventInterval(formResponse);
+    // I'm so done with this.
+    // eslint-disable-next-line max-len
+    this.uploadToYoutube = formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube
+    // eslint-disable-next-line max-len
+    || formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube;
+    this.fbACMURL = new URL('https://acmurl.com/facebook');
+    this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
+    this.historianOnsite = null;
   }
 }

@@ -5,8 +5,10 @@ import { notionCalSchema, googleSheetSchema } from './assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { parse } from 'papaparse';
-import { differenceWith, head, isEqual, uniq, without } from 'lodash';
+import { differenceWith, isEqual, without } from 'lodash';
 import got from 'got';
+import NotionEvent from './NotionEvent';
+import { HostFormResponse } from './types';
 
 
 config();
@@ -88,11 +90,13 @@ const getHostForm = async () => {
 
   Logger.info('Pipeline ready! Running.');
   Logger.info(`${hostForm.data.length} events detected. Checking for new events...`);
-  const newEvents = hostForm.data.filter((formResponse) =>
+  const newEvents: HostFormResponse[] = hostForm.data.filter((formResponse) =>
     formResponse['Imported to Notion'] === 'FALSE' && without(Object.values(formResponse), '', 'FALSE').length !== 0,
-  );
-  console.log(head(hostForm.data.map((form) => form['Preferred start time'])));
-  console.log(head(hostForm.data.map((form) => form['Preferred end time'])));
-  console.log(head(hostForm.data.map((form) => form['Preferred date'])));
+  ) as HostFormResponse[];
   Logger.info(`${newEvents.length} new events detected.`);
+  Logger.info(`Converting events...`)
+  const notionEventsToImport = newEvents.map((newEvent) => {
+    return new NotionEvent(newEvent);
+  })
+  Logger.info(`All events converted!`);
 })();
