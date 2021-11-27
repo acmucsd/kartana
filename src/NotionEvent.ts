@@ -1,3 +1,5 @@
+import { Client } from '@notionhq/client/build/src';
+import { CreatePageParameters } from '@notionhq/client/build/src/api-endpoints';
 import { DateTime, Interval } from 'luxon';
 import {
   notionLocationTag,
@@ -9,6 +11,11 @@ import {
   StudentOrg,
   isStudentOrg,
 } from './types';
+import Logger from './utils/Logger';
+
+const toNotionRichText = (text: string) => {
+  return [ { text: { content: text } } ];
+};
 
 const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
   return (response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room"
@@ -48,8 +55,8 @@ const filterOrgsResponse = (response: HostFormResponse): StudentOrg[] => {
 
 const getEventInterval = (response: HostFormResponse): Interval => {
   return Interval.fromDateTimes(
-    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'MM/dd/YYYY h:mm:ss a'),
-    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'MM/dd/YYYY h:mm:ss a'),
+    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'M/dd/yyyy h:mm:ss a'),
+    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/dd/yyyy h:mm:ss a'),
   );
 };
 
@@ -220,7 +227,7 @@ export default class NotionEvent {
     this.bookingTime = null;
     // Bruh.
     // eslint-disable-next-line max-len
-    this.recordingRequests = formResponse['If yes to the previous question: string; do you have any special recording requests?'];
+    this.recordingRequests = formResponse['If yes to the previous question: string; do you have any special recording requests?'] || '';
     this.eventCoordinator = null;
     this.checkinCode = '';
     this.fbCoHost = '';
@@ -248,9 +255,189 @@ export default class NotionEvent {
     // eslint-disable-next-line max-len
     this.uploadToYoutube = formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube
     // eslint-disable-next-line max-len
-    || formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube;
+    || formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube
+    || 'No I do not want anything uploaded to YouTube';
     this.fbACMURL = new URL('https://acmurl.com/facebook');
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
+  }
+
+  /**
+   * Uploads this event to Notion.
+   * 
+   * This operation simply creates a page on the Notion calendar.
+   * It will not keep track of it once it is created. This uses the Notion API
+   * to submit.
+   * 
+   * This is done by taking the properties of the event and converting
+   * them into the properties payload the Notion API requests for. See
+   * the API documentation for details of each property's type and contents.
+   * 
+   * @see https://developers.notion.com/reference/post-page
+   * @see https://developers.notion.com/reference/page#all-property-values
+   */
+  public async uploadToNotion(client: Client): Promise<void> {
+    const createPagePayload: CreatePageParameters = {
+      parent: {
+        database_id: process.env.NOTION_CALENDAR_ID
+      },
+      properties: {
+        Name: {
+          title: toNotionRichText(this.name),
+        },
+        Type: {
+          select: { name: this.type },
+        },
+        'Funding Status': {
+          select: { name: this.fundingStatus },
+        },
+        'PR Status': {
+          select: { name: this.prStatus },
+        },
+        'Intake Form Status': {
+          select: { name: this.intakeFormStatus },
+        },
+        'TAP Status': {
+          select: { name: this.TAPStatus },
+        },
+        // "Funding Manager" omitted.
+        // 
+        // We don't know how to set this yet.
+
+        'Marketing Description': {
+          rich_text: toNotionRichText(this.marketingDescription),
+        },
+        'Additional Finance Info': {
+          rich_text: toNotionRichText(this.additionalFinanceInfo),
+        },
+        'Location': {
+          select: { name: this.location },
+        },
+        // Booking Time omitted.
+        //
+        // TODO check to see if we need to do this or not.
+
+        'Recording Requests': {
+          rich_text: toNotionRichText(this.recordingRequests),
+        },
+        // "Event Coordinator" omitted.
+        //
+        // EC's will assign themselves an event to deal with, per
+        // spec of pipeline.
+        
+        // "Check-in Code" omitted.
+        //
+        // This is set by EC's and Marketing, not us.
+
+        'FB CoHost': {
+          rich_text: toNotionRichText(this.fbCoHost),
+        },
+        'Recording': {
+          select: { name: this.recording },
+        },
+        'Booking Status': {
+          select: { name: this.bookingStatus },
+        },
+        'Organizations': {
+          multi_select: this.organizations.map((org) => {
+            return { name: org }
+          }),
+        },
+        // "FB Cover Photo" omitted.
+        //
+        // We don't add it in the pipeline, at least for now?
+        'Location Backup 1': {
+          select: { name: this.locationBackup1 },
+        },
+        'Location Backup 2': {
+          select: { name: this.locationBackup2 },
+        },
+        'Projected Attendance': {
+          number: this.projectedAttendance,
+        },
+        // "Location URL" omitted.
+        //
+        // We don't get this from the host form.
+
+        // "YouTube Link" omitted.
+        //
+        // We don't get this from the host form.
+        'PR Requests': {
+          rich_text: toNotionRichText(this.prRequests),
+        },
+        'AV Equipment': {
+          select: { name: this.avEquipment },
+        },
+        // "Drive Link" omitted.
+        //
+        // We don't know how to set this yet.
+        'Projector?': {
+          select: { name: this.projectorStatus },
+        },
+        // "Other Graphics" omitted
+        //
+        // We don't know how to set this yet.
+        
+        // "Hosted by" omitted.
+        // 
+        // This COULD be done if everyone had their names set on Notion,
+        // but it'll be difficult to find them otherwise.
+        // TODO Ask Events Team to get everyone to set their names?
+        'Location Details': {
+          rich_text: toNotionRichText(this.locationDetails),
+        },
+        'Funding Source': {
+          multi_select: this.fundingSource.map((fundingSource) => {
+            return { name: fundingSource }
+          }),
+        },
+        'Event Description': {
+          rich_text: toNotionRichText(this.marketingDescription),
+        },
+        // "Booking Confirmation" omitted.
+        //
+        // We DEFINITELY don't add this, since we don't automate
+        // booking requests.
+  
+        // "PR Manager" omitted.
+        //
+        // We don't know who will manage this event yet.
+        Date: {
+          date: {
+            start: this.date.start.toISO(),
+            end: this.date.end.toISO(),
+          },
+        },
+        'Requested Items': {
+          rich_text: toNotionRichText(this.requestedItems),
+        },
+        'Upload to Youtube?': {
+          select: { name: this.uploadToYoutube },
+        },
+        // "FB ACMURL" omitted.
+        //
+        // We don't make this ACMURL.
+        'Date/Time Notes': {
+          rich_text: toNotionRichText(this.dateTimeNotes),
+        },
+        // "Historian Onsite" omitted.
+        //
+        // We don't know this yet.
+      }
+    };
+
+    // Upload the event to Notion's API. If this errors, out, we'll need to
+    // send a message to Discord paging me about the issue.
+    //
+    // For now, just error to stdout.
+    try {
+      const response = await client.pages.create(createPagePayload);
+      Logger.debug(`Page ${response.id} created for event "${this.name}"`);
+    } catch (error) {
+      Logger.error(`Error creating event "${this.name}: ${error}"`, {
+        error,
+        eventName: this.name,
+      });
+    }
   }
 }

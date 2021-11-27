@@ -99,5 +99,8 @@ const getHostForm = async () => {
   const notionEventsToImport = newEvents.map((newEvent) => {
     return new NotionEvent(newEvent);
   });
+  await Promise.all(notionEventsToImport.map(async (event) => {
+    await event.uploadToNotion(notion);
+  }));
   Logger.info('All events converted!');
 })();
