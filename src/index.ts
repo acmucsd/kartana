@@ -5,11 +5,11 @@ import { notionCalSchema, googleSheetSchema } from './assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { parse } from 'papaparse';
-import { differenceWith, isEqual, without } from 'lodash';
+import { differenceWith, isEqual, uniq, without } from 'lodash';
 import got from 'got';
 import NotionEvent from './NotionEvent';
 import { HostFormResponse } from './types';
-
+import { exit } from 'process';
 
 config();
 
@@ -36,7 +36,7 @@ const validateNotionDatabase = (database: GetDatabaseResponse) => {
       type: 'error',
       diff: databaseDiff, 
     });
-    return;
+    exit(1);
   }
 };
 
@@ -53,7 +53,7 @@ const validateGoogleSheetsSchema = (headers) => {
       type: 'error',
       diff: differenceWith(googleSheetSchema, strippedHeaders, isEqual),
     });
-    return;
+    exit(1);
   }
 };
 
@@ -78,10 +78,11 @@ const getHostForm = async () => {
   const notion = await getNotionAPI();
   Logger.info('Downloading Google Sheet...');
   const hostForm = await getHostForm();
-  Logger.debug('Validating schemas for data sources...');
+  Logger.info('Getting Notion Calendar...');
   const databaseId = process.env.NOTION_CALENDAR_ID;
   const database = await notion.databases.retrieve({ database_id: databaseId });
 
+  Logger.debug('Validating schemas for data sources...');
   Logger.debug('Validating Notion database schema...');
   validateNotionDatabase(database);
 
@@ -89,14 +90,14 @@ const getHostForm = async () => {
   validateGoogleSheetsSchema(hostForm.meta.fields);
 
   Logger.info('Pipeline ready! Running.');
-  Logger.info(`${hostForm.data.length} events detected. Checking for new events...`);
+  Logger.info(`${hostForm.data.length} rows in Host Form CSV detected. Checking for new events...`);
   const newEvents: HostFormResponse[] = hostForm.data.filter((formResponse) =>
     formResponse['Imported to Notion'] === 'FALSE' && without(Object.values(formResponse), '', 'FALSE').length !== 0,
   ) as HostFormResponse[];
   Logger.info(`${newEvents.length} new events detected.`);
-  Logger.info(`Converting events...`)
+  Logger.info('Converting events...');
   const notionEventsToImport = newEvents.map((newEvent) => {
     return new NotionEvent(newEvent);
-  })
-  Logger.info(`All events converted!`);
+  });
+  Logger.info('All events converted!');
 })();

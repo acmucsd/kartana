@@ -18,6 +18,14 @@ const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
     : 'TAP TODO';
 };
 
+const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intake Form TODO' => {
+  return (response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room"
+  || response['Where is your event taking place?'] === 'My event is on Discord only'
+  || response['Where is your event taking place?'] === 'My event is off campus')
+    ? 'Intake Form N/A'
+    : 'Intake Form TODO';
+}
+
 const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO' => {
   return (response['Where is your event taking place?'] === 'I need a room on campus'
   || response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room") 
@@ -50,9 +58,14 @@ export default class NotionEvent {
 
   private fundingStatus: 'Funding Not Requested'
   | 'Funding TODO'
-  | 'Funding in Progress'
+  | 'AS Forms Submitted'
+  | 'AS Funding Approved'
   | 'Funding Completed'
-  | 'Funding CANCELLED';
+  | 'Waiting for Reimbursement'
+  | 'Funding CANCELLED'
+  | 'Funding in Progress'
+  | 'PEEF  to be completed'
+  | 'PEEF Completed';
 
   private type: EventType;
 
@@ -61,7 +74,15 @@ export default class NotionEvent {
   | 'PR Completed'
   | 'PR In Progress'
   | 'PR Done'
-  | 'PR Unconfirmed Details';
+  | 'PR Unconfirmed Details'
+  | 'PR Waiting for link update';
+
+  private intakeFormStatus: 'Intake Form N/A'
+  | 'Intake Form TODO'
+  | 'Intake Form In Progress'
+  | 'Intake Form Pending Approval'
+  | 'Intake Form Completed'
+  | 'Intake Form CANCELLED';
 
   private TAPStatus: 'TAP N/A'
   | 'TAP TODO'
@@ -82,12 +103,15 @@ export default class NotionEvent {
   private locationBackup1: EventLocation;
 
   private locationBackup2: EventLocation;
+
+  private bookingTime: DateTime | null;
   
   private recordingRequests: string;
 
   private eventCoordinator: NotionUser | null;
   
   // Would we ever import a thumbnail? Probably not.
+  // TODO Find out if we need this property at all.
   // private youtubeThumbnail: File;
 
   private checkinCode: string;
@@ -99,18 +123,63 @@ export default class NotionEvent {
   private bookingStatus: 'Booking N/A'
   | 'Booking TODO'
   | 'Booking In Progress'
-  | 'Booking Completed';
-
-  private fbLink: URL;
+  | 'Booking Completed'
+  | 'Booking CANCELLED';
 
   private organizations: StudentOrg[];
 
   // Keep this, maybe?
+  // TODO Find out if we need this property at all.
   // private fbCoverPhoto: File;
+
+  private csiFormStatus: 'CSI Form N/A'
+  | 'CSI Form TODO'
+  | 'CSI Form In Progress'
+  | 'CSI Form Done'
+
+  private projectedAttendance: number;
+
+  private locationURL: URL | null;
+
+  private youtubeLink: URL | null;
+
+  private prRequests: string;
+  
+  private avEquipment: 'From Venue'
+  | 'From ECE Department'
+  | 'From University Centers Tech'
+  | 'From ACM'
+  | 'N/A';
+
+  private driveLink: URL | null;
+
+  // TODO Consider replacing this with booleans.
+  // To be honest, checking for strings named like this
+  // is stupid. We should probably just use booleans
+  // and convert when uploading to Notion.
+  private projectorStatus: 'Yes' | 'No';
+
+  // I am not sure I need to keep this.
+  // private otherGraphics: File[];
+
+  private hostedBy: NotionUser[] | null;
+  
+  private locationDetails: string;
+
+  private fundingSource: 'AS'
+  | 'CSE Department'
+  | 'ECE Department'
+  | 'Internal';
+
+  // Don't know if I need this either.
+  // Keep?
+  // private bookingConfirmation: File[];
 
   private prManager: NotionUser;
 
   private date: Interval;
+
+  private requestedItems: string;
 
   private uploadToYoutube: 'Yes I would like the Events team to handle the all aspects of recording for my event'
   // This answer is SO long. This is making me consider
@@ -137,7 +206,8 @@ export default class NotionEvent {
     this.prStatus = formResponse['Will your event require marketing?']
       === 'No, do not market my event at all. (Meetings, etc.)'
       ? 'PR Not Requested'
-      : 'PR TODO';  
+      : 'PR TODO';
+    this.intakeFormStatus = needsIntakeForm(formResponse);
     this.TAPStatus = needsTAPForm(formResponse);
     this.fundingManager = null;
     this.marketingDescription = formResponse['Any additional comments or requests?'];
@@ -147,6 +217,7 @@ export default class NotionEvent {
     this.location = notionLocationTag[formResponse['First choice for venue']] || 'Other (See Details)';
     this.locationBackup1 = notionLocationTag[formResponse['Second choice for venue']] || 'Other (See Details)';
     this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
+    this.bookingTime = null;
     // Bruh.
     // eslint-disable-next-line max-len
     this.recordingRequests = formResponse['If yes to the previous question: string; do you have any special recording requests?'];
@@ -155,10 +226,24 @@ export default class NotionEvent {
     this.fbCoHost = '';
     this.recording = needsRecording(formResponse);
     this.bookingStatus = needsBooking(formResponse);
-    this.fbLink = new URL('https://facebook.com/acmucsd');
     this.organizations = filterOrgsResponse(formResponse);
+    // TODO Find out when this is needed and HOW?
+    this.csiFormStatus = 'CSI Form N/A';
+    this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) | -1;
+    this.locationURL = null;
+    this.youtubeLink = null;
+    this.prRequests = '';
+    this.avEquipment = this.recording === 'Yes' ? 'From Venue' : 'N/A';
+    this.driveLink = null;
+    this.projectorStatus = formResponse['Will you need a projector?'] === "Yes" ? "Yes" : "No";
+    this.hostedBy = [];
+    // TODO Ask what are these next 2 fields for, how do I check them
+    this.locationDetails = '';
+    this.fundingSource = 'Internal';
     this.prManager = null;
     this.date = getEventInterval(formResponse);
+    // TODO What is this for?
+    this.requestedItems = '';
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube

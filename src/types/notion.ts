@@ -3,7 +3,6 @@ import { GetUserResponse } from '@notionhq/client/build/src/api-endpoints';
 export type NotionUser = GetUserResponse;
 
 export type EventLocation = 'Zoom (See Details)'
-| 'Zoom Webinar (See Details)'
 | 'Discord (See Details)'
 | 'Qualcomm Room'
 | 'Henry Booker Room'
@@ -106,7 +105,8 @@ export type StudentOrg = 'ACM General'
 | 'SASE'
 | 'Contrary Capital'
 | 'Phi Beta Lambda'
-| 'Quantum Computing at UCSD';
+| 'Quantum Computing at UCSD'
+| 'Girls Who Code';
 
 export const isStudentOrg = (org: string): org is StudentOrg => {
   return org === 'ACM General'

@@ -2,7 +2,7 @@
 //
 // This effectively is a copy of the `database.properties` JSON object
 // extracted from a copy of the ACM UCSD Notion Calendar as of
-// Fri, 29 Oct 2021 23:33:20 PDT.
+// Fri, 26 Nov 2021 17:24:25 PDT.
 export const notionCalSchema = {
   'Funding Status': {
     'id': '%23D%22x',
@@ -22,8 +22,13 @@ export const notionCalSchema = {
         },
         {
           'id': 'b176ea4f-765d-4501-8422-7690de5549a1',
-          'name': 'Funding In Progress',
+          'name': 'AS Forms Submitted',
           'color': 'yellow',
+        },
+        {
+          'id': 'ac96949e-a060-49bc-a14f-4913a5803e40',
+          'name': 'AS Funding Approved',
+          'color': 'blue',
         },
         {
           'id': 'c6d41dc8-6628-49c0-ab6a-9828793520f2',
@@ -31,9 +36,29 @@ export const notionCalSchema = {
           'color': 'green',
         },
         {
+          'id': '28d2388f-718c-4d48-b66d-4be685db8ecf',
+          'name': 'Waiting for Reimbursement',
+          'color': 'purple',
+        },
+        {
           'id': 'c8c14460-0a9d-40ff-adaa-e186f1b8c938',
           'name': 'Funding CANCELLED',
           'color': 'red',
+        },
+        {
+          'id': '13e5c209-c3ec-484f-9348-5a322d513079',
+          'name': 'Funding In Progress',
+          'color': 'pink',
+        },
+        {
+          'id': '472e62ae-77d1-47db-9ff5-5ea97c1f54bc',
+          'name': 'PEEF  to be completed',
+          'color': 'gray',
+        },
+        {
+          'id': '1649066e-886a-4699-b584-0c38e08d5cba',
+          'name': 'PEEF Completed',
+          'color': 'brown',
         },
       ],
     },
@@ -106,7 +131,7 @@ export const notionCalSchema = {
         },
         {
           'id': '69179491-8f97-4ba7-b07d-09af451cc78a',
-          'name': 'Side Projects Showcase',
+          'name': 'Projects Showcase',
           'color': 'green',
         },
         {
@@ -163,6 +188,50 @@ export const notionCalSchema = {
           'name': 'PR Unconfirmed Details',
           'color': 'purple',
         },
+        {
+          'id': 'a714409f-6eff-4dd7-b74f-10fb5490ae25',
+          'name': 'PR Waiting for link update',
+          'color': 'pink',
+        },
+      ],
+    },
+  },
+  'Intake Form Status': {
+    'id': '%3BnPn',
+    'name': 'Intake Form Status',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': '733e89dc-e63c-4340-b773-23288ceeaf00',
+          'name': 'Intake Form N/A',
+          'color': 'default',
+        },
+        {
+          'id': 'cacd21cb-0852-4e4a-80e1-5310246337d8',
+          'name': 'Intake Form TODO',
+          'color': 'orange',
+        },
+        {
+          'id': 'c5e35290-36b7-4900-b6e6-a609ab0a10f4',
+          'name': 'Intake Form In Progress',
+          'color': 'yellow',
+        },
+        {
+          'id': '48a581e5-977d-4a3a-9034-28f1252800e4',
+          'name': 'Intake Form Pending Approval',
+          'color': 'purple',
+        },
+        {
+          'id': '1f190ba0-b47a-4e0e-bae4-c65e01c15fdd',
+          'name': 'Intake Form Completed',
+          'color': 'green',
+        },
+        {
+          'id': '6a1a9bca-6d47-4d79-b1f3-c7651353505d',
+          'name': 'Intake Form CANCELLED',
+          'color': 'red',
+        },
       ],
     },
   },
@@ -188,9 +257,24 @@ export const notionCalSchema = {
           'color': 'yellow',
         },
         {
+          'id': '3c9ce41e-a0a1-431e-98a4-8d3a37666104',
+          'name': 'TAP Pending Approval',
+          'color': 'purple',
+        },
+        {
           'id': '4625cb7e-33b7-4701-8995-28ccf51f4d90',
-          'name': 'TAP Completed',
+          'name': 'TAP Approved',
           'color': 'green',
+        },
+        {
+          'id': '0d211613-098b-49df-bba5-9ebc611f9ef5',
+          'name': 'TAP Denied',
+          'color': 'red',
+        },
+        {
+          'id': '541fdccf-18cd-4e14-80a0-41257902fe6a',
+          'name': 'TAP CANCELLED',
+          'color': 'red',
         },
       ],
     },
@@ -223,11 +307,6 @@ export const notionCalSchema = {
           'id': '0f43e2c8-48ae-4ca3-9bc3-98428254f899',
           'name': 'Zoom (See Details)',
           'color': 'yellow',
-        },
-        {
-          'id': '0b9be35f-20db-4957-aa44-6e457a2433f7',
-          'name': 'Zoom Webinar (See Details)',
-          'color': 'orange',
         },
         {
           'id': 'ad4d5527-56ea-415e-9eae-b1779eb5fc51',
@@ -347,6 +426,12 @@ export const notionCalSchema = {
       ],
     },
   },
+  'Booking Time': {
+    'id': 'H%3F%5DX',
+    'name': 'Booking Time',
+    'type': 'date',
+    'date': {},
+  },
   'Recording Requests': {
     'id': 'LYO%3D',
     'name': 'Recording Requests',
@@ -422,14 +507,13 @@ export const notionCalSchema = {
           'name': 'Booking Completed',
           'color': 'green',
         },
+        {
+          'id': '6a1a9bca-6d47-4d79-b1f3-c7651353505d',
+          'name': 'Booking CANCELLED',
+          'color': 'red',
+        },
       ],
     },
-  },
-  'FB LINK': {
-    'id': 'YrP%7B',
-    'name': 'FB LINK',
-    'type': 'rich_text',
-    'rich_text': {},
   },
   'Organizations': {
     'id': '%5B9%5Ba',
@@ -525,22 +609,32 @@ export const notionCalSchema = {
         {
           'id': '013034fb-1d3b-4b57-9c03-a8c07b541c8c',
           'name': 'QC',
-          'color': 'yellow',
+          'color': 'default',
         },
         {
           'id': '29f07943-da25-4569-9ac2-6c4f3d6eec6f',
           'name': 'SASE',
-          'color': 'green',
+          'color': 'default',
         },
         {
           'id': '1f13c982-8b9b-4e74-b02c-ef35240f0d33',
           'name': 'Contrary Capital',
-          'color': 'brown',
+          'color': 'default',
         },
         {
           'id': '9a969d21-dd41-40ff-81a4-32830ed4079c',
           'name': 'Phi Beta Lambda',
-          'color': 'green',
+          'color': 'default',
+        },
+        {
+          'id': 'f60a92a5-0e77-4a59-841b-d7b55ca916f6',
+          'name': 'Quantum Computing at UCSD',
+          'color': 'default',
+        },
+        {
+          'id': '964dec4b-1c89-4d16-81f0-92e604782576',
+          'name': 'Girls Who Code',
+          'color': 'default',
         },
       ],
     },
@@ -712,8 +806,10 @@ export const notionCalSchema = {
   'Projected Attendance': {
     'id': 'b%5D%5Dq',
     'name': 'Projected Attendance',
-    'type': 'rich_text',
-    'rich_text': {},
+    'type': 'number',
+    'number': {
+      'format': 'number',
+    },
   },
   'Location URL': {
     'id': 'cjEL',
@@ -732,6 +828,40 @@ export const notionCalSchema = {
     'name': 'PR Requests',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'AV Equipment': {
+    'id': 'hYL%3D',
+    'name': 'AV Equipment',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': 'ad6f5f84-1f88-4152-97f9-43f8b85c3ed5',
+          'name': 'From Venue',
+          'color': 'yellow',
+        },
+        {
+          'id': '01c3ca8c-53db-4a01-abdf-4c71eba32e4c',
+          'name': 'From ECE Department',
+          'color': 'red',
+        },
+        {
+          'id': 'a15a5399-ab85-4a66-ad4b-e85a957ab95e',
+          'name': 'From University Centers Tech',
+          'color': 'green',
+        },
+        {
+          'id': '655870db-a8f1-4e2f-9377-b73ee7fcd989',
+          'name': 'From ACM',
+          'color': 'pink',
+        },
+        {
+          'id': 'bc2d36e2-7bca-4361-9079-2fcf563780e4',
+          'name': 'N/A',
+          'color': 'default',
+        },
+      ],
+    },
   },
   'Drive Link': {
     'id': "j'C%5C",
@@ -776,11 +906,46 @@ export const notionCalSchema = {
     'type': 'rich_text',
     'rich_text': {},
   },
+  'Funding Source': {
+    'id': 'qiw%5E',
+    'name': 'Funding Source',
+    'type': 'multi_select',
+    'multi_select': {
+      'options': [
+        {
+          'id': '8f11ea25-bd83-4062-989c-313293e4a9b1',
+          'name': 'AS',
+          'color': 'purple',
+        },
+        {
+          'id': '75020878-a55b-4c1c-a40c-0a3276e351b2',
+          'name': 'CSE Department',
+          'color': 'yellow',
+        },
+        {
+          'id': '2ecd45b6-9e04-40c6-b527-40e292248dfc',
+          'name': 'ECE Department',
+          'color': 'blue',
+        },
+        {
+          'id': '7ba5b16b-b4f5-438b-8720-5567d1fda18f',
+          'name': 'Internal',
+          'color': 'pink',
+        },
+      ],
+    },
+  },
   'Event Description': {
     'id': 'r%3Dk)',
     'name': 'Event Description',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'Booking Confirmation': {
+    'id': 'rghL',
+    'name': 'Booking Confirmation',
+    'type': 'files',
+    'files': {},
   },
   'Location Backup 1': {
     'id': 'rtZm',
@@ -942,7 +1107,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a9c8ca5b-43cf-4582-b68d-39f790818062',
-          // Disabling this ESLint rule because I want to keep the calendar schema as close as possible.
+          // Again, line is too long.
           // eslint-disable-next-line max-len
           'name': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
           'color': 'gray',
