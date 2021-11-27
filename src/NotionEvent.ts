@@ -166,10 +166,10 @@ export default class NotionEvent {
   
   private locationDetails: string;
 
-  private fundingSource: 'AS'
+  private fundingSource: ('AS'
   | 'CSE Department'
   | 'ECE Department'
-  | 'Internal';
+  | 'Internal')[];
 
   // Don't know if I need this either.
   // Keep?
@@ -239,7 +239,7 @@ export default class NotionEvent {
     this.hostedBy = [];
     // TODO Ask what are these next 2 fields for, how do I check them
     this.locationDetails = '';
-    this.fundingSource = 'Internal';
+    this.fundingSource = ['Internal'];
     this.prManager = null;
     this.date = getEventInterval(formResponse);
     // TODO What is this for?
