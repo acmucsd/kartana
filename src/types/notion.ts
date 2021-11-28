@@ -49,6 +49,10 @@ export const notionLocationTag = {
   'Other': 'Other (See Details)',
 };
 
+// The lines here are long, gross, and impossible to reduce down to length right now.
+// Just disable ESLint's rule for max line length on these.
+/* eslint-disable max-len */
+
 export const notionYoutubeAnswer = {
   'No, I do not want anything uploaded to YouTube': 'No I do not want anything uploaded to YouTube',
   'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
@@ -57,6 +61,8 @@ export const notionYoutubeAnswer = {
   'Yes, but I will record it myself and send the Events team a link': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
   '': 'No I do not want anything uploaded to YouTube',
 };
+/* eslint-enable max-len */
+
 
 export type EventType = 'Competition'
 | 'Workshop'

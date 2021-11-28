@@ -32,7 +32,7 @@ const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intak
   || response['Where is your event taking place?'] === 'My event is off campus')
     ? 'Intake Form N/A'
     : 'Intake Form TODO';
-}
+};
 
 const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO' => {
   return (response['Where is your event taking place?'] === 'I need a room on campus'
@@ -143,7 +143,7 @@ export default class NotionEvent {
   private csiFormStatus: 'CSI Form N/A'
   | 'CSI Form TODO'
   | 'CSI Form In Progress'
-  | 'CSI Form Done'
+  | 'CSI Form Done';
 
   private projectedAttendance: number;
 
@@ -237,13 +237,13 @@ export default class NotionEvent {
     this.organizations = filterOrgsResponse(formResponse);
     // TODO Find out when this is needed and HOW?
     this.csiFormStatus = 'CSI Form N/A';
-    this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) | -1;
+    this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) || -1;
     this.locationURL = null;
     this.youtubeLink = null;
     this.prRequests = '';
     this.avEquipment = this.recording === 'Yes' ? 'From Venue' : 'N/A';
     this.driveLink = null;
-    this.projectorStatus = formResponse['Will you need a projector?'] === "Yes" ? "Yes" : "No";
+    this.projectorStatus = formResponse['Will you need a projector?'] === 'Yes' ? 'Yes' : 'No';
     this.hostedBy = [];
     // TODO Ask what are these next 2 fields for, how do I check them
     this.locationDetails = '';
@@ -277,7 +277,7 @@ export default class NotionEvent {
   public async uploadToNotion(client: Client): Promise<void> {
     const createPagePayload: CreatePageParameters = {
       parent: {
-        database_id: process.env.NOTION_CALENDAR_ID
+        database_id: process.env.NOTION_CALENDAR_ID,
       },
       properties: {
         Name: {
@@ -338,7 +338,7 @@ export default class NotionEvent {
         },
         'Organizations': {
           multi_select: this.organizations.map((org) => {
-            return { name: org }
+            return { name: org };
           }),
         },
         // "FB Cover Photo" omitted.
@@ -386,7 +386,7 @@ export default class NotionEvent {
         },
         'Funding Source': {
           multi_select: this.fundingSource.map((fundingSource) => {
-            return { name: fundingSource }
+            return { name: fundingSource };
           }),
         },
         'Event Description': {
@@ -421,7 +421,7 @@ export default class NotionEvent {
         // "Historian Onsite" omitted.
         //
         // We don't know this yet.
-      }
+      },
     };
 
     // Upload the event to Notion's API. If this errors, out, we'll need to

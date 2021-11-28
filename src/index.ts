@@ -4,9 +4,7 @@ import Logger from './utils/Logger';
 import { notionCalSchema, googleSheetSchema } from './assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
-import { parse } from 'papaparse';
-import { differenceWith, isEqual, uniq, without } from 'lodash';
-import got from 'got';
+import { differenceWith, isEqual, without } from 'lodash';
 import NotionEvent from './NotionEvent';
 import { HostFormResponse } from './types';
 import { exit } from 'process';
@@ -94,16 +92,6 @@ const getHostForm = async (hostFormDoc: GoogleSpreadsheet) => {
     rows,
     data: rows.map((row) => toHostFormResponse(headers, row)),
   };
-  // OLD CSV method
-  // Keep everything as close to this as possible.
-  // const documentID = process.env.GOOGLE_SHEETS_DOC_ID;
-  // const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME;
-
-  // const googleSheetURL = `https://docs.google.com/spreadsheets/d/${documentID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-  // const googleSheetCSV = await got.get(googleSheetURL).text() as any;
-  // return parse(googleSheetCSV, {
-  //   header: true,
-  // });
 };
 
 (async () => {
@@ -131,17 +119,18 @@ const getHostForm = async (hostFormDoc: GoogleSpreadsheet) => {
   Logger.info(`${hostForm.data.length} rows in Host Form CSV detected. Checking for new events...`);
   const newEventRows: GoogleSpreadsheetRow[] = [];
   const newEvents: HostFormResponse[] = hostForm.data.filter((formResponse, index) => {
-      if (formResponse['Imported to Notion'] === 'FALSE' && without(Object.values(formResponse), '', 'FALSE').length !== 0) {
-          newEventRows.push(hostForm.rows[index]);
-        return true;
-      } else {
-        return false;
-      }
+    if (formResponse['Imported to Notion'] === 'FALSE'
+    && without(Object.values(formResponse), '', 'FALSE').length !== 0) {
+      newEventRows.push(hostForm.rows[index]);
+      return true;
+    } else {
+      return false;
     }
+  },
   ) as HostFormResponse[];
   Logger.info(`${newEvents.length} new events detected.`);
   if (newEvents.length === 0) {
-    Logger.info(`No events to convert! Done!`);
+    Logger.info('No events to convert! Done!');
     return;
   }
   Logger.info('Converting events...');
