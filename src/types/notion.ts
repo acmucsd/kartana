@@ -49,6 +49,15 @@ export const notionLocationTag = {
   'Other': 'Other (See Details)',
 };
 
+export const notionYoutubeAnswer = {
+  'No, I do not want anything uploaded to YouTube': 'No I do not want anything uploaded to YouTube',
+  'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
+  'Yes, I would like the Events team to handle the all aspects of recording for my event (in person events only)': 'Yes I would like the Events team to handle the all aspects of recording for my event',
+  'Yes, and I will upload it to the ACM YouTube channel myself': 'Yes and I will upload it to the ACM YouTube channel myself',
+  'Yes, but I will record it myself and send the Events team a link': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
+  '': 'No I do not want anything uploaded to YouTube',
+};
+
 export type EventType = 'Competition'
 | 'Workshop'
 | 'Industry Panel'

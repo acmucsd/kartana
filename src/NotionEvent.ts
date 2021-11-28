@@ -10,6 +10,7 @@ import {
   NotionUser,
   StudentOrg,
   isStudentOrg,
+  notionYoutubeAnswer,
 } from './types';
 import Logger from './utils/Logger';
 
@@ -253,10 +254,7 @@ export default class NotionEvent {
     this.requestedItems = '';
     // I'm so done with this.
     // eslint-disable-next-line max-len
-    this.uploadToYoutube = formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube
-    // eslint-disable-next-line max-len
-    || formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?'] as typeof this.uploadToYoutube
-    || 'No I do not want anything uploaded to YouTube';
+    this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
     this.fbACMURL = new URL('https://acmurl.com/facebook');
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
