@@ -1,8 +1,10 @@
-// The Notion Calendar database schema.
-//
-// This effectively is a copy of the `database.properties` JSON object
-// extracted from a copy of the ACM UCSD Notion Calendar as of
-// Fri, 26 Nov 2021 17:24:25 PDT.
+/**
+ * The Notion Calendar database schema.
+ * 
+ * This effectively is a copy of the `database.properties` JSON object
+ * extracted from a copy of the ACM UCSD Notion Calendar as of
+ * Fri, 26 Nov 2021 17:24:25 PDT.
+ */
 export const notionCalSchema = {
   'Funding Status': {
     'id': '%23D%22x',

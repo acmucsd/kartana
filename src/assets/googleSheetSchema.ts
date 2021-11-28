@@ -1,3 +1,9 @@
+/**
+ * The schema of the Host Form response Google Sheet.
+ * 
+ * This is just an ordered copy of the header values of the
+ * Host Form Response Google Sheet as of Fri, 26 Nov 2021 17:24:25 PDT.
+ */
 export const googleSheetSchema = [
   'Event name',
   'Event director(s)',

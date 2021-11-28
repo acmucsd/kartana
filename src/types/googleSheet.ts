@@ -1,3 +1,9 @@
+/**
+ * A response to the Host Form, extracted from a row of its corresponding
+ * Google Sheet.
+ * 
+ * This effectively matches the columns from the Google Spreadsheet.
+ */
 export interface HostFormResponse {
   'Event name',
   'Event director(s)',

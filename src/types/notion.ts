@@ -1,7 +1,11 @@
 import { GetUserResponse } from '@notionhq/client/build/src/api-endpoints';
 
+// A Notion User.
 export type NotionUser = GetUserResponse;
 
+// The location for a NotionEvent.
+//
+// This is limited to the values available in the Notion Calendar.
 export type EventLocation = 'Zoom (See Details)'
 | 'Discord (See Details)'
 | 'Qualcomm Room'
@@ -27,6 +31,12 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Off Campus'
 | 'Other (See Details)';
 
+/**
+ * Converter from the Host Form's locations to the Notion Calendar
+ * entries for locations.
+ * 
+ * Since they don't map 1:1, this effectively converts them properly.
+ */
 export const notionLocationTag = {
   'Price Center West Ballroom': 'PC West Ballroom',
   'Price Center East Ballroom': 'PC East Ballroom',
@@ -53,6 +63,10 @@ export const notionLocationTag = {
 // Just disable ESLint's rule for max line length on these.
 /* eslint-disable max-len */
 
+/**
+ * Converter from the Host Form's answers for the "Upload to YouTube?"
+ * question to the Notion calendar's entries for the eponymous column.
+ */
 export const notionYoutubeAnswer = {
   'No, I do not want anything uploaded to YouTube': 'No I do not want anything uploaded to YouTube',
   'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
@@ -63,7 +77,9 @@ export const notionYoutubeAnswer = {
 };
 /* eslint-enable max-len */
 
-
+/**
+ * The Type of NotionEvent held.
+ */
 export type EventType = 'Competition'
 | 'Workshop'
 | 'Industry Panel'
@@ -81,6 +97,12 @@ export type EventType = 'Competition'
 | 'Kickoff'
 | 'Info Session';
 
+/**
+ * User-defined Type Guard for the EventType.
+ * 
+ * @param type A random string.
+ * @returns Whether the parameter complies with the EventType type.
+ */
 export const isEventType = (type: string): type is EventType => {
   return type === 'Competition'
     || type === 'Industry Panel'
@@ -99,6 +121,9 @@ export const isEventType = (type: string): type is EventType => {
     || type === 'Info Session';
 };
 
+/**
+ * Any student organizations ACM collaborates with or has Events hosted with.
+ */
 export type StudentOrg = 'ACM General'
 | 'ACM AI'
 | 'ACM Cyber'
@@ -123,6 +148,12 @@ export type StudentOrg = 'ACM General'
 | 'Quantum Computing at UCSD'
 | 'Girls Who Code';
 
+/**
+ * User-defined Type Guard for StudentOrg.
+ *
+ * @param org A random string.
+ * @returns Whether the parameter complies with the StudentOrg type.
+ */
 export const isStudentOrg = (org: string): org is StudentOrg => {
   return org === 'ACM General'
   || org === 'ACM AI'

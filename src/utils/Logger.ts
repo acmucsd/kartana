@@ -1,3 +1,8 @@
+/**
+ * This is a VERBATIM copy of the Logger used in BreadBot.
+ * 
+ * Make of that what you will.
+ */
 import {
   createLogger, transports as Transports, format,
 } from 'winston';
@@ -20,7 +25,7 @@ const consoleLogFormat = printf((information) => {
 });
   
 /**
- * Logger for the bot with split transports.
+ * Logger for the Notion Event Pipeline with split transports.
  *
  * Logger saves colorized output to standard out and creates a daily rotated log file
  * of the same logs for safekeeping purposes.
