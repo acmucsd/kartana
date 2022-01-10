@@ -5,8 +5,8 @@
  * This effectively matches the columns from the Google Spreadsheet.
  */
 export interface HostFormResponse {
-  'Event name',
-  'Event director(s)',
+  'Event name': string;
+  'Event director(s)': string;
   'What kind of event is this?': string;
   'Which of the following organizations are involved in this event?': string;
   'Preferred date': string;

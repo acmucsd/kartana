@@ -142,8 +142,8 @@ const getEventInterval = (response: HostFormResponse): Interval => {
   return Interval.fromDateTimes(
     // Convert from the provided host form responses to the DateTime objects.
     // The format string below SEEMS to work for most events, but I MAY be wrong.
-    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'M/dd/yyyy h:mm:ss a'),
-    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/dd/yyyy h:mm:ss a'),
+    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'M/d/yyyy h:mm:ss a'),
+    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/d/yyyy h:mm:ss a'),
   );
 };
 
@@ -247,7 +247,6 @@ export default class NotionEvent {
   private eventCoordinator: NotionUser | null;
   
   // Would we ever import a thumbnail? Probably not.
-  // TODO Find out if we need this property at all.
   // private youtubeThumbnail: File;
 
   // The Check-in Code assigned to this Event.
@@ -270,7 +269,6 @@ export default class NotionEvent {
   private organizations: StudentOrg[];
 
   // Keep this, maybe?
-  // TODO Find out if we need this property at all.
   // private fbCoverPhoto: File;
 
   // The status of the CSI Intake Form submission required for this Event, if any.
@@ -387,23 +385,27 @@ export default class NotionEvent {
     this.recording = needsRecording(formResponse);
     this.bookingStatus = needsBooking(formResponse);
     this.organizations = filterOrgsResponse(formResponse);
-    // TODO Find out when this is needed and HOW?
-    this.csiFormStatus = 'CSI Form N/A';
+    // If no TAP form and not off-campus, TODO, else N/A.
+    this.csiFormStatus =
+      // if no TAP form needed for event...
+      this.TAPStatus === 'TAP N/A'
+      // and event is not off-campus...
+      && !(this.location === 'Off Campus')
+      // ...we need a CSI form; otherwise, no.
+        ? 'CSI Form TODO' : 'CSI Form N/A';
     this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) || -1;
-    this.locationURL = null;
+    this.locationURL = new URL(formResponse['Event Link (ACMURL)']);
     this.youtubeLink = null;
     this.prRequests = '';
-    this.avEquipment = this.recording === 'Yes' ? 'From Venue' : 'N/A';
+    this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
     this.driveLink = null;
     this.projectorStatus = formResponse['Will you need a projector?'] === 'Yes' ? 'Yes' : 'No';
     this.hostedBy = [];
-    // TODO Ask what are these next 2 fields for, how do I check them
-    this.locationDetails = '';
-    this.fundingSource = ['Internal'];
+    this.locationDetails = this.location === 'Other (See Details)' ? formResponse['First choice for venue'] : '';
+    this.fundingSource = [];
     this.prManager = null;
     this.date = getEventInterval(formResponse);
-    // TODO What is this for?
-    this.requestedItems = '';
+    this.requestedItems = formResponse['What do you need funding for?'];
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
@@ -464,8 +466,6 @@ export default class NotionEvent {
           select: { name: this.location },
         },
         // Booking Time omitted.
-        //
-        // TODO check to see if we need to do this or not.
 
         'Recording Requests': {
           rich_text: toNotionRichText(this.recordingRequests),
@@ -523,9 +523,9 @@ export default class NotionEvent {
         'PR Requests': {
           rich_text: toNotionRichText(this.prRequests),
         },
-        'AV Equipment': {
-          select: { name: this.avEquipment },
-        },
+        // "AV Equipment" omitted.
+        //
+        // We don't automatically assign this.
         // "Drive Link" omitted.
         //
         // We don't know how to set this yet.
@@ -540,7 +540,6 @@ export default class NotionEvent {
         // 
         // This COULD be done if everyone had their names set on Notion,
         // but it'll be difficult to find them otherwise.
-        // TODO Ask Events Team to get everyone to set their names?
         'Location Details': {
           rich_text: toNotionRichText(this.locationDetails),
         },
