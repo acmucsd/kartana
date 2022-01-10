@@ -8,6 +8,7 @@ import NotionEvent from './NotionEvent';
 import { HostFormResponse } from '../types';
 import { exit } from 'process';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
+import { MessageEmbed, WebhookClient } from 'discord.js';
 
 /**
  * Logs into Notion.
@@ -106,6 +107,7 @@ export interface EventNotionPipelineConfig {
   hostFormSheetName: string;
   googleSheetAPICredentials: ServiceAccountCredentials;
   notionCalendarId: string;
+  webhookURL: string;
   notionToken: string;
 }
 
@@ -167,6 +169,10 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
 
   Logger.debug('Validating Google Sheets schema...');
   validateGoogleSheetsSchema(hostForm.headers);
+
+  // We need to get access to our Discord webhook as well.
+  // Get it from configs and just make a webhook client.
+  const webhook = new WebhookClient({ url: config.webhookURL });
 
   Logger.info('Pipeline ready! Running.');
   Logger.info(`${hostForm.data.length} rows in Host Form CSV detected. Checking for new events...`);
@@ -230,6 +236,15 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         eventName: newEvent['Event name'],
       });
       newEventRows.splice(index, 1);
+      // Report error in Discord as well.
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error importing event!')
+        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
+        .setColor('DARK_RED');
+      webhook.send({
+        content: 'Paging <LOGISTICS PING> and <MATEI>',
+        embeds: [errorEmbed],
+      });
       return [];
     }
   });
@@ -240,13 +255,30 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   await Promise.all(notionEventsToImport.map(async (event, index) => {
     // Upload to Notion.
     try {
-      await event.uploadToNotion(notion);
+      const url = await event.uploadToNotion(notion);
+      // Report that we've successfully imported the event on Discord.
+      const successEmbed = new MessageEmbed()
+        .setTitle('📥 Imported new event!')
+        .setDescription(`**Event name:** ${event.getName()}\n**URL:** ${url}`)
+        .setColor('GREEN');
+      await webhook.send({
+        content: '<LOGISTICS PING>',
+        embeds: [successEmbed],
+      });
     } catch (error) {
       // If we can't create the event, notify everone. Skip over the
       // "tick the checkbox" part, since we didn't actually import the event.
       Logger.error(`Error creating event "${event.getName()}: ${error}"`, {
         error,
         eventName: event.getName(),
+      });
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error creating event on Notion!')
+        .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
+        .setColor('RED');
+      await webhook.send({
+        content: 'Paging <LOGISTICS PING> and <MATEI>',
+        embeds: [errorEmbed],
       });
       return;
     }

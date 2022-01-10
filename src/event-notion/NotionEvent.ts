@@ -427,8 +427,9 @@ export default class NotionEvent {
    * 
    * @see https://developers.notion.com/reference/post-page
    * @see https://developers.notion.com/reference/page#all-property-values
+   * @returns the URL of the created Page for the event.
    */
-  public async uploadToNotion(client: Client): Promise<void> {
+  public async uploadToNotion(client: Client): Promise<string> {
     const createPagePayload: CreatePageParameters = {
       parent: {
         database_id: process.env.NOTION_CALENDAR_ID,
@@ -592,5 +593,6 @@ export default class NotionEvent {
     // For now, just throw the error.
     const response = await client.pages.create(createPagePayload);
     Logger.debug(`Page ${response.id} created for event "${this.name}"`);
+    return response.url;
   }
 }
