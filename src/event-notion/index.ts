@@ -195,7 +195,9 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
     // (there's no way empty rows are actual responses, right?)
     //
     // First off, get the checkbox for the current host form response. Since sheet rows
-    // are by default 1-indexed, but we keep 0-indexes, we need to subtract 1.
+    // are by default 1-indexed, but we keep 0-indexes, we need to subtract 2; one to switch
+    // from 1-indexing to 0-indexing, and another due to the fact the row index considers
+    // the header too, which we don't keep in our row arrays.
     const eventRow = hostForm.rows[index];
     const checkboxRow = hostForm.checkboxRows[eventRow.rowIndex - 2];
 

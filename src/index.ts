@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import express from 'express';
 import Logger from './utils/Logger';
+import { scheduleJob } from 'node-schedule';
 
 config();
 
@@ -13,6 +14,24 @@ app.get('/ping', (_, res) => {
   res.send('Pong!');
 });
 
+/**
+ * Cronjob to run Notion Event Sync Pipeline every 30 minutes.
+ */
+const notionEventSyncJob = scheduleJob('*/30 * * * *', async () => {
+  Logger.info('Running notion event pipeline sync cron job!');
+  await syncHostFormToNotionCalendar({
+    hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
+    hostFormSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME,
+    notionCalendarId: process.env.NOTION_CALENDAR_ID,
+    notionToken: process.env.NOTION_INTEGRATION_TOKEN,
+    webhookURL: process.env.DISCORD_WEBHOOK_URL,
+    googleSheetAPICredentials: JSON.parse(googleSheetKeyFile.toString()),
+  });
+});
+
+/**
+ * Route to trigger sync manually. Does not disrupt cronjob.
+ */
 app.post('/notion/events/sync', async (_, res) => {
   await syncHostFormToNotionCalendar({
     hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
