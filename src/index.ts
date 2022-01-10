@@ -17,7 +17,7 @@ app.get('/ping', (_, res) => {
 /**
  * Cronjob to run Notion Event Sync Pipeline every 30 minutes.
  */
-const notionEventSyncJob = scheduleJob('*/30 * * * *', async () => {
+scheduleJob('*/30 * * * *', async () => {
   Logger.info('Running notion event pipeline sync cron job!');
   await syncHostFormToNotionCalendar({
     logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
