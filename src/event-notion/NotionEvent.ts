@@ -446,6 +446,9 @@ export default class NotionEvent {
         'PR Status': {
           select: { name: this.prStatus },
         },
+        'CSI Form Status': {
+          select: { name: this.csiFormStatus },
+        },
         'Intake Form Status': {
           select: { name: this.intakeFormStatus },
         },

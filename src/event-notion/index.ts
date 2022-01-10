@@ -87,13 +87,16 @@ export const toHostFormResponse = (headers: string[], row: GoogleSpreadsheetRow)
 export const getHostForm = async (hostFormDoc: GoogleSpreadsheet, hostFormSheetName: string) => {
   await hostFormDoc.loadInfo();
   const sheet = hostFormDoc.sheetsByTitle[hostFormSheetName];
+  const checkboxSheet = hostFormDoc.sheetsByTitle['Notion Event Pipeline'];
   const rows = await sheet.getRows();
+  const checkboxRows = await checkboxSheet.getRows();
   // Save the form headers, but remove everything else
   const headers = sheet.headerValues;
   // return the parts of the sheet separately, for easier management later
   return {
     headers,
     rows,
+    checkboxRows,
     data: rows.map((row) => toHostFormResponse(headers, row)),
   };
 };
@@ -114,7 +117,8 @@ export interface EventNotionPipelineConfig {
  * - Look for any events that don’t have the “Imported to Notion” column checkbox ticked
  * - For each event, convert to something Notion’s API can read, per the business logic EC's normally use
  * - Upload to Notion using their API.
- * - Tick the checkbox for “Imported to Notion” on the spreadsheet
+ * - Tick the checkbox for “Imported to Notion” on the spreadsheet.
+ * - Alert the Discord of any errors or successfuly imported events.
  * 
  * This function is basically the main function of the pipeline right now, but this will be replaced
  * with a call from a web microservice soon.
@@ -184,12 +188,17 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
     // it's much more resilient to host form changes to simply check for a COMPLETELY empty row
     // (there's no way empty rows are actual responses, right?)
     //
+    // First off, get the checkbox for the current host form response. Since sheet rows
+    // are by default 1-indexed, but we keep 0-indexes, we need to subtract 1.
+    const eventRow = hostForm.rows[index];
+    const checkboxRow = hostForm.checkboxRows[eventRow.rowIndex - 2];
+
     // If the host form row has not been imported yet (checkbox not ticked) and it has ANY
     // non-empty values...
-    if (formResponse['Imported to Notion'] === 'FALSE'
+    if (checkboxRow['Imported to Notion'] === 'FALSE'
     && without(Object.values(formResponse), '', 'FALSE').length !== 0) {
       // Keep track of the GoogleSpreadsheetRow in newEventRows and keep it in our filtered array.
-      newEventRows.push(hostForm.rows[index]);
+      newEventRows.push(eventRow);
       return true;
     } else {
       return false;
@@ -250,10 +259,11 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
     //
     // Thank God.
     const eventRow = newEventRows[index];
-    eventRow['Imported to Notion'] = 'TRUE';
+    const checkboxRow = hostForm.checkboxRows[eventRow.rowIndex - 2];
+    checkboxRow['Imported to Notion'] = 'TRUE';
 
     // Update the changes to Google Spreadsheets.
-    await eventRow.save();
+    await checkboxRow.save();
   }));
 
   // Done! 

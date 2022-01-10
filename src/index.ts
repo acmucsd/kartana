@@ -9,16 +9,17 @@ config();
 const app = express();
 const googleSheetKeyFile = readFileSync(process.env.GOOGLE_SHEETS_KEY_FILE);
 
-app.get('/ping', (req, res) => {
+app.get('/ping', (_, res) => {
   res.send('Pong!');
 });
 
-app.post('/notionEventSync/sync', async (req, res) => {
+app.post('/notion/events/sync', async (_, res) => {
   await syncHostFormToNotionCalendar({
     hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
     hostFormSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME,
     notionCalendarId: process.env.NOTION_CALENDAR_ID,
     notionToken: process.env.NOTION_INTEGRATION_TOKEN,
+    webhookURL: process.env.DISCORD_WEBHOOK_URL,
     googleSheetAPICredentials: JSON.parse(googleSheetKeyFile.toString()),
   });
   res.send('Manual sync run!');
