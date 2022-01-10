@@ -20,6 +20,8 @@ app.get('/ping', (_, res) => {
 const notionEventSyncJob = scheduleJob('*/30 * * * *', async () => {
   Logger.info('Running notion event pipeline sync cron job!');
   await syncHostFormToNotionCalendar({
+    logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
+    maintainerId: process.env.DISCORD_MAINTAINER_MENTION_ID,
     hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
     hostFormSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME,
     notionCalendarId: process.env.NOTION_CALENDAR_ID,
@@ -34,6 +36,8 @@ const notionEventSyncJob = scheduleJob('*/30 * * * *', async () => {
  */
 app.post('/notion/events/sync', async (_, res) => {
   await syncHostFormToNotionCalendar({
+    logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
+    maintainerId: process.env.DISCORD_MAINTAINER_MENTION_ID,
     hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
     hostFormSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME,
     notionCalendarId: process.env.NOTION_CALENDAR_ID,

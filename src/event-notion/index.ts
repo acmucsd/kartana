@@ -103,6 +103,8 @@ export const getHostForm = async (hostFormDoc: GoogleSpreadsheet, hostFormSheetN
 };
 
 export interface EventNotionPipelineConfig {
+  logisticsTeamId: string;
+  maintainerId: string;
   hostFormSheetId: string;
   hostFormSheetName: string;
   googleSheetAPICredentials: ServiceAccountCredentials;
@@ -244,7 +246,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
         .setColor('DARK_RED');
       webhook.send({
-        content: 'Paging <LOGISTICS PING> and <MATEI>',
+        content: `*Paging <@${config.logisticsTeamId}> and <@${config.maintainerId}>!*`,
         embeds: [errorEmbed],
       });
       return [];
@@ -264,7 +266,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setDescription(`**Event name:** ${event.getName()}\n**URL:** ${url}`)
         .setColor('GREEN');
       await webhook.send({
-        content: '<LOGISTICS PING>',
+        content: `<@${config.logisticsTeamId}>`,
         embeds: [successEmbed],
       });
     } catch (error) {
@@ -279,7 +281,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
         .setColor('RED');
       await webhook.send({
-        content: 'Paging <LOGISTICS PING> and <MATEI>',
+        content: `*Paging <@${config.logisticsTeamId}> and <@${config.maintainerId}>!*`,
         embeds: [errorEmbed],
       });
       return;
