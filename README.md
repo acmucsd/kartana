@@ -1,10 +1,21 @@
-# Host Form Events to Notion pipeline
+# Kartana
 
-This repository contains the scripts used to synchronize the responses sent to
-our Events Host Form (https://acmurl.com/host) to our private board Notion
-Events calendar.
+Kartana is ACM UCSD Board's virtual assistant for various tasks related to the
+management of Board's tasks.
 
-This script does so by:
+Current functions include automatically importing new events to our internal Notion
+for logistical management.
+
+# Functions
+
+Kartana does a few things, but here are the highlights.
+
+## Notion Events Pipeline
+
+Kartana can synchronize the responses sent to our Events Host Form
+(https://acmurl.com/host) to our private board Notion Events calendar.
+
+Kartana does so by:
 - reading the Google Sheets responses and finding those that have not been
   imported yet
 - forming a Notion card that can be added to the Notion Calendar base
@@ -17,14 +28,12 @@ This script does so by:
 Fill the `.env.example` file with the necessary credentials and URL's and save it
 as `.env`. Check the comments in the file for details. If you need any help
 acquiring the credentials in the `.env.example` file, consult the `SECURITY.md`
-file for details.
+file for details, along with the other docs for any specific pipeline to configure.
 
-This script can be run using:
+Kartana can be run using:
 ```sh
 yarn start
 ```
-
-The script can be saved as a cronjob, if necessary.
 
 # Credits
 
@@ -33,3 +42,4 @@ Thanks to:
   sometime this year.
 - Notion for at least _providing_ an API
 - Bryce Tsuyuki for guiding me through the business logic of the Host Form
+- Kristina "Kat" Diep for helping me come up with a name for Kartana
