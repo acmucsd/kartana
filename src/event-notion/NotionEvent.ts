@@ -382,6 +382,21 @@ export default class NotionEvent {
     this.location = notionLocationTag[formResponse['First choice for venue']] || 'Other (See Details)';
     this.locationBackup1 = notionLocationTag[formResponse['Second choice for venue']] || 'Other (See Details)';
     this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
+    if (formResponse['Where is your event taking place?'] === 'My event is on Discord only') {
+      this.location = 'Discord (See Details)';
+      this.locationBackup1 = null;
+      this.locationBackup2 = null;
+    }
+    if (formResponse['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room") {
+      this.location = 'Zoom (See Details)';
+      this.locationBackup1 = null;
+      this.locationBackup2 = null;
+    }
+    if (formResponse['Where is your event taking place?'] === 'My event is off campus') {
+      this.location = 'Off Campus';
+      this.locationBackup1 = null;
+      this.locationBackup2 = null;
+    }
     this.bookingTime = null;
     // Bruh.
     // eslint-disable-next-line max-len
@@ -437,6 +452,7 @@ export default class NotionEvent {
    * @returns the URL of the created Page for the event.
    */
   public async uploadToNotion(client: Client): Promise<string> {
+    console.log(this.locationURL.host + this.locationURL.pathname);
     const createPagePayload: CreatePageParameters = {
       parent: {
         database_id: process.env.NOTION_CALENDAR_ID,
@@ -525,7 +541,7 @@ export default class NotionEvent {
           number: this.projectedAttendance,
         },
         'Location URL': {
-          rich_text: toNotionRichText(this.locationURL.host + this.locationURL.pathname),
+          url: this.locationURL.host + this.locationURL.pathname,
         },
 
         // "YouTube Link" omitted.
