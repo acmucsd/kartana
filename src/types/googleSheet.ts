@@ -42,5 +42,4 @@ export interface HostFormResponse {
   'Email Address': string;
   'BACKUP ONLINE VENUE: Would you like your backup online venue to be a standard Zoom room or Discord?': string;
   'What ACMURL do you want for the Facebook event page?': string;
-  'Imported to Notion': string;
 }

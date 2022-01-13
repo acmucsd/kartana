@@ -2,7 +2,7 @@
  * The schema of the Host Form response Google Sheet.
  * 
  * This is just an ordered copy of the header values of the
- * Host Form Response Google Sheet as of Fri, 26 Nov 2021 17:24:25 PDT.
+ * Host Form Response Google Sheet as of Thu, 13 Jan 2022 20:16:21 PST.
  */
 export const googleSheetSchema = [
   'Event name',
@@ -22,6 +22,7 @@ export const googleSheetSchema = [
   'Third choice for venue',
   'Other venue details?',
   'Will you need a projector?',
+  'Will you want a recording of your in person event uploaded to the ACM YouTube channel?',
   'If yes to the previous question, do you have any special recording requests?',
   'Event Link (ACMURL)',
   'Is there a sponsor that will pay for this event?',
@@ -41,5 +42,4 @@ export const googleSheetSchema = [
   'Email Address',
   'BACKUP ONLINE VENUE: Would you like your backup online venue to be a standard Zoom room or Discord?',
   'What ACMURL do you want for the Facebook event page?',
-  'Imported to Notion',
 ];

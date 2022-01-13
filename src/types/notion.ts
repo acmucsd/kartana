@@ -12,6 +12,7 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Henry Booker Room'
 | 'Fung Auditorium'
 | 'CSE 1202'
+| 'Room 2315'
 | 'PC Eleanor Roosevelt Room'
 | 'PC Marshall Room'
 | 'PC Muir College Room'
@@ -29,7 +30,9 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Library Walk'
 | 'Lecture Hall (See Details)'
 | 'Off Campus'
-| 'Other (See Details)';
+| 'Other (See Details)'
+| 'CSE B225'
+| 'PC Forum';
 
 /**
  * Converter from the Host Form's locations to the Notion Calendar
@@ -69,10 +72,10 @@ export const notionLocationTag = {
  */
 export const notionYoutubeAnswer = {
   'No, I do not want anything uploaded to YouTube': 'No I do not want anything uploaded to YouTube',
-  'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
+  'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me': 'Yes but I will record it myself and send the Events team a link',
   'Yes, I would like the Events team to handle the all aspects of recording for my event (in person events only)': 'Yes I would like the Events team to handle the all aspects of recording for my event',
   'Yes, and I will upload it to the ACM YouTube channel myself': 'Yes and I will upload it to the ACM YouTube channel myself',
-  'Yes, but I will record it myself and send the Events team a link': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
+  'Yes, but I will record it myself and send the Events team a link': 'Yes but I will record it myself and send the Events team a link',
   '': 'No I do not want anything uploaded to YouTube',
 };
 /* eslint-enable max-len */
@@ -95,7 +98,9 @@ export type EventType = 'Competition'
 | 'Side Projects Showcase'
 | 'Projects Kickoff'
 | 'Kickoff'
-| 'Info Session';
+| 'Mid Quarter Meeting'
+| 'Info Session'
+| 'PENDING EVENT HOST WORKSHOP';
 
 /**
  * User-defined Type Guard for the EventType.
@@ -118,7 +123,9 @@ export const isEventType = (type: string): type is EventType => {
     || type === 'Side Projects Showcase'
     || type === 'Projects Kickoff'
     || type === 'Kickoff'
-    || type === 'Info Session';
+    || type === 'Info Session'
+    || type === 'PENDING EVENT HOST WORKSHOP'
+    || type === 'Mid Quarter Meeting';
 };
 
 /**
@@ -146,7 +153,8 @@ export type StudentOrg = 'ACM General'
 | 'Contrary Capital'
 | 'Phi Beta Lambda'
 | 'Quantum Computing at UCSD'
-| 'Girls Who Code';
+| 'Girls Who Code'
+| 'The Zone';
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -176,5 +184,7 @@ export const isStudentOrg = (org: string): org is StudentOrg => {
   || org === 'SASE'
   || org === 'Contrary Capital'
   || org === 'Phi Beta Lambda'
-  || org === 'Quantum Computing at UCSD';
+  || org === 'Quantum Computing at UCSD'
+  || org === 'Girls Who Code'
+  || org === 'The Zone';
 };

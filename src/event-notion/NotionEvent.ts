@@ -195,7 +195,8 @@ export default class NotionEvent {
   | 'PR In Progress'
   | 'PR Done'
   | 'PR Unconfirmed Details'
-  | 'PR Waiting for link update';
+  | 'PR Waiting for link update'
+  | 'PR Cancelled';
 
   // The status of the CSI Intake Form submission required for this Event.
   private intakeFormStatus: 'Intake Form N/A'
@@ -213,6 +214,9 @@ export default class NotionEvent {
   | 'TAP Approved'
   | 'TAP Denied'
   | 'TAP CANCELLED';
+
+  // A copy of the CSI Intake form approval.
+  private approvedIntake: File | null;
 
   // The Funding Manager designated to get funding for this Event.
   private fundingManager: NotionUser | null;
@@ -242,6 +246,9 @@ export default class NotionEvent {
   
   // Any additional requests with regards to the Recording requirements of an Event.
   private recordingRequests: string;
+
+  // The invoice for food funding.
+  private foodInvoice: File | null;
 
   // The Event Coordinator assigned to manage this Event.
   private eventCoordinator: NotionUser | null;
@@ -517,9 +524,9 @@ export default class NotionEvent {
         'Projected Attendance': {
           number: this.projectedAttendance,
         },
-        // "Location URL" omitted.
-        //
-        // We don't get this from the host form.
+        'Location URL': {
+          rich_text: toNotionRichText(this.locationURL.host + this.locationURL.pathname),
+        },
 
         // "YouTube Link" omitted.
         //

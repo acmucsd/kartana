@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Fri, 26 Nov 2021 17:24:25 PDT.
+ * Thu, 13 Jan 2022 20:16:21 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -147,9 +147,19 @@ export const notionCalSchema = {
           'color': 'blue',
         },
         {
+          'id': 'd6dcbc95-2395-4e7c-b968-c16fcec83008',
+          'name': 'Mid Quarter Meeting',
+          'color': 'green',
+        },
+        {
           'id': '0d903a72-17d0-4e0f-a322-dc3cc2257190',
           'name': 'Info Session',
           'color': 'green',
+        },
+        {
+          'id': '56410925-4f27-4c8f-b1bd-99ed593389f5',
+          'name': 'PENDING EVENT HOST WORKSHOP',
+          'color': 'red',
         },
       ],
     },
@@ -194,6 +204,11 @@ export const notionCalSchema = {
           'id': 'a714409f-6eff-4dd7-b74f-10fb5490ae25',
           'name': 'PR Waiting for link update',
           'color': 'pink',
+        },
+        {
+          'id': '66559891-92fa-4aa6-a4be-9dde92393333',
+          'name': 'PR Cancelled',
+          'color': 'gray',
         },
       ],
     },
@@ -281,6 +296,12 @@ export const notionCalSchema = {
       ],
     },
   },
+  'Approved Intake': {
+    'id': '%40hOD',
+    'name': 'Approved Intake',
+    'type': 'files',
+    'files': {},
+  },
   'Funding Manager': {
     'id': 'APk4',
     'name': 'Funding Manager',
@@ -333,6 +354,11 @@ export const notionCalSchema = {
         {
           'id': '5c493725-ea0a-4f06-ae06-7ba3fcc8cfac',
           'name': 'CSE 1202',
+          'color': 'default',
+        },
+        {
+          'id': 'cbc67309-d8bf-4abb-a959-ece3d41dfd91',
+          'name': 'Room 2315',
           'color': 'default',
         },
         {
@@ -425,6 +451,11 @@ export const notionCalSchema = {
           'name': 'Other (See Details)',
           'color': 'gray',
         },
+        {
+          'id': 'a323da05-b7e3-4fdd-b8df-6b86c543f209',
+          'name': 'CSE B225',
+          'color': 'default',
+        },
       ],
     },
   },
@@ -439,6 +470,12 @@ export const notionCalSchema = {
     'name': 'Recording Requests',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'Invoice (Food)': {
+    'id': 'ReRE',
+    'name': 'Invoice (Food)',
+    'type': 'files',
+    'files': {},
   },
   'Event Coordinator': {
     'id': 'TC0%24',
@@ -636,6 +673,11 @@ export const notionCalSchema = {
         {
           'id': '964dec4b-1c89-4d16-81f0-92e604782576',
           'name': 'Girls Who Code',
+          'color': 'default',
+        },
+        {
+          'id': 'c03ded4c-1a97-4303-9ca6-24f210812393',
+          'name': 'The Zone',
           'color': 'default',
         },
       ],
@@ -1075,6 +1117,11 @@ export const notionCalSchema = {
           'name': 'Other (See Details)',
           'color': 'gray',
         },
+        {
+          'id': 'a5193d10-1beb-41b3-9361-850518e29771',
+          'name': 'PC Forum',
+          'color': 'red',
+        },
       ],
     },
   },
@@ -1109,9 +1156,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a9c8ca5b-43cf-4582-b68d-39f790818062',
-          // Again, line is too long.
-          // eslint-disable-next-line max-len
-          'name': 'Yes I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me',
+          'name': 'Yes but I will record it myself and send the Events team a link',
           'color': 'gray',
         },
         {
