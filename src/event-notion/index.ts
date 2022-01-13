@@ -3,7 +3,7 @@ import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
-import { differenceWith, isEqual, without } from 'lodash';
+import { differenceWith, isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
 import { HostFormResponse } from '../types';
 import { exit } from 'process';
