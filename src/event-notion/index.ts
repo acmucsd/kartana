@@ -164,7 +164,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   // logic and other things.
   //
   // I'll probably configure an error transport for Winston so that errors automatically get
-  // reported to Dec Team when this whole thing breaks.
+  // reported to Dev Team when this whole thing breaks.
   Logger.debug('Validating schemas for data sources...');
   Logger.debug('Validating Notion database schema...');
   validateNotionDatabase(database);

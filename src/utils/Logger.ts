@@ -29,6 +29,8 @@ const consoleLogFormat = printf((information) => {
  *
  * Logger saves colorized output to standard out and creates a daily rotated log file
  * of the same logs for safekeeping purposes.
+ * 
+ * TODO Add Error Transport to send Discord webhook messages to the maintainer.
  */
 export default createLogger({
   format: json(),
