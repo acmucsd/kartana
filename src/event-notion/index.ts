@@ -206,7 +206,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
     // If the host form row has not been imported yet (checkbox not ticked) and it has ANY
     // non-empty values...
     if (checkboxRow['Imported to Notion'] === 'FALSE'
-    && formResponse['Event name'] === '') {
+    && formResponse['Event name'] !== '') {
       // Keep track of the GoogleSpreadsheetRow in newEventRows and keep it in our filtered array.
       newEventRows.push(eventRow);
       return true;
