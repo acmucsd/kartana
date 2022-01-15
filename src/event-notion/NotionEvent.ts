@@ -455,7 +455,6 @@ export default class NotionEvent {
    * @returns the URL of the created Page for the event.
    */
   public async uploadToNotion(client: Client): Promise<string> {
-    console.log(this.locationURL.host + this.locationURL.pathname);
     const createPagePayload: CreatePageParameters = {
       parent: {
         database_id: process.env.NOTION_CALENDAR_ID,
@@ -547,6 +546,7 @@ export default class NotionEvent {
         //
         // This is required until the Host Form guarantees the Event Link field
         // is filled regardless of situation.
+        // TODO Remove this along with null check for Event Link field.
         ...(this.locationURL !== null ? {
           'Location URL': {
             url: this.locationURL.host + this.locationURL.pathname,
