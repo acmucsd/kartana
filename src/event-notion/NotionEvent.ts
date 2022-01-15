@@ -419,7 +419,7 @@ export default class NotionEvent {
     // Leave field empty if there's no response for "Event Link" in the host form.
     // TODO Remove this check once host form is fixed. This field _should_ be included
     // with every event; skirting the required field is not ok.
-    this.locationURL = formResponse['Event Link (ACMURL)'] ? new URL(formResponse['Event Link (ACMURL)']) : null;
+    this.locationURL = formResponse['Event Link (ACMURL)'] !== '' ? new URL(formResponse['Event Link (ACMURL)']) : null;
     this.youtubeLink = null;
     this.prRequests = '';
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
@@ -547,7 +547,7 @@ export default class NotionEvent {
         //
         // This is required until the Host Form guarantees the Event Link field
         // is filled regardless of situation.
-        ...(this.locationURL ? {
+        ...(this.locationURL !== null ? {
           'Location URL': {
             url: this.locationURL.host + this.locationURL.pathname,
           },
