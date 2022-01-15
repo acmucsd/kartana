@@ -416,7 +416,10 @@ export default class NotionEvent {
       // ...we need a CSI form; otherwise, no.
         ? 'CSI Form TODO' : 'CSI Form N/A';
     this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) || -1;
-    this.locationURL = new URL(formResponse['Event Link (ACMURL)']);
+    // Leave field empty if there's no response for "Event Link" in the host form.
+    // TODO Remove this check once host form is fixed. This field _should_ be included
+    // with every event; skirting the required field is not ok.
+    this.locationURL = formResponse['Event Link (ACMURL)'] ? new URL(formResponse['Event Link (ACMURL)']) : null;
     this.youtubeLink = null;
     this.prRequests = '';
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
@@ -540,9 +543,15 @@ export default class NotionEvent {
         'Projected Attendance': {
           number: this.projectedAttendance,
         },
-        'Location URL': {
-          url: this.locationURL.host + this.locationURL.pathname,
-        },
+        // Check whether the location URL is empty before adding it.
+        //
+        // This is required until the Host Form guarantees the Event Link field
+        // is filled regardless of situation.
+        ...(this.locationURL ? {
+          'Location URL': {
+            url: this.locationURL.host + this.locationURL.pathname,
+          },
+        } : {}),
 
         // "YouTube Link" omitted.
         //
