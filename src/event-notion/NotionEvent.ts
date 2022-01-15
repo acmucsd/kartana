@@ -161,6 +161,9 @@ const getEventInterval = (response: HostFormResponse): Interval => {
  * inconsistencies in what Notion or other API's may store.
  */
 export default class NotionEvent {
+  // The original HostFormResponse object used to generate this NotionEvent.
+  private response: HostFormResponse;
+
   // The name of the Event. (the Title of the Notion Page)
   private name: string;
 
@@ -170,6 +173,14 @@ export default class NotionEvent {
    */
   public getName(): string {
     return this.name;
+  }
+
+  /**
+   * Gets the original HostFormResponse object the Event was created from.
+   * @returns The original HostFormResponse object.
+   */
+  public getHostFormResponse(): HostFormResponse {
+    return this.response;
   }
 
   // The funding status for the Event.
@@ -361,6 +372,7 @@ export default class NotionEvent {
   private historianOnsite: NotionUser | null;
 
   constructor(formResponse: HostFormResponse) {
+    this.response = formResponse;
     this.name = formResponse['Event name'];
     this.fundingStatus = formResponse['Will your event require funding?'] === 'Yes'
       ? 'Funding TODO'
@@ -384,11 +396,6 @@ export default class NotionEvent {
     this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
     if (formResponse['Where is your event taking place?'] === 'My event is on Discord only') {
       this.location = 'Discord (See Details)';
-      this.locationBackup1 = null;
-      this.locationBackup2 = null;
-    }
-    if (formResponse['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room") {
-      this.location = 'Zoom (See Details)';
       this.locationBackup1 = null;
       this.locationBackup2 = null;
     }
