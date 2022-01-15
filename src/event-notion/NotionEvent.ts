@@ -363,7 +363,7 @@ export default class NotionEvent {
   | 'No I do not want anything uploaded to YouTube';
 
   // The ACMURL for the Facebook Events page for this Event, if any. 
-  private fbACMURL: URL;
+  private fbACMURL: URL | null;
 
   // Notes with regards to the date and times this Event will be hosted at.
   private dateTimeNotes: string;
@@ -441,7 +441,9 @@ export default class NotionEvent {
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
-    this.fbACMURL = null;
+    this.fbACMURL = formResponse['What ACMURL do you want for the Facebook event page?'] !== ''
+      ? new URL(formResponse['What ACMURL do you want for the Facebook event page?'])
+      : null;
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
   }
@@ -614,9 +616,12 @@ export default class NotionEvent {
         'Upload to Youtube?': {
           select: { name: this.uploadToYoutube },
         },
-        // "FB ACMURL" omitted.
-        //
-        // We don't make this ACMURL.
+        ...(this.fbACMURL !== null ? {
+          'FB ACMURL': {
+            url: this.fbACMURL.host + this.fbACMURL.pathname,
+          },
+        } : {}),
+
         'Date/Time Notes': {
           rich_text: toNotionRichText(this.dateTimeNotes),
         },
