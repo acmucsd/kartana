@@ -256,14 +256,17 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   // Then take all our events that we've converted and not only
   // upload them to notion, but ALSO make sure the Google spreadsheet
   // has the checkbox ticked if there were no errors with the import.
-  await Promise.all(notionEventsToImport.map(async (event, index) => {
+  await Promise.all(notionEventsToImport.map(async (event: NotionEvent, index) => {
     // Upload to Notion.
     try {
       const url = await event.uploadToNotion(notion);
       // Report that we've successfully imported the event on Discord.
       const successEmbed = new MessageEmbed()
         .setTitle('📥 Imported new event!')
-        .setDescription(`**Event name:** ${event.getName()}\n**URL:** ${url}`)
+        .setDescription(
+          `**Event name:** ${event.getName()}
+          **URL:** ${url}
+          **Hosted by:** ${event.getHostFormResponse()['Event director(s)']}`)
         .setColor('GREEN');
       await webhook.send({
         content: `<@&${config.logisticsTeamId}>`,
