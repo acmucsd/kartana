@@ -231,6 +231,9 @@ export default class NotionEvent {
 
   // The Funding Manager designated to get funding for this Event.
   private fundingManager: NotionUser | null;
+  
+  // The description used by the host form submitter to describe the event.
+  private description: string;
 
   // The description used by Marketing to advertise this Event.
   private marketingDescription: string;
@@ -374,6 +377,7 @@ export default class NotionEvent {
   constructor(formResponse: HostFormResponse) {
     this.response = formResponse;
     this.name = formResponse['Event name'];
+    this.description = formResponse['Event description'];
     this.fundingStatus = formResponse['Will your event require funding?'] === 'Yes'
       ? 'Funding TODO'
       : 'Funding Not Requested';
@@ -387,7 +391,6 @@ export default class NotionEvent {
     this.intakeFormStatus = needsIntakeForm(formResponse);
     this.TAPStatus = needsTAPForm(formResponse);
     this.fundingManager = null;
-    this.marketingDescription = formResponse['Any additional comments or requests?'];
     // This question is also equally long.
     // eslint-disable-next-line max-len
     this.additionalFinanceInfo = formResponse['Anything else you would like to let the Finance Team know about your event?'];
@@ -428,7 +431,7 @@ export default class NotionEvent {
     // with every event; skirting the required field is not ok.
     this.locationURL = formResponse['Event Link (ACMURL)'] !== '' ? new URL(formResponse['Event Link (ACMURL)']) : null;
     this.youtubeLink = null;
-    this.prRequests = '';
+    this.prRequests = formResponse['Any additional comments or requests?'];
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
     this.driveLink = null;
     this.projectorStatus = formResponse['Will you need a projector?'] === 'Yes' ? 'Yes' : 'No';
@@ -494,9 +497,9 @@ export default class NotionEvent {
         // 
         // We don't know how to set this yet.
 
-        'Marketing Description': {
-          rich_text: toNotionRichText(this.marketingDescription),
-        },
+        // "Marketing Description" omitted.
+        //
+        // The form does not exactly provide a specific way to deduce this.
         'Additional Finance Info': {
           rich_text: toNotionRichText(this.additionalFinanceInfo),
         },
@@ -594,7 +597,7 @@ export default class NotionEvent {
           }),
         },
         'Event Description': {
-          rich_text: toNotionRichText(this.marketingDescription),
+          rich_text: toNotionRichText(this.description),
         },
         // "Booking Confirmation" omitted.
         //
