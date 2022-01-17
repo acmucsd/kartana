@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Thu, 13 Jan 2022 20:16:21 PST.
+ * Mon, 17 Jan 2022 00:39:31 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -160,6 +160,11 @@ export const notionCalSchema = {
           'id': '56410925-4f27-4c8f-b1bd-99ed593389f5',
           'name': 'PENDING EVENT HOST WORKSHOP',
           'color': 'red',
+        },
+        {
+          'id': '29b70f22-6ec6-4d05-a096-e065deae77af',
+          'name': 'OPEN RESERVATION',
+          'color': 'orange',
         },
       ],
     },
