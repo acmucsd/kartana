@@ -32,7 +32,8 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Off Campus'
 | 'Other (See Details)'
 | 'CSE B225'
-| 'PC Forum';
+| 'PC Forum'
+| 'PC Bear Room';
 
 /**
  * Converter from the Host Form's locations to the Notion Calendar
