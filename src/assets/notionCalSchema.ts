@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Mon, 17 Jan 2022 13:51:24 PST.
+ * Mon, 17 Jan 2022 14:40:07 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -378,7 +378,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'd3dec2f1-4d56-49bb-9139-ec3775188d11',
-          'name': 'PC Muir College Room',
+          'name': 'PC Muir Room',
           'color': 'default',
         },
         {
@@ -413,7 +413,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a4b65aa3-c36c-4cc0-b765-e8ab38175948',
-          'name': 'Multi-Purpose Room',
+          'name': 'Student Services Center Multi-Purpose Room',
           'color': 'default',
         },
         {
@@ -443,7 +443,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'fb4c37cb-346c-4b09-8379-5fc06e43f278',
-          'name': 'Lecture Hall (See Details)',
+          'name': 'Lecture Hall',
           'color': 'gray',
         },
         {
@@ -782,7 +782,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a4b65aa3-c36c-4cc0-b765-e8ab38175948',
-          'name': 'Multi-Purpose Room',
+          'name': 'Student Services Center Multi-Purpose Room',
           'color': 'default',
         },
         {
@@ -807,7 +807,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a24a97aa-5003-4138-a2df-94750a4a9abe',
-          'name': ' Student Services Center Multi Purpose Room',
+          'name': 'Multi Purpose Room',
           'color': 'default',
         },
         {
@@ -1084,7 +1084,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a4b65aa3-c36c-4cc0-b765-e8ab38175948',
-          'name': 'Multi-Purpose Room',
+          'name': 'Student Services Center Multi-Purpose Room',
           'color': 'default',
         },
         {

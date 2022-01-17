@@ -15,20 +15,20 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Room 2315'
 | 'PC Eleanor Roosevelt Room'
 | 'PC Marshall Room'
-| 'PC Muir College Room'
+| 'PC Muir Room'
 | 'PC Warren Room'
 | 'PC Revelle Room'
 | 'PC Red Shoe Room'
 | 'PC Snake Path Room'
 | 'PC East Ballroom'
 | 'PC West Ballroom'
-| 'Multi-Purpose Room'
+| 'Student Services Center Multi-Purpose Room'
 | 'Warren Mall'
 | 'Warren Bear'
 | 'Warren College SAC'
 | 'Sixth College Lodge'
 | 'Library Walk'
-| 'Lecture Hall (See Details)'
+| 'Lecture Hall'
 | 'Off Campus'
 | 'Other (See Details)'
 | 'CSE B225'
@@ -42,24 +42,29 @@ export type EventLocation = 'Zoom (See Details)'
  * Since they don't map 1:1, this effectively converts them properly.
  */
 export const notionLocationTag = {
-  'Price Center West Ballroom': 'PC West Ballroom',
-  'Price Center East Ballroom': 'PC East Ballroom',
-  'Price Center Roosevelt College Room': 'PC Eleanor Roosevelt Room',
-  'Price Center Marshall College Room': 'PC Marshall Room',
-  'Price Center Warren College Room': 'PC Warren Room',
-  'Price Center Revelle College Room': 'PC Revelle Room',
-  'Price Center Muir College Room': 'PC Muir College Room',
-  'Price Center Red Shoe Room': 'PC Red Shoe Room',
-  'Student Services Center Multi Purpose Room': 'Multi-Purpose Room',
-  'EBU-1 Qualcomm Room': 'Qualcomm Room',
-  'EBU-1 Henry Booker Room': 'Henry Booker Room',
+  'PC West Ballroom': 'PC West Ballroom',
+  'PC East Ballroom': 'PC East Ballroom',
+  'PC Eleanor Roosevelt Room': 'PC Eleanor Roosevelt Room',
+  'PC Marshall Room': 'PC Marshall Room',
+  'PC Warren Room': 'PC Warren Room',
+  'PC Revelle Room': 'PC Revelle Room',
+  'PC Muir Room': 'PC Muir Room',
+  'PC Red Shoe Room': 'PC Red Shoe Room',
+  'PC Bear Room': 'PC Bear Room',
+  'PC Forum': 'PC Forum',
+  'Student Services Center Multi-Purpose Room': 'Student Services Center Multi-Purpose Room',
+  'Qualcomm Room': 'Qualcomm Room',
+  'Henry Booker Room': 'Henry Booker Room',
   'CSE 1202': 'CSE 1202',
+  'CSE B225': 'CSE B225',
   'CSE Labs': 'Other (See Details)',
   'Fung Auditorium': 'Fung Auditorium',
+  'Warren Bear': 'Warren Bear',
   'Warren College SAC': 'Warren College SAC',
   'Warren Mall': 'Warren Mall',
   'Sixth College Lodge': 'Sixth College Lodge',
-  'Lecture Hall': 'Lecture Hall (See Details)',
+  'Lecture Hall': 'Lecture Hall',
+  'Library Walk': 'Library Walk',
   'Other': 'Other (See Details)',
 };
 
