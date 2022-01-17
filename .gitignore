@@ -254,3 +254,6 @@ build/
 
 # Google API creds
 gapi-service-account-creds.json
+
+# Notion Database properties
+database.properties
