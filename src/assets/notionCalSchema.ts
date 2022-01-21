@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Mon, 17 Jan 2022 14:40:07 PST.
+ * Thu, 20 Jan 2022 22:45:16 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -60,6 +60,11 @@ export const notionCalSchema = {
         {
           'id': '1649066e-886a-4699-b584-0c38e08d5cba',
           'name': 'PEEF Completed',
+          'color': 'brown',
+        },
+        {
+          'id': '6c69cfc7-b3eb-4a50-9177-58dbd45c2785',
+          'name': 'Internal Funding',
           'color': 'brown',
         },
       ],
@@ -299,6 +304,14 @@ export const notionCalSchema = {
           'color': 'red',
         },
       ],
+    },
+  },
+  'Funding Amount': {
+    'id': '%40gPB',
+    'name': 'Funding Amount',
+    'type': 'number',
+    'number': {
+      'format': 'number',
     },
   },
   'Approved Intake': {
