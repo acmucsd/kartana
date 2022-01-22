@@ -444,9 +444,21 @@ export default class NotionEvent {
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
-    this.fbACMURL = formResponse['What ACMURL do you want for the Facebook event page?'] !== ''
-      ? new URL(formResponse['What ACMURL do you want for the Facebook event page?'])
-      : null;
+    try {
+      if (formResponse['What ACMURL do you want for the Facebook event page?'].startsWith('acmurl.com')) {
+        this.fbACMURL = new URL('https://' + formResponse['What ACMURL do you want for the Facebook event page?']);
+      } else {
+        this.fbACMURL = formResponse['What ACMURL do you want for the Facebook event page?'] !== ''
+          ? new URL(formResponse['What ACMURL do you want for the Facebook event page?'])
+          : null; 
+      }
+    } catch (e) {
+      Logger.warn(`Event ${this.name} has erroneous FB ACMURL input! Setting as null.`, {
+        input: formResponse['What ACMURL do you want for the Facebook event page?'],
+      });
+      this.fbACMURL = null;
+    }
+    
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
   }
