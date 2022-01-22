@@ -426,10 +426,25 @@ export default class NotionEvent {
       // ...we need a CSI form; otherwise, no.
         ? 'CSI Form TODO' : 'CSI Form N/A';
     this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) || -1;
-    // Leave field empty if there's no response for "Event Link" in the host form.
-    // TODO Remove this check once host form is fixed. This field _should_ be included
-    // with every event; skirting the required field is not ok.
-    this.locationURL = formResponse['Event Link (ACMURL)'] !== '' ? new URL(formResponse['Event Link (ACMURL)']) : null;
+    // Add a check to ensure no ill-written URL's are included.
+    // Basically, try to fix classic shortenings of ACMURL's, and if there's still a URL parse error
+    // Just warn the console and set the URL as null.
+    //
+    // TODO Ask host form to validate URL input fields as URL's.
+    try {
+      if (formResponse['Event Link (ACMURL)'].startsWith('acmurl.com')) {
+        this.locationURL = new URL('https://' + formResponse['Event Link (ACMURL)']);
+      } else {
+        this.locationURL = formResponse['Event Link (ACMURL)'] !== ''
+          ? new URL(formResponse['Event Link (ACMURL)'])
+          : null; 
+      }
+    } catch (e) {
+      Logger.warn(`Event ${this.name} has erroneous location URL input! Setting as null.`, {
+        input: formResponse['Event Link (ACMURL)'],
+      });
+      this.locationURL = null;
+    }
     this.youtubeLink = null;
     this.prRequests = formResponse['Any additional comments or requests?'];
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
@@ -444,6 +459,11 @@ export default class NotionEvent {
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
+    // Add a check to ensure no ill-written URL's are included.
+    // Basically, try to fix classic shortenings of ACMURL's, and if there's still a URL parse error
+    // Just warn the console and set the URL as null.
+    //
+    // TODO Ask host form to validate URL input fields as URL's.
     try {
       if (formResponse['What ACMURL do you want for the Facebook event page?'].startsWith('acmurl.com')) {
         this.fbACMURL = new URL('https://' + formResponse['What ACMURL do you want for the Facebook event page?']);
@@ -458,7 +478,6 @@ export default class NotionEvent {
       });
       this.fbACMURL = null;
     }
-    
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
   }
