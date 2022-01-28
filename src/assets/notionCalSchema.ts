@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Thu, 20 Jan 2022 22:45:16 PST.
+ * Thu, 27 Jan 2022 21:54:43 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -311,7 +311,7 @@ export const notionCalSchema = {
     'name': 'Funding Amount',
     'type': 'number',
     'number': {
-      'format': 'number',
+      'format': 'dollar',
     },
   },
   'Approved Intake': {
@@ -1007,6 +1007,25 @@ export const notionCalSchema = {
     'name': 'Event Description',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'Participation Waivers': {
+    'id': 'r%60ZI',
+    'name': 'Participation Waivers',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': 'df00581d-0080-4727-8a08-feea425b2f93',
+          'name': 'Required',
+          'color': 'red',
+        },
+        {
+          'id': 'aba6a139-a400-4afc-b554-e0b40a138928',
+          'name': 'Not Required',
+          'color': 'green',
+        },
+      ],
+    },
   },
   'Booking Confirmation': {
     'id': 'rghL',
