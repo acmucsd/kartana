@@ -712,6 +712,12 @@ export const notionCalSchema = {
     'type': 'files',
     'files': {},
   },
+  'Amount Approved': {
+    'id': '%5EjiH',
+    'name': 'Amount Approved',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
   'Location Backup 2': {
     'id': '%60%3DK%3A',
     'name': 'Location Backup 2',
