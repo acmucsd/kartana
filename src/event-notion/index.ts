@@ -5,8 +5,7 @@ import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { differenceWith, isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
-import { HostFormResponse } from '../types';
-import { exit } from 'process';
+import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
 import { MessageEmbed, WebhookClient } from 'discord.js';
 
@@ -27,13 +26,13 @@ export const getNotionAPI = async (notionToken: string) => {
  * @param database The Notion Database we are running modifications on.
  */
 export const validateNotionDatabase = (database: GetDatabaseResponse) => {
-  const databaseDiff = diff(database.properties, notionCalSchema);
+  const databaseDiff = diff(notionCalSchema, database.properties);
   if (databaseDiff.length !== 0) {
     Logger.error('Notion Calendar schema is mismatched! Halting!', {
       type: 'error',
       diff: databaseDiff, 
     });
-    exit(1);
+    throw new NotionSchemaMismatchError(databaseDiff);
   }
 };
 
@@ -45,11 +44,12 @@ export const validateNotionDatabase = (database: GetDatabaseResponse) => {
  */
 export const validateGoogleSheetsSchema = (headers) => {
   if (!isEqual(headers, googleSheetSchema)) {
+    const schemaDiff = differenceWith(googleSheetSchema, headers, isEqual);
     Logger.error('Google Sheets schema is mismatched! Halting!', {
       type: 'error',
-      diff: differenceWith(googleSheetSchema, headers, isEqual),
+      diff: schemaDiff,
     });
-    exit(1);
+    throw new GoogleSheetsSchemaMismatchError(schemaDiff);
   }
 };
 
@@ -109,7 +109,7 @@ export interface EventNotionPipelineConfig {
   hostFormSheetName: string;
   googleSheetAPICredentials: ServiceAccountCredentials;
   notionCalendarId: string;
-  webhookURL: string;
+  webhook: WebhookClient;
   notionToken: string;
 }
 
@@ -132,6 +132,8 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   Logger.debug('Getting API clients...');
   // The Notion API is easy enough to get.
   const notion = await getNotionAPI(config.notionToken);
+  // Get the Discord webhook as well.
+  const webhook = config.webhook;
 
   // Getting our Google Spreasheet is harder, but not by much.
   // This is using the `google-spreadsheet` NPM package, but we need to basically
@@ -171,10 +173,6 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
 
   Logger.debug('Validating Google Sheets schema...');
   validateGoogleSheetsSchema(hostForm.headers);
-
-  // We need to get access to our Discord webhook as well.
-  // Get it from configs and just make a webhook client.
-  const webhook = new WebhookClient({ url: config.webhookURL });
 
   Logger.info('Pipeline ready! Running.');
   Logger.info(`${hostForm.data.length} rows in Host Form CSV detected. Checking for new events...`);
