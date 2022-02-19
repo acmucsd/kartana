@@ -410,7 +410,7 @@ export default class NotionEvent {
     this.bookingTime = null;
     // Bruh.
     // eslint-disable-next-line max-len
-    this.recordingRequests = formResponse['If yes to the previous question: string; do you have any special recording requests?'] || '';
+    this.recordingRequests = formResponse['If yes to the previous question, do you have any special recording requests?'];
     this.eventCoordinator = null;
     this.checkinCode = '';
     this.fbCoHost = '';
@@ -531,17 +531,22 @@ export default class NotionEvent {
         // "Marketing Description" omitted.
         //
         // The form does not exactly provide a specific way to deduce this.
-        'Additional Finance Info': {
-          rich_text: toNotionRichText(this.additionalFinanceInfo),
-        },
+        ...(this.additionalFinanceInfo !== '' ? {
+          'Additional Finance Info': {
+            rich_text: toNotionRichText(this.additionalFinanceInfo),
+          },
+        } : {}),
         'Location': {
           select: { name: this.location },
         },
         // Booking Time omitted.
 
-        'Recording Requests': {
-          rich_text: toNotionRichText(this.recordingRequests),
-        },
+        ...(this.recordingRequests !== '' ? {
+          'Recording Requests': {
+            rich_text: toNotionRichText(this.recordingRequests),
+          },
+        } : {}),
+
         // "Event Coordinator" omitted.
         //
         // EC's will assign themselves an event to deal with, per
@@ -551,9 +556,12 @@ export default class NotionEvent {
         //
         // This is set by EC's and Marketing, not us.
 
-        'FB CoHost': {
-          rich_text: toNotionRichText(this.fbCoHost),
-        },
+        ...(this.fbCoHost !== '' ? {
+          'FB CoHost': {
+            rich_text: toNotionRichText(this.fbCoHost),
+          },
+        } : {}),
+
         'Recording': {
           select: { name: this.recording },
         },
@@ -599,9 +607,12 @@ export default class NotionEvent {
         // "YouTube Link" omitted.
         //
         // We don't get this from the host form.
-        'PR Requests': {
-          rich_text: toNotionRichText(this.prRequests),
-        },
+        ...(this.prRequests !== '' ? {
+          'PR Requests': {
+            rich_text: toNotionRichText(this.prRequests),
+          },
+        } : {}),
+
         // "AV Equipment" omitted.
         //
         // We don't automatically assign this.
@@ -619,17 +630,25 @@ export default class NotionEvent {
         // 
         // This COULD be done if everyone had their names set on Notion,
         // but it'll be difficult to find them otherwise.
-        'Location Details': {
-          rich_text: toNotionRichText(this.locationDetails),
-        },
+
+        ...(this.locationDetails !== '' ? {
+          'Location Details': {
+            rich_text: toNotionRichText(this.locationDetails),
+          },
+        } : {}),
+
         'Funding Source': {
           multi_select: this.fundingSource.map((fundingSource) => {
             return { name: fundingSource };
           }),
         },
-        'Event Description': {
-          rich_text: toNotionRichText(this.description),
-        },
+
+        ...(this.description !== '' ? {
+          'Event Description': {
+            rich_text: toNotionRichText(this.description),
+          },
+        } : {}),
+
         // "Booking Confirmation" omitted.
         //
         // We DEFINITELY don't add this, since we don't automate
@@ -644,9 +663,13 @@ export default class NotionEvent {
             end: this.date.end.toISO(),
           },
         },
-        'Requested Items': {
-          rich_text: toNotionRichText(this.requestedItems),
-        },
+
+        ...(this.requestedItems !== '' ? {
+          'Requested Items': {
+            rich_text: toNotionRichText(this.requestedItems),
+          },
+        } : {}),
+
         'Upload to Youtube?': {
           select: { name: this.uploadToYoutube },
         },
@@ -656,9 +679,11 @@ export default class NotionEvent {
           },
         } : {}),
 
-        'Date/Time Notes': {
-          rich_text: toNotionRichText(this.dateTimeNotes),
-        },
+        ...(this.dateTimeNotes !== '' ? {
+          'Date/Time Notes': {
+            rich_text: toNotionRichText(this.dateTimeNotes),
+          },
+        } : {}),
         // "Historian Onsite" omitted.
         //
         // We don't know this yet.

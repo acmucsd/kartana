@@ -23,7 +23,7 @@ export interface HostFormResponse {
   'Other venue details?': string;
   'Will you need a projector?': string;
   'Will you want a recording of your in person event uploaded to the ACM YouTube channel? ': string;
-  'If yes to the previous question: string; do you have any special recording requests?': string;
+  'If yes to the previous question, do you have any special recording requests?': string;
   'Event Link (ACMURL)': string;
   'Is there a sponsor that will pay for this event?': string;
   'Will you want a recording of your event uploaded to the ACM YouTube channel?': string;
