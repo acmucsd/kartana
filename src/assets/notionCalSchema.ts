@@ -326,6 +326,12 @@ export const notionCalSchema = {
     'type': 'people',
     'people': {},
   },
+  'Booking Details': {
+    'id': 'Ab%3Ae',
+    'name': 'Booking Details',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
   'Marketing Description': {
     'id': 'BW%2Cy',
     'name': 'Marketing Description',
