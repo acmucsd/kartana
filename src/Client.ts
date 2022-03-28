@@ -4,11 +4,12 @@ import Logger from './utils/Logger';
 import { BotSettings, BotClient } from './types';
 import Command from './Command';
 import ActionManager from './managers/ActionManager';
+import NotionEventSyncManager from './managers/NotionEventSyncManager';
 import configuration from './config/config';
 
 /**
  * The class representing the Discord bot.
- * Copied verbatim from BreadBot, with references to PortalAPIManager removed.
+ * Copied verbatim from BreadBot, with PortalAPIManager replaced with NotionEventSyncManager.
  *
  * Our Client class not only holds the client itself, but also implements additional
  * parameters to keep track of bot settings and registered Events and Commands.
@@ -19,8 +20,8 @@ import configuration from './config/config';
  *   adding environment variables found. If any required environment variables don't exist,
  *   we error out.
  * - Initialize our ActionManager, our method of dynamically importing Events and Commands
- * - Initialize our PortalAPIManager, our method of centralizing API tokens to the Membership
- *   Portal API.
+ * - Initialize our NotionEventSyncManager, our pipeline to automatically sync Notion Events
+ * with the Events Host Form
  * - Login to Discord API when done initializing everything.
  *
  * ActionManager does the heavy lifting, so read that as well.
@@ -41,7 +42,7 @@ export default class Client extends DiscordClient implements BotClient {
    * @param actionManager An ActionManager class to run. Injected by TypeDI.
    * @param portalAPIManager A PortalAPIManager class to run. Injected by TypeDI
    */
-  constructor(private actionManager: ActionManager) {
+  constructor(private actionManager: ActionManager, private notionEventSyncManager: NotionEventSyncManager) {
     super(configuration.clientOptions || {
       intents: [
         'GUILDS',
@@ -130,6 +131,7 @@ export default class Client extends DiscordClient implements BotClient {
     try {
       this.actionManager.initializeCommands(this);
       ActionManager.initializeEvents(this);
+      this.notionEventSyncManager.initializeNotionSync(this);
       await this.login(configuration.token);
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);
