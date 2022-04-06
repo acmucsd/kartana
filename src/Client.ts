@@ -204,6 +204,14 @@ export default class Client extends DiscordClient implements BotClient {
   }
 
   /**
+   * Manually runs the Notion sync pipeline from notionEventSyncManager.
+   * Used in commands/Sync.ts to manually run the pipeline.
+   */
+  public async runNotionPipeline(): Promise<void> {
+    await this.notionEventSyncManager.runNotionPipeline(this);
+  }
+
+  /**
    * Get a map of [commandName, Command] pairs.
    *
    * Useful to find a registered Command quickly.

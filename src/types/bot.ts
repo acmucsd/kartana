@@ -185,6 +185,12 @@ export interface BotClient extends Client {
     validNotionSchema: boolean,
     validGoogleSchema: boolean,
   }
+
+  /**
+   * Manually runs the Notion sync pipeline from notionEventSyncManager.
+   * Used in commands/Sync.ts to manually run the pipeline.
+   */
+  runNotionPipeline(args?: any): void;
 }
   
 /**
