@@ -1241,6 +1241,12 @@ export const notionCalSchema = {
     'type': 'rich_text',
     'rich_text': {},
   },
+  'Food Pickup Details': {
+    'id': 'w%5CvE',
+    'name': 'Food Pickup Details',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
   'Upload to Youtube?': {
     'id': 'yW_J',
     'name': 'Upload to Youtube?',
