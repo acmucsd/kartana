@@ -114,13 +114,6 @@ export interface BotSettings {
    */
   clientID: string;
   /**
-   * ID of maintainer of bot.
-   *
-   * Used for funny easter eggs with regards to the maintainer, such as BreadBot's
-   * trademark disobedience of its master.
-   */
-  maintainerID?: string;
-  /**
    * The Discord API bot token. Needed to authenticate the bot.
    */
   token: string;
@@ -129,6 +122,43 @@ export interface BotSettings {
     commands: string;
     events: string;
   };
+  /**
+   * The credentials required for the Notion Integration
+   * connected to the ACM UCSD Board Notion.
+   * 
+   * This Integration needs read-write access to the Notion Calendar
+   * in order for the Event Notion Pipeline to function properly.
+   */
+  notionIntegrationToken: string;
+  notionCalendarID: string;
+  /**
+   * The credentials for the GCS service account with access to the
+   * Host Form Response Google Sheet.
+   * 
+   * The first should link to the email, but the second environment variable
+   * should be a relative path to the JSON file acquired from GCS for the
+   * service account.
+   */
+  googleSheetsServiceAccountEmail: string;
+  googleSheetsKeyFile: string;
+  /**
+   * The information required to access the Host Form Response Google Sheet.
+   * 
+   * The ID can be extracted from the first part of the Google Sheet URL, and the
+   * sheet name MUST be a verbatim copy of the sheet from the Google Sheet that
+   * contains all the response.
+   */
+  googleSheetsDocID: string;
+  googleSheetsSheetName: string;
+  /**
+   * Discord webhook URL for any alerts pipeline makes.
+   */
+  discordWebhookURL: string;
+  /**
+   * Discord mention ID's for Logistics team and maintainer of pipelines.
+   */
+  maintainerID?: string;
+  logisticsTeamID?: string;
 }
   
 /**
@@ -147,6 +177,14 @@ export interface BotClient extends Client {
    * for other commands, like Help.
    */
   commands: Collection<string, Command>;
+
+  /**
+   * Flags for Kartana to run properly.
+   */
+  flags: {
+    validNotionSchema: boolean,
+    validGoogleSchema: boolean,
+  }
 }
   
 /**

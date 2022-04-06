@@ -30,43 +30,33 @@ export default class Sync extends Command {
 
   public async run(interaction: CommandInteraction): Promise<void> {
     const googleSheetKeyFile = readFileSync(process.env.GOOGLE_SHEETS_KEY_FILE);
-    /**
-     * Flags for Kartana to run properly.
-     * A simple key-value store the web server can keep.
-     * 
-     * In the future, this should be abstracted to a Service Manager.
-     */
-    const flags = {
-      validNotionSchema: true,
-      validGoogleSchema: true,
-    };
     const webhook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK_URL });
     try {
       await syncHostFormToNotionCalendar({
-        logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
-        maintainerId: process.env.DISCORD_MAINTAINER_MENTION_ID,
-        hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
-        hostFormSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME,
-        notionCalendarId: process.env.NOTION_CALENDAR_ID,
-        notionToken: process.env.NOTION_INTEGRATION_TOKEN,
+        logisticsTeamId: this.client.settings.logisticsTeamID,
+        maintainerId: this.client.settings.maintainerID,
+        hostFormSheetId: this.client.settings.googleSheetsDocID,
+        hostFormSheetName: this.client.settings.googleSheetsSheetName,
+        notionCalendarId: this.client.settings.notionCalendarID,
+        notionToken: this.client.settings.notionIntegrationToken,
         webhook,
         googleSheetAPICredentials: JSON.parse(googleSheetKeyFile.toString()),
       });
 
       // If the pipeline has run by now without throwing an Error, we must have
       // skipped any data schema related errors, so we can mark them off as fine.
-      flags.validGoogleSchema = true;
-      flags.validNotionSchema = true;
+      this.client.flags.validGoogleSchema = true;
+      this.client.flags.validNotionSchema = true;
       super.respond(interaction, 'Manual sync run!');
     } catch (e) {
       // If we got an error, one of our schemas is mismatched! We want to call that out
       // on Discord, ping both Events Team and the Kartana developer and deal with it later on.
       if (e instanceof NotionSchemaMismatchError) {
         // If not yet marked as invalid, don't deal with any of the logic.
-        if (flags.validNotionSchema) {
+        if (this.client.flags.validNotionSchema) {
           // Mark it off as invalid. We'll validate it later when we run through one pipeline run
           // with no thrown Errors.
-          flags.validNotionSchema = false;
+          this.client.flags.validNotionSchema = false;
 
           // Send the error out on Discord. If we're in this "if", it means we've
           // not sent it before, so we'll only send once total between schema changes
@@ -81,15 +71,15 @@ export default class Sync extends Command {
           await webhook.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
-            content: `Paging <@&${process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID}> and <@${process.env.DISCORD_MAINTAINER_MENTION_ID}>!`,
+            content: `Paging <@&${this.client.settings.logisticsTeamID}> and <@${this.client.settings.maintainerID}>!`,
             embeds: [errorEmbed],
           });
         }
         super.respond(interaction, 'Notion schema mismatch!');
       } else if (e instanceof GoogleSheetsSchemaMismatchError) {
         // Similarly for this if statement, except this outputs an embed for the Google Sheets table error.
-        if (flags.validGoogleSchema) {
-          flags.validGoogleSchema = false;
+        if (this.client.flags.validGoogleSchema) {
+          this.client.flags.validGoogleSchema = false;
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Google Sheets table columns changed!')
             .setDescription(`Changes found in table:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
@@ -100,7 +90,7 @@ export default class Sync extends Command {
           await webhook.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
-            content: `Paging <@&${process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID}> and <@${process.env.DISCORD_MAINTAINER_MENTION_ID}>!`,
+            content: `Paging <@&${this.client.settings.logisticsTeamID}> and <@${this.client.settings.maintainerID}>!`,
             embeds: [errorEmbed],
           });
         }

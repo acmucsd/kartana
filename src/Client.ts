@@ -36,6 +36,14 @@ export default class Client extends DiscordClient implements BotClient {
   public settings: BotSettings;
 
   /**
+   * Flags for Kartana to run properly.
+   */
+  public flags = {
+    validNotionSchema: true,
+    validGoogleSchema: true,
+  };
+
+  /**
    * The default constructor for Client.
    *
    * Begins the configuration process. Initialization is done in {@link initialize initialize()}.
@@ -81,7 +89,6 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.clientID = process.env.CLIENT_ID;
     this.settings.token = process.env.BOT_TOKEN;
     this.settings.prefix = process.env.BOT_PREFIX;
-    this.settings.maintainerID = process.env.MAINTAINER_USER_ID;
     this.settings.apiKeys.catAPI = process.env.CAT_API_KEY;
     this.settings.apiKeys.unsplash = process.env.UNSPLASH_ACCESS_KEY;
 
@@ -117,6 +124,64 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.acmurl.password = process.env.ACMURL_PASSWORD;
     this.settings.portalAPI.username = process.env.MEMBERSHIP_PORTAL_API_USERNAME;
     this.settings.portalAPI.password = process.env.MEMBERSHIP_PORTAL_API_PASSWORD;
+    if (!process.env.NOTION_INTEGRATION_TOKEN) {
+      Logger.error('Could not construct Client class: missing Notion Integration Token in envvars', {
+        eventType: 'initError',
+        error: 'missing Notion Integration Token in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Notion Integration Token in envvars');
+    }
+    if (!process.env.NOTION_CALENDAR_ID) {
+      Logger.error('Could not construct Client class: missing Notion Calendar ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Notion Calendar ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Notion Calendar ID in envvars');
+    }
+    if (!process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL) {
+      Logger.error('Could not construct Client class: missing Google Sheets Service Account Email in envvars', {
+        eventType: 'initError',
+        error: 'missing Google Sheets Service Account Email in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Google Sheets Service Account Email in envvars');
+    }
+    if (!process.env.GOOGLE_SHEETS_KEY_FILE) {
+      Logger.error('Could not construct Client class: missing Google Sheets Key File in envvars', {
+        eventType: 'initError',
+        error: 'missing Google Sheets Key File in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Google Sheets Key File in envvars');
+    }
+    if (!process.env.GOOGLE_SHEETS_DOC_ID) {
+      Logger.error('Could not construct Client class: missing Google Sheets Doc ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Google Sheets Doc ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Google Sheets Doc ID in envvars');
+    }
+    if (!process.env.GOOGLE_SHEETS_SHEET_NAME) {
+      Logger.error('Could not construct Client class: missing Google Sheets Sheet Name in envvars', {
+        eventType: 'initError',
+        error: 'missing Google Sheets Sheet Name in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Google Sheets Sheet Name in envvars');
+    }
+    if (!process.env.DISCORD_WEBHOOK_URL) {
+      Logger.error('Could not construct Client class: missing Discord Webhook URL in envvars', {
+        eventType: 'initError',
+        error: 'missing Discord Webhook URL in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Discord Webhook URL in envvars');
+    }
+    this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
+    this.settings.notionCalendarID = process.env.NOTION_CALENDAR_ID;
+    this.settings.googleSheetsServiceAccountEmail = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
+    this.settings.googleSheetsKeyFile = process.env.GOOGLE_SHEETS_KEY_FILE;
+    this.settings.googleSheetsDocID = process.env.GOOGLE_SHEETS_DOC_ID;
+    this.settings.googleSheetsSheetName = process.env.GOOGLE_SHEETS_SHEET_NAME;
+    this.settings.discordWebhookURL = process.env.DISCORD_WEBHOOK_URL;
+    this.settings.maintainerID = process.env.DISCORD_MAINTAINER_MENTION_ID;
+    this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;
     this.initialize().then();
   }
 
