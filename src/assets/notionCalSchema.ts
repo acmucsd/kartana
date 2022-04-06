@@ -381,6 +381,11 @@ export const notionCalSchema = {
           'color': 'default',
         },
         {
+          'id': '57a7a39f-7960-484d-b258-d11eb0595fc4',
+          'name': 'CSE 2154',
+          'color': 'default',
+        },
+        {
           'id': '94a1d714-99d1-4d77-a96c-206eb2e022e0',
           'name': 'CSE 4140',
           'color': 'default',
@@ -765,6 +770,11 @@ export const notionCalSchema = {
           'color': 'default',
         },
         {
+          'id': 'a08d8084-650d-489b-9e95-e53673fc3c6c',
+          'name': 'CSE 2154',
+          'color': 'default',
+        },
+        {
           'id': 'c4334a9b-4986-4f4f-a2e9-6604a0bcccaa',
           'name': 'CSE 4140',
           'color': 'default',
@@ -1098,6 +1108,11 @@ export const notionCalSchema = {
         {
           'id': '5c493725-ea0a-4f06-ae06-7ba3fcc8cfac',
           'name': 'CSE 1202',
+          'color': 'default',
+        },
+        {
+          'id': 'aecd1f42-5294-4c2f-8602-e4cebfa8846c',
+          'name': 'CSE 2154',
           'color': 'default',
         },
         {
