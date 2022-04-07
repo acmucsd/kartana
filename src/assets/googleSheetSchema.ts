@@ -42,4 +42,5 @@ export const googleSheetSchema = [
   'Email Address',
   'BACKUP ONLINE VENUE: Would you like your backup online venue to be a standard Zoom room or Discord?',
   'What ACMURL do you want for the Facebook event page?',
+  'Did you upload a marketing icon to https://acmurl.com/icons?',
 ];
