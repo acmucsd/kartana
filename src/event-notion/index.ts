@@ -46,7 +46,7 @@ export const validateNotionDatabase = (database: GetDatabaseResponse) => {
  */
 export const validateGoogleSheetsSchema = (headers) => {
   if (!isEqual(headers, googleSheetSchema)) {
-    const schemaDiff = differenceWith(googleSheetSchema, headers, isEqual);
+    const schemaDiff = diff(googleSheetSchema, headers);
     Logger.error('Google Sheets schema is mismatched! Halting!', {
       type: 'error',
       diff: schemaDiff,
