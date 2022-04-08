@@ -3,13 +3,12 @@ import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
-import { differenceWith, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
 import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
 import { MessageEmbed, WebhookClient } from 'discord.js';
 import { DateTime } from 'luxon';
-import { writeFileSync } from 'fs';
 
 /**
  * Logs into Notion.
