@@ -418,9 +418,9 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
               },
             },
             {
-              property: 'CSI Form Status',
+              property: 'Intake Form Status',
               select: {
-                equals: 'CSI Form TODO',
+                equals: 'Intake Form TODO',
               },
             },
           ],
@@ -452,19 +452,23 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
   const isEventPingable = (event: typeof allEvents[0],
     deadlineDate: DateTime,
     orgPing: 'CSI' | 'TAP',
-    status: 'TAP TODO' | 'TAP In Progress' | 'CSI Form TODO') => {
+    status: 'TAP TODO' | 'TAP In Progress' | 'Intake Form TODO') => {
     if (event.properties.Date.type !== 'date') {
       return false;
     }
     if (event.properties['TAP Status'].type !== 'select') {
       return false;
     }
-    if (event.properties['CSI Form Status'].type !== 'select') {
+    if (event.properties['Intake Form Status'].type !== 'select') {
+      return false;
+    }
+    if (event.properties.Name.type !== 'title') {
       return false;
     }
     const date = event.properties.Date.date.start;
     const tapStatus = event.properties['TAP Status'].select.name;
-    const csiStatus = event.properties['CSI Form Status'].select.name;
+    const csiStatus = event.properties['Intake Form Status'].select.name;
+    
     if (orgPing === 'TAP') {
       return date === deadlineDate.toISODate() && tapStatus === status;
     } else {
@@ -505,13 +509,13 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
   // We will do the same for the CSI Event Intake form deadline pings.
   const eventIntakeEvents = {
     oneDay: allEvents.filter((event) => {
-      return isEventPingable(event, thirdDayToPingForTODO, 'CSI', 'CSI Form TODO');
+      return isEventPingable(event, thirdDayToPingForTODO, 'CSI', 'Intake Form TODO');
     }),
     twoDays: allEvents.filter((event) => {
-      return isEventPingable(event, secondDayToPingForTODO, 'CSI', 'CSI Form TODO');
+      return isEventPingable(event, secondDayToPingForTODO, 'CSI', 'Intake Form TODO');
     }),
     threeDays: allEvents.filter((event) => {
-      return isEventPingable(event, firstDayToPingForTODO, 'CSI', 'CSI Form TODO');
+      return isEventPingable(event, firstDayToPingForTODO, 'CSI', 'Intake Form TODO');
     }),
   };
 
@@ -524,10 +528,9 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
   // We'll still build them by embed, so we can keep all code somewhat structured.
   // Begin with TAP deadline pings. For each embed, first check if we even have deadlines
   // coming up, and if we don't skip building the embed.
-  
+  Logger.info('Beginning TAP deadline embed build...');
   if (!(Object.values(tapDeadlineEvents.firstDeadline).every((array) => array.length === 0) &&
       Object.values(tapDeadlineEvents.secondDeadline).every((array) => array.length === 0))) {
-    Logger.info('Beginning TAP deadline embed build...');
     tapDeadlineEmbed = new MessageEmbed()
       .setTitle('TAP forms are due!')
       .setColor('YELLOW');
@@ -554,7 +557,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         // More often than not, this will just be 1 single string, but we're accounting for all
         // possible cases here.
         // Look into whether this needs spaces between the title string components or not.
-        firstDeadlineSection += `[${
+        firstDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -566,7 +569,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `[${
+        firstDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -578,7 +581,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `[${
+        firstDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -586,12 +589,12 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
 
     // Now for the 14-day deadline. Same thing, different section.
     if (tapDeadlineEvents.secondDeadline.oneDay.length !== 0) {
-      secondDeadlineSection += '\n⚠️ TAP forms due today! ⚠️\n';
+      secondDeadlineSection += '\n⚠️ **TAP forms due today!** ⚠️\n';
       tapDeadlineEvents.secondDeadline.oneDay.forEach((event) => {
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        secondDeadlineSection += `[${
+        secondDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -603,7 +606,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        secondDeadlineSection += `[${
+        secondDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -615,7 +618,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        secondDeadlineSection += `[${
+        secondDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -625,8 +628,8 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
     // for empty sections and reduce the amount of clutter. We also add a newline after
     // the first deadline section in case of the new section as well.
     tapDeadlineEmbed.setDescription(
-      firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : ''
-      + secondDeadlineSection !== '_14-day Deadline_\n' ? secondDeadlineSection : '');
+      (firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '')
+      + (secondDeadlineSection !== '_14-day Deadline_\n' ? secondDeadlineSection : ''));
 
     Logger.info('Sections built! Sending TAP deadline embed...');
     // Send the embed!
@@ -651,7 +654,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `[${
+        firstDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -663,7 +666,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `[${
+        firstDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
@@ -675,7 +678,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `[${
+        firstDeadlineSection += `- [${
           event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
         }](${event.url})\n`;
       });
