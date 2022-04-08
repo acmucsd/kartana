@@ -225,5 +225,58 @@ app.post('/notion/events/sync', async (_, res) => {
   }
 });
 
+app.post('/notion/events/ping', async (_, res) => {
+  Logger.info('Running TAP and CSI deadline pings cron job!');
+  const webhook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK_URL });
+  try {
+    await pingForTAPandCSIDeadlines({
+      logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
+      maintainerId: process.env.DISCORD_MAINTAINER_MENTION_ID,
+      hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
+      hostFormSheetName: process.env.GOOGLE_SHEETS_SHEET_NAME,
+      notionCalendarId: process.env.NOTION_CALENDAR_ID,
+      notionToken: process.env.NOTION_INTEGRATION_TOKEN,
+      webhook,
+      googleSheetAPICredentials: JSON.parse(googleSheetKeyFile.toString()),
+    });
+
+    // If the pipeline has run by now without throwing an Error, we must have
+    // skipped any data schema related errors, so we can mark them off as fine.
+    //
+    // Note for this pipeline we don't check the Google sheets, so only mark Notion
+    // as good.
+    flags.validNotionSchema = true;
+    res.send('Manual ping sent!');
+  } catch (e) {
+    // If we got an error, our schemas are mismatched! We want to call that out
+    // on Discord, ping both Events Team and the Kartana developer and deal with it later on.
+    if (e instanceof NotionSchemaMismatchError) {
+      // If not yet marked as invalid, don't deal with any of the logic.
+      if (flags.validNotionSchema) {
+        // Mark it off as invalid. We'll validate it later when we run through one pipeline run
+        // with no thrown Errors.
+        flags.validNotionSchema = false;
+
+        // Send the error out on Discord. If we're in this "if", it means we've
+        // not sent it before, so we'll only send once total between schema changes
+        // (or restarts).
+        const errorEmbed = new MessageEmbed()
+          .setTitle('🚫 Notion database changed!')
+          .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
+          .setFooter({
+            text: "I will not run any Notion-related pipelines again until y'all confirm the Notion database changes.",
+          })
+          .setColor('DARK_RED');
+        await webhook.send({
+          // No point in making this line shorter.
+          // eslint-disable-next-line max-len
+          content: `Paging <@&${process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID}> and <@${process.env.DISCORD_MAINTAINER_MENTION_ID}>!`,
+          embeds: [errorEmbed],
+        });
+      }
+    }
+  }
+});
+
 Logger.info('Ready. Listening on port 8080!');
 app.listen(8080, 'localhost');
