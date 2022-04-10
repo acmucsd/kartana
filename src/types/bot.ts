@@ -157,8 +157,8 @@ export interface BotSettings {
   /**
    * Discord mention ID's for Logistics team and maintainer of pipelines.
    */
-  maintainerID?: string;
-  logisticsTeamID?: string;
+  maintainerID: string;
+  logisticsTeamID: string;
 }
   
 /**

@@ -173,6 +173,20 @@ export default class Client extends DiscordClient implements BotClient {
       });
       throw new Error('Could not construct Client class: missing Discord Webhook URL in envvars');
     }
+    if (!process.env.DISCORD_MAINTAINER_MENTION_ID) {
+      Logger.error('Could not construct Client class: missing Discord Maintainer Mention ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Discord Maintainer Mention ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Discord Maintainer Mention ID in envvars');
+    }
+    if (!process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID) {
+      Logger.error('Could not construct Client class: missing Discord Logistics Team Mention ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Discord Logistics Team Mention ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Discord Logistics Team Mention ID in envvars');
+    }
     this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
     this.settings.notionCalendarID = process.env.NOTION_CALENDAR_ID;
     this.settings.googleSheetsServiceAccountEmail = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
