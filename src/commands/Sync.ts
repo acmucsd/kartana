@@ -26,7 +26,8 @@ export default class Sync extends Command {
   }
 
   public async run(interaction: CommandInteraction): Promise<void> {
+    await super.defer(interaction, true);
     await this.client.runNotionPipeline();
-    await super.respond(interaction, 'Ran the Notion Sync Pipeline!');
+    await super.edit(interaction, { content: 'Ran the Notion Sync Pipeline!', ephemeral: true });
   }
 }
