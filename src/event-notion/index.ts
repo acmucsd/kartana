@@ -756,7 +756,8 @@ export const pingForKeys = async (notion: Client,
   const keyPingEmbed = new MessageEmbed()
     .setTitle("Don't forget to pick up keys for rooms tomorrow!")
     .setColor('GREEN')
-    .setDescription(keyPingDescription);
+    .setDescription(keyPingDescription)
+    .setFooter({ text: 'Note that the offices to pick up keys from close up at 4 PM!' });
 
   await webhook.send({
     content: `<@&${config.logisticsTeamId}>`,
