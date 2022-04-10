@@ -3,7 +3,7 @@ import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
-import { isEqual } from 'lodash';
+import { groupBy, isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
 import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
@@ -320,25 +320,10 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
  * - Checks whether the events still need to have a TAP or CSI Event Intake form submitted.
  * - Adds all the events to two separate embed with a title and URL and pings the Logistics team about it.
  */
-export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfig) => {
-  Logger.info('Setting up TAP deadline pings...');
-  Logger.debug('Getting API clients...');
-  // The Notion API is easy enough to get.
-  const notion = await getNotionAPI(config.notionToken);
-  // Get the Discord webhook as well.
-  const webhook = config.webhook;
-
-  Logger.info('Getting Notion Calendar...');
-
-  const databaseId = config.notionCalendarId;
-  const database = await notion.databases.retrieve({ database_id: databaseId });
-
-  // Validate both the Notion Calendar and the Google Sheet.
-  Logger.debug('Validating schemas for data sources...');
-  Logger.debug('Validating Notion database schema...');
-  validateNotionDatabase(database);
-
-  Logger.info('Pipeline ready! Running.');
+export const pingForTAPandCSIDeadlines = async (notion: Client,
+  webhook: WebhookClient,
+  databaseId: string,
+  config: EventNotionPipelineConfig) => {
   // The day for which we ping for any non-submitted events.
   // This is just basically to look for events that are 23 days away from now.
   //
@@ -358,7 +343,7 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
   // For events we're interested to ping for anyway, we'll just get
   // every event that has one of the correct status forms and has a deadline coming up,
   // whether it be the 21-day deadline or the 14-day deadline.
-  Logger.debug('Querying Notion API for events with deadlines coming up...');
+  Logger.debug('Querying Notion API for events with TAP and Event Intake deadlines coming up...');
   const eventsResponse = await notion.databases.query({
     database_id: databaseId,
     filter: {
@@ -694,7 +679,126 @@ export const pingForTAPandCSIDeadlines = async (config: EventNotionPipelineConfi
       embeds: [eventIntakeDeadlineEmbed],
     });
   }
+};
+
+/**
+ * Pings the Logistics Team to remind them to get keys for particular rooms that require them.
+ * 
+ * Every event in the Qualcomm Conference Room or in any CSE building room that is not CSE B225
+ * ("The Fishbowl") requires keys.
+ */
+export const pingForKeys = async (notion: Client,
+  webhook: WebhookClient,
+  databaseId: string,
+  config: EventNotionPipelineConfig) => {
+  const tomorrow = DateTime.now().plus({ days: 1 });
+  Logger.debug('Querying Notion API for events tomorrow in Qualcomm or CSE rooms...');
+  const eventsResponse = await notion.databases.query({
+    database_id: databaseId,
+    filter: {
+      and: [
+        {
+          property: 'Date',
+          date: {
+            equals: tomorrow.toISODate(),
+          },
+        },
+        {
+          or: ['Qualcomm Room', 'CSE 1202', 'CSE 2154', 'CSE 4140'].map((location) => {
+            return {
+              property: 'Location',
+              select: {
+                equals: location,
+              },
+            };
+          }),
+        },
+      ],
+    },
+  });
+
+  const allEvents = eventsResponse.results;
+
+  // Check if there are any events to actually ping for.
+  if (allEvents.length === 0) {
+    Logger.info('No events to ping for! Skipping embed building...');
+    return;
+  }
+
+  // Group the events depending on which location they're in. This way, we can build
+  // the embed much easier later on.
+  const eventsByLocation = groupBy(allEvents, (event) => {
+    if (event.properties.Location.type !== 'select') {
+      throw new TypeError(`Location field for event not a SELECT! (Event URL: ${event.url}`);
+    }
+    return event.properties.Location.select.name;
+  });
+
+  let keyPingDescription = '';
+
+  // For each location, setup a header for the set of events that are in that location
+  // and then list the names for each, along with the title, like the other pings
+  // we send.
+  Object.entries(eventsByLocation).forEach(([location, events]) => {
+    keyPingDescription += `_${location} needs keys for these events:_\n`;
+    events.forEach((event) => {
+      if (event.properties.Name.type !== 'title') {
+        throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
+      }
+      keyPingDescription += `- [${
+        event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
+      }](${event.url})\n`;
+    });
+    keyPingDescription += '\n';
+  });
+
+  // Now that we have all of them grouped up, we can build the embed.
+  const keyPingEmbed = new MessageEmbed()
+    .setTitle("Don't forget to pick up keys for rooms tomorrow!")
+    .setColor('GREEN')
+    .setDescription(keyPingDescription);
+
+  await webhook.send({
+    content: `<@&${config.logisticsTeamId}>`,
+    embeds: [keyPingEmbed],
+  });
+
+  Logger.info('Pinged for keys!');
+};
+
+/**
+ * Pings for any deadlines and reminders that the Teams might need for any sort of event-related task.
+ * 
+ * This includes:
+ * - TAP and CSI Event Intake Form deadlines
+ * - Key reminders for Qualcomm and CSE rooms
+ * - AS Funding deadline reminders
+ *
+ * @param config The config for the pipeline.
+ */
+export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineConfig) => {
+  Logger.info('Setting up TAP deadline pings...');
+  Logger.debug('Getting API clients...');
+  // The Notion API is easy enough to get.
+  const notion = await getNotionAPI(config.notionToken);
+  // Get the Discord webhook as well.
+  const webhook = config.webhook;
+
+  Logger.info('Getting Notion Calendar...');
+
+  const databaseId = config.notionCalendarId;
+  const database = await notion.databases.retrieve({ database_id: databaseId });
+
+  // Validate the Notion Calendar.
+  Logger.debug('Validating schemas for data sources...');
+  Logger.debug('Validating Notion database schema...');
+  validateNotionDatabase(database);
+
+  Logger.info('Pipeline ready! Running.');
+  
+  pingForTAPandCSIDeadlines(notion, webhook, databaseId, config);
+  pingForKeys(notion, webhook, databaseId, config);
 
   // Done!
-  Logger.info('All deadlines pinged!');
+  Logger.info('All reminders and deadlines pinged!');
 };

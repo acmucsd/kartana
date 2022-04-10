@@ -1,4 +1,4 @@
-import { syncHostFormToNotionCalendar, pingForTAPandCSIDeadlines } from './event-notion';
+import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders } from './event-notion';
 import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import express from 'express';
@@ -104,7 +104,7 @@ scheduleJob('0 10 * * *', async () => {
   Logger.info('Running TAP and CSI deadline pings cron job!');
   const webhook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK_URL });
   try {
-    await pingForTAPandCSIDeadlines({
+    await pingForDeadlinesAndReminders({
       logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
       maintainerId: process.env.DISCORD_MAINTAINER_MENTION_ID,
       hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
@@ -225,11 +225,11 @@ app.post('/notion/events/sync', async (_, res) => {
   }
 });
 
-app.post('/notion/events/ping', async (_, res) => {
-  Logger.info('Running TAP and CSI deadline pings cron job!');
+app.post('/notion/events/reminders', async (_, res) => {
+  Logger.info('Running deadline and reminder pings cron job!');
   const webhook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK_URL });
   try {
-    await pingForTAPandCSIDeadlines({
+    await pingForDeadlinesAndReminders({
       logisticsTeamId: process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID,
       maintainerId: process.env.DISCORD_MAINTAINER_MENTION_ID,
       hostFormSheetId: process.env.GOOGLE_SHEETS_DOC_ID,
