@@ -50,7 +50,7 @@ export default class Client extends DiscordClient implements BotClient {
    * @param actionManager An ActionManager class to run. Injected by TypeDI.
    * @param portalAPIManager A PortalAPIManager class to run. Injected by TypeDI
    */
-  constructor(private actionManager: ActionManager, private notionEventSyncManager: NotionEventSyncManager) {
+  constructor(private actionManager: ActionManager, public notionEventSyncManager: NotionEventSyncManager) {
     super(configuration.clientOptions || {
       intents: [
         'GUILDS',
@@ -180,14 +180,6 @@ export default class Client extends DiscordClient implements BotClient {
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);
     }
-  }
-
-  /**
-   * Manually runs the Notion sync pipeline from notionEventSyncManager.
-   * Used in commands/Sync.ts to manually run the pipeline.
-   */
-  public async runNotionPipeline(): Promise<void> {
-    await this.notionEventSyncManager.runNotionPipeline(this);
   }
 
   /**

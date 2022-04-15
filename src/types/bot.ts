@@ -11,6 +11,7 @@ import {
   InteractionReplyOptions,
 } from 'discord.js';
 import Command from '../Command';
+import NotionEventSyncManager from '../managers/NotionEventSyncManager';
   
 /**
  * The options for a Command.
@@ -163,11 +164,7 @@ export interface BotClient extends Client {
     validGoogleSchema: boolean,
   }
 
-  /**
-   * Manually runs the Notion sync pipeline from notionEventSyncManager.
-   * Used in commands/Sync.ts to manually run the pipeline.
-   */
-  runNotionPipeline(args?: any): void;
+  notionEventSyncManager: NotionEventSyncManager;
 }
   
 /**

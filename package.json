@@ -10,6 +10,7 @@
     "build": "tsc",
     "start": "node build/src/index.js",
     "lint": "eslint ./ --ext .ts",
+    "dev": "tsc && node build/src/index.js",
     "lint:fix": "eslint ./ --ext .ts --fix"
   },
   "dependencies": {

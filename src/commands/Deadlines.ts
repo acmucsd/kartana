@@ -8,26 +8,26 @@ import { BotClient } from '../types';
  * 
  * Doesn't disrupt the cronjob that runs every 30 minutes.
  */
-export default class Sync extends Command {
+export default class Deadlines extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
-      .setName('sync')
-      .setDescription('Triggers Notion Event Sync pipeline manually.');
+      .setName('deadlines')
+      .setDescription('Pings for any upcoming TAP and CSI deadlines and key reminders manually.');
 
     super(client, {
-      name: 'sync',
+      name: 'deadlines',
       boardRequired: true,
       enabled: true,
-      description: 'Triggers Notion Event Sync pipeline manually.',
+      description: 'Pings for any upcoming TAP and CSI deadlines and key reminders manually.',
       category: 'Utility',
-      usage: client.settings.prefix.concat('sync'),
+      usage: client.settings.prefix.concat('deadlines'),
       requiredPermissions: ['SEND_MESSAGES'],
     }, definition);
   }
 
   public async run(interaction: CommandInteraction): Promise<void> {
     await super.defer(interaction, true);
-    await this.client.notionEventSyncManager.runNotionPipeline(this.client);
-    await super.edit(interaction, { content: 'Ran the Notion Sync Pipeline!', ephemeral: true });
+    await this.client.notionEventSyncManager.runDeadlinesAndReminders(this.client);
+    await super.edit(interaction, { content: 'Ran the TAP and CSI reminders!', ephemeral: true });
   }
 }
