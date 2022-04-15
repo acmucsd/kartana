@@ -164,6 +164,16 @@ export default class NotionEvent {
   // The original HostFormResponse object used to generate this NotionEvent.
   private response: HostFormResponse;
 
+  // The calendar ID for the location where the Notion Event should exist in.
+  private parentCalendarId: string;
+
+  /**
+   * Set the parent calendar ID.
+   */
+  public setCalendarId(id: string): void {
+    this.parentCalendarId = id;
+  }
+
   // The name of the Event. (the Title of the Notion Page)
   private name: string;
 
@@ -348,7 +358,7 @@ export default class NotionEvent {
   // private bookingConfirmation: File[];
 
   // The PR Manager assigned to manage this Event.
-  private prManager: NotionUser;
+  private prManager: NotionUser | null;
 
   // The time at which this Event takes place.
   private date: Interval;
@@ -500,7 +510,7 @@ export default class NotionEvent {
   public async uploadToNotion(client: Client): Promise<string> {
     const createPagePayload: CreatePageParameters = {
       parent: {
-        database_id: process.env.NOTION_CALENDAR_ID,
+        database_id: this.parentCalendarId,
       },
       properties: {
         Name: {

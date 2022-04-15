@@ -1,17 +1,28 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
     "target": "es6",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "types": ["node"],
+    "typeRoots": ["node_modules/@types"],
+    "module": "commonjs",
+    "outDir": "build",
+    "rootDir": "./",
+    "removeComments": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "inlineSourceMap": true,
     "moduleResolution": "node",
-    "baseUrl": ".",
-    "outDir": "./build",
-    "declaration": true
+    "sourceRoot": "src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
-    "src/**/*.ts"
+    "src", "src/jsModuleDecs.d.ts"
   ],
+  "exclude": [
+    "build",
+    "node_modules"
+  ]
 }

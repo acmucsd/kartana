@@ -229,7 +229,9 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   Logger.info('Syncing events to Notion calendar...');
   const notionEventsToImport = newEvents.flatMap((newEvent, index) => {
     try {
-      return new NotionEvent(newEvent);
+      const notionEvent = new NotionEvent(newEvent);
+      notionEvent.setCalendarId(databaseId);
+      return notionEvent;
     } catch (error) {
       // If there was a TypeError (doubtful, but possible), we'll want to report it
       // to deal with the issue.

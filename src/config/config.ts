@@ -3,10 +3,6 @@ import { BotSettings } from '../types';
 export default {
   apiKeys: {
   },
-  acmurl: {
-    username: '',
-    password: '',
-  },
   clientID: '',
   clientOptions: {
     intents: [
@@ -18,10 +14,6 @@ export default {
       'GUILD_MESSAGE_REACTIONS',
       'DIRECT_MESSAGE_REACTIONS',
     ],
-  },
-  portalAPI: {
-    username: '',
-    password: '',
   },
   presence: {
     activities: [{
@@ -36,4 +28,13 @@ export default {
     commands: 'src/commands',
     events: 'src/events',
   },
+  notionIntegrationToken: '',
+  notionCalendarID: '',
+  googleSheetsServiceAccountEmail: '',
+  googleSheetsKeyFile: '',
+  googleSheetsDocID: '',
+  googleSheetsSheetName: '',
+  discordWebhookURL: '',
+  maintainerID: '',
+  logisticsTeamID: '',
 } as BotSettings;
