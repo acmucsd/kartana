@@ -461,7 +461,7 @@ export default class NotionEvent {
     this.driveLink = null;
     this.projectorStatus = formResponse['Will you need a projector?'] === 'Yes' ? 'Yes' : 'No';
     this.hostedBy = [];
-    this.locationDetails = this.location === 'Other (See Details)' ? formResponse['First choice for venue'] : '';
+    this.locationDetails = this.location === 'Other (See Details)' ? formResponse['Other venue details?'] : '';
     this.fundingSource = [];
     this.prManager = null;
     this.date = getEventInterval(formResponse);

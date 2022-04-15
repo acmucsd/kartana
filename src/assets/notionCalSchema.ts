@@ -381,6 +381,16 @@ export const notionCalSchema = {
           'color': 'default',
         },
         {
+          'id': '57a7a39f-7960-484d-b258-d11eb0595fc4',
+          'name': 'CSE 2154',
+          'color': 'default',
+        },
+        {
+          'id': '94a1d714-99d1-4d77-a96c-206eb2e022e0',
+          'name': 'CSE 4140',
+          'color': 'default',
+        },
+        {
           'id': 'cbc67309-d8bf-4abb-a959-ece3d41dfd91',
           'name': 'Room 2315',
           'color': 'default',
@@ -477,7 +487,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'a323da05-b7e3-4fdd-b8df-6b86c543f209',
-          'name': 'CSE B225',
+          'name': 'CSE B225 (Fishbowl)',
           'color': 'default',
         },
         {
@@ -757,6 +767,16 @@ export const notionCalSchema = {
         {
           'id': '5c493725-ea0a-4f06-ae06-7ba3fcc8cfac',
           'name': 'CSE 1202',
+          'color': 'default',
+        },
+        {
+          'id': 'a08d8084-650d-489b-9e95-e53673fc3c6c',
+          'name': 'CSE 2154',
+          'color': 'default',
+        },
+        {
+          'id': 'c4334a9b-4986-4f4f-a2e9-6604a0bcccaa',
+          'name': 'CSE 4140',
           'color': 'default',
         },
         {
@@ -1091,6 +1111,16 @@ export const notionCalSchema = {
           'color': 'default',
         },
         {
+          'id': 'aecd1f42-5294-4c2f-8602-e4cebfa8846c',
+          'name': 'CSE 2154',
+          'color': 'default',
+        },
+        {
+          'id': '23909571-89c8-4d47-9aad-01c9d57ae4a1',
+          'name': 'CSE 4140',
+          'color': 'default',
+        },
+        {
           'id': '6250b696-d92c-44a6-8e85-0d345f0e9319',
           'name': 'PC Eleanor Roosevelt Room',
           'color': 'default',
@@ -1208,6 +1238,12 @@ export const notionCalSchema = {
   'Requested Items': {
     'id': 'u7pc',
     'name': 'Requested Items',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
+  'Food Pickup Details': {
+    'id': 'w%5CvE',
+    'name': 'Food Pickup Details',
     'type': 'rich_text',
     'rich_text': {},
   },

@@ -116,6 +116,7 @@ export type EventType = 'Competition'
  */
 export const isEventType = (type: string): type is EventType => {
   return type === 'Competition'
+    || type === 'Workshop'
     || type === 'Industry Panel'
     || type === 'Social'
     || type === 'Seminar'
