@@ -17,7 +17,7 @@ export default {
   },
   presence: {
     activities: [{
-      type: 'WATCHING',
+      type: 'PLAYING',
       name: 'with Host Forms',
     }],
     status: 'online',
