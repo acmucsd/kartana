@@ -18,7 +18,7 @@ export default {
   presence: {
     activities: [{
       type: 'WATCHING',
-      name: 'acmurl.com/poggers',
+      name: 'with Host Forms',
     }],
     status: 'online',
   },
