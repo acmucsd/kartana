@@ -693,8 +693,8 @@ export const pingForKeys = async (notion: Client,
   webhook: WebhookClient,
   databaseId: string,
   config: EventNotionPipelineConfig) => {
-  const tomorrow = DateTime.now().plus({ days: 1 });
-  Logger.debug('Querying Notion API for events tomorrow in Qualcomm or CSE rooms...');
+  const tomorrow = DateTime.now().setZone('America/Los_Angeles').plus({ days: 1 });
+  Logger.debug(`Querying Notion API for events on date ${tomorrow.toISODate()} in Qualcomm or CSE rooms...`);
   const eventsResponse = await notion.databases.query({
     database_id: databaseId,
     filter: {
@@ -721,15 +721,22 @@ export const pingForKeys = async (notion: Client,
 
   const allEvents = eventsResponse.results;
 
+  const activeEvents = allEvents.filter((event) => {
+    if (event.properties.Type.type !== 'select') {
+      throw new TypeError(`Event Type field for event not a SELECT! (Event URL: ${event.url}`);
+    }
+    return event.properties.Type.select.name !== 'CANCELLED';
+  });
+
   // Check if there are any events to actually ping for.
-  if (allEvents.length === 0) {
+  if (activeEvents.length === 0) {
     Logger.info('No events to ping for! Skipping embed building...');
     return;
   }
 
   // Group the events depending on which location they're in. This way, we can build
   // the embed much easier later on.
-  const eventsByLocation = groupBy(allEvents, (event) => {
+  const eventsByLocation = groupBy(activeEvents, (event) => {
     if (event.properties.Location.type !== 'select') {
       throw new TypeError(`Location field for event not a SELECT! (Event URL: ${event.url}`);
     }
