@@ -41,6 +41,7 @@ export default class {
         notionCalendarId: client.settings.notionCalendarID,
         notionToken: client.settings.notionIntegrationToken,
         webhook,
+        client,
         googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
       });
   
@@ -112,6 +113,7 @@ export default class {
         notionCalendarId: client.settings.notionCalendarID,
         notionToken: client.settings.notionIntegrationToken,
         webhook,
+        client,
         googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
       });
   

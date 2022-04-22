@@ -5,10 +5,11 @@ import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { groupBy, isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
-import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
+import { BotClient, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
-import { MessageEmbed, WebhookClient } from 'discord.js';
+import { MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
 import { DateTime } from 'luxon';
+import { getCurrentQuarter, getQuarter, quarters } from 'ucsd-quarters-years';
 
 /**
  * Logs into Notion.
@@ -111,6 +112,7 @@ export interface EventNotionPipelineConfig {
   googleSheetAPICredentials: ServiceAccountCredentials;
   notionCalendarId: string;
   webhook: WebhookClient;
+  client: BotClient;
   notionToken: string;
 }
 
@@ -416,7 +418,12 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
     },
   });
 
-  const allEvents = eventsResponse.results;
+  const allEvents = eventsResponse.results.filter((event) => {
+    if (event.properties.Type.type !== 'select') {
+      throw new TypeError(`Event Type field for event not a SELECT! (Event URL: ${event.url}`);
+    }
+    return event.properties.Type.select.name !== 'CANCELLED';
+  });
 
   Logger.debug(`Number of events with deadlines coming up: ${allEvents.length}`);
 
@@ -719,9 +726,7 @@ export const pingForKeys = async (notion: Client,
     },
   });
 
-  const allEvents = eventsResponse.results;
-
-  const activeEvents = allEvents.filter((event) => {
+  const allEvents = eventsResponse.results.filter((event) => {
     if (event.properties.Type.type !== 'select') {
       throw new TypeError(`Event Type field for event not a SELECT! (Event URL: ${event.url}`);
     }
@@ -729,14 +734,14 @@ export const pingForKeys = async (notion: Client,
   });
 
   // Check if there are any events to actually ping for.
-  if (activeEvents.length === 0) {
+  if (allEvents.length === 0) {
     Logger.info('No events to ping for! Skipping embed building...');
     return;
   }
 
   // Group the events depending on which location they're in. This way, we can build
   // the embed much easier later on.
-  const eventsByLocation = groupBy(activeEvents, (event) => {
+  const eventsByLocation = groupBy(allEvents, (event) => {
     if (event.properties.Location.type !== 'select') {
       throw new TypeError(`Location field for event not a SELECT! (Event URL: ${event.url}`);
     }
@@ -777,6 +782,152 @@ export const pingForKeys = async (notion: Client,
 };
 
 /**
+ * Pings the Finance Team for any upcoming events that need AS Funding forms submitted.
+ * 
+ * According to the Finance Team, AS Funding forms need to be submitted on the Friday 6 weeks before the event starts.
+ */
+export const pingForASFundingDeadlines = async (notion: Client,
+  client: BotClient,
+  databaseId: string,
+  config: EventNotionPipelineConfig) => {
+  // The week we need to look at for events that have that deadline.
+  //
+  // In reality, we'll have to query for the events in each day of the week,
+  // so let's just get all those days in here.
+  const allDaysToPingForWeek: DateTime[] = [];
+  
+  // We need to check whether we are in Week 9 of Spring. This is because in this case
+  // we're interested in the events of next year. In that case look for next academic
+  // year's Fall Quarter first 5 weeks.
+  //
+  // Week 9 of Spring is just 2 weeks before Finals Week, and all quarters end on exactly
+  // Finals Week.
+  const currentQuarter = getCurrentQuarter();
+  const mondayThisWeek = DateTime.now().set({ weekday: 1 });
+  if (currentQuarter === undefined) {
+    throw new Error('Current time outside of saved academic calendars in ucsd-quarters-years!');
+  }
+  const isWeek9 = DateTime.fromJSDate(currentQuarter.end)
+    .set({ weekday: 1 })
+    .minus({ weeks: 2 })
+    .hasSame(mondayThisWeek, 'day');
+  if (currentQuarter.name.startsWith('SP') && isWeek9) {
+    // Get the next Fall Quarter this year. This is very janky to query for, but alas.
+    const nextYearFallQuarter = getQuarter('FA' + mondayThisWeek.year.toString().slice(-2) as keyof typeof quarters);
+
+    // Get the range of 5 weeks of events we want to save.
+    const startOf5Weeks = DateTime.fromJSDate(nextYearFallQuarter.start);
+    const endOf5Weeks = startOf5Weeks.plus({ weeks: 5 }).set({ weekday: 7 });
+    
+    // Add each day to the array.
+    for (let date = startOf5Weeks; !date.hasSame(endOf5Weeks, 'day'); date.plus({ days: 1 })) {
+      allDaysToPingForWeek.push(date);
+    }
+  } else {
+    // If not week 9 of Spring, just get the days from 6 weeks from now.
+    const weekToPingForDeadline = DateTime.now().plus({ weeks: 6 }).set({ weekday: 1 });
+    for (let i = 1; i <= 7; i++) {
+      allDaysToPingForWeek.push(weekToPingForDeadline.set({ weekday: i }));
+    } 
+  } 
+
+  // Query for all the events in the calendar from that week
+  Logger.debug('Querying Notion API for events with AS Funding deadlines coming up...');
+  const eventsResponse = await notion.databases.query({
+    database_id: databaseId,
+    filter: {
+      and: [
+        {
+          or: allDaysToPingForWeek.map((day) => {
+            return {
+              property: 'Date',
+              date: {
+                equals: day.toISODate(),
+              },
+            };
+          }),
+        },
+        {
+          property: 'Funding Status',
+          select: {
+            equals: 'Funding TODO',
+          },
+        },
+      ],
+    },
+  });
+
+  const allEvents = eventsResponse.results.filter((event) => {
+    if (event.properties.Type.type !== 'select') {
+      throw new TypeError(`Event Type field for event not a SELECT! (Event URL: ${event.url}`);
+    }
+    return event.properties.Type.select.name !== 'CANCELLED';
+  });
+
+  Logger.debug(`Number of events with deadlines coming up: ${allEvents.length}`);
+
+  // Check to see if we have no events to report. If we don't,
+  // don't send any embeds and just return.
+  if (allEvents.length === 0) {
+    Logger.info('No events to ping for! Skipping embed building...');
+    return;
+  }
+
+  // At this point, we know that all events have AS forms due on Friday. Therefore,
+  // we just want to bunch them all up, and simply display those that don't have
+  // funding done by Friday. Depending on the current day of the week, we want
+  // to ping with different embed properties.
+  const today = DateTime.now().setZone('America/Los_Angeles');
+  let financePingEmbed = new MessageEmbed(); 
+  // If Wednesday, we have another 2 days, we're good.
+  if (today.weekday === 3) {
+    financePingEmbed
+      .setTitle('AS funding forms are due 2 days from now!')
+      .setColor('BLUE');
+  } else if (today.weekday === 4) {
+    financePingEmbed
+      .setTitle('AS funding forms are due 1 day from now!')
+      .setColor('YELLOW');
+  } else if (today.weekday === 5) {
+    financePingEmbed
+      .setTitle('⚠️ AS funding forms are due today! ⚠️')
+      .setColor('RED');
+  } else {
+    return;
+  }
+
+  // Now to add the events to the description of the embed.
+  // Just do the same as before.
+  let financePingDescription = 'Here are all the events that need their forms done:\n';
+  allEvents.forEach((event) => {
+    if (event.properties.Name.type !== 'title') {
+      throw new Error('Event does not have Name field of type "title"');
+    }
+    // Make a hyperlink with the title as the text and the Notion page URL as the link.
+    // The reduce goes through Notion API's representation of the title and just concatenates
+    // all the plain text versions of any segment in the Title object.
+    //
+    // More often than not, this will just be 1 single string, but we're accounting for all
+    // possible cases here.
+    // Look into whether this needs spaces between the title string components or not.
+    financePingDescription += `- [${
+      event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
+    }](${event.url})\n`;
+  });
+  financePingEmbed.setDescription(financePingDescription);
+
+  // Get the Finance channel and role.
+  const financeChannel = client.channels.cache.get(config.client.settings.financeChannelID) as TextChannel;
+  if (!financeChannel) {
+    throw new Error(`Finance Channel not found with ID ${config.client.settings.financeChannelID}`);
+  }
+  await financeChannel.send({
+    content: `<@&${config.client.settings.financeRoleID}>`,
+    embeds: [financePingEmbed],
+  });
+};
+
+/**
  * Pings for any deadlines and reminders that the Teams might need for any sort of event-related task.
  * 
  * This includes:
@@ -808,6 +959,7 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
   
   pingForTAPandCSIDeadlines(notion, webhook, databaseId, config);
   pingForKeys(notion, webhook, databaseId, config);
+  pingForASFundingDeadlines(notion, config.client, databaseId, config);
 
   // Done!
   Logger.info('All reminders and deadlines pinged!');
