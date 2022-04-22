@@ -31,7 +31,7 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Lecture Hall'
 | 'Off Campus'
 | 'Other (See Details)'
-| 'CSE B225'
+| 'CSE B225 (Fishbowl)'
 | 'PC Forum'
 | 'PC Bear Room';
 
@@ -56,7 +56,7 @@ export const notionLocationTag = {
   'Qualcomm Room': 'Qualcomm Room',
   'Henry Booker Room': 'Henry Booker Room',
   'CSE 1202': 'CSE 1202',
-  'CSE B225': 'CSE B225',
+  'CSE B225': 'CSE B225 (Fishbowl)',
   'CSE Labs': 'Other (See Details)',
   'Fung Auditorium': 'Fung Auditorium',
   'Warren Bear': 'Warren Bear',
