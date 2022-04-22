@@ -407,6 +407,9 @@ export default class NotionEvent {
     this.location = notionLocationTag[formResponse['First choice for venue']] || 'Other (See Details)';
     this.locationBackup1 = notionLocationTag[formResponse['Second choice for venue']] || 'Other (See Details)';
     this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
+    if (formResponse['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room") {
+      this.location = 'Zoom (See Details)';
+    }
     if (formResponse['Where is your event taking place?'] === 'My event is on Discord only') {
       this.location = 'Discord (See Details)';
       this.locationBackup1 = null;
