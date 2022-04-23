@@ -3,7 +3,7 @@ import { Service } from 'typedi';
 import schedule from 'node-schedule';
 import { BotClient } from '../types';
 import Logger from '../utils/Logger';
-import { google } from 'googleapis';
+import { calendar_v3, google } from 'googleapis';
 import { MessageEmbed } from 'discord.js';
 
 /**
@@ -16,6 +16,65 @@ export default class {
    * Cronjob to check for upcoming meetings every 15 minutes.
    */
   public meetingNotificationsJob!: schedule.Job;
+
+  /** 
+   * Cronjob maintaining the API token refreshing for Google Calendar API calls.
+   */
+  public googleTokenRefreshJob!: schedule.Job;
+
+  /**
+   * Queries the calendar for events happening in the given time window and sends
+   * messages to the calendar's respective Discord channel for each meeting.
+   * @param client The original client, for access to the configuration.
+   * @param calendar The Google Calendar to make queries on.
+   * @param calendarID The name of the specific calendar we're searching in. (ex. ACM General)
+   * @param start Date object storing the start of the time window we are querying for.
+   */
+  private sendMeetingPings(client: BotClient, calendar: calendar_v3.Calendar, calendarID: string, start: Date): void {
+    /**
+     * We're setting the end of the time window of the query to be one minute after start.
+     */
+    const end = new Date(start);
+    end.setMinutes(start.getMinutes() + 1);
+
+    calendar.events.list({
+      calendarId: calendarID,
+      timeMin: start.toISOString(),
+      timeMax: end.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+    }, (err, res) => {
+      if (err) {
+        // We'll report if there's an API error to deal with the issue.
+        Logger.error('Error with Google Calendar API: ' + err);
+        const errorEmbed = new MessageEmbed()
+          .setTitle('⚠️ Error with Google Calendar API!')
+          .setDescription('' + err)
+          .setColor('DARK_RED');
+        /** TODO: Set a mapping from calendarID to the channel ID.
+        const channel = client.channels.cache.get(channelID);
+        channel.send({
+          content: `*Paging <@${client.settings.maintainerID}>!*`,
+          embeds: [errorEmbed],
+        });
+        */
+      } 
+      // Check that there are events to send notifications for
+      if (res && res.data.items) {
+        const events = res.data.items;
+        events.map((event, i) => {
+          if (event && event.start) {
+            // Send a specific embed for each meeting here
+            const eventStart = event.start.dateTime || event.start.date;
+            /** TODO: special text case for one hour from now, abstract embed building? */
+            console.log(`Happening now: ${eventStart} - ${event.summary}`);
+          }
+        });
+      } else {
+        console.log('No upcoming events found occurring right now.');
+      }
+    });
+  }
 
   /**
    * Checks and pings if there are any upcoming meetings.
@@ -31,103 +90,21 @@ export default class {
     const calendar = google.calendar( { version: 'v3', auth } );
 
     /* 
-     * Querying the calendar and sending notifications for all meetings happening this minute.
-     *
-     * 
-     * We'll set the times to query the Google Calendar API for. 
-     * Google Calendar API will select all events where timeMin < eventTime < timeMax. 
-     * We want to get all events in the current minute, so we'll set 
-     * startTime to be (min-1):59 and endTime to be (min):59.
+     * Google Calendar API selects all events where timeMin < eventTime < timeMax. 
+     * We want to get all events in this current minute, so we'll set 
+     * startTime to be (currentMinute-1):59.
      */
     const startTime = new Date();
-    // JavaScript Date handles overflow for us, so we don't need special cases.
+    // JavaScript Date handles overflow for us, so we don't need to handle any special cases.
     startTime.setMinutes(startTime.getMinutes() - 1);
     startTime.setSeconds(59);
-    const endTime = new Date(startTime);
-    endTime.setMinutes(endTime.getMinutes() + 1);
-
-    calendar.events.list({
-      calendarId: 'primary',
-      timeMin: startTime.toISOString(),
-      timeMax: endTime.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    }, (err, res) => {
-      // TODO: Abstract this away to another function
-      if (err) {
-        // We'll report if there's an API error to deal with the issue.
-        Logger.error('Error with Google Calendar API: ' + err);
-        const errorEmbed = new MessageEmbed()
-          .setTitle('⚠️ Error with Google Calendar API!')
-          .setDescription('' + err)
-          .setColor('DARK_RED');
-        // Figure out how to send to a specific channel from here.
-        /*
-        webhook.send({
-          content: `*Paging <@${client.settings.maintainerID}>!*`,
-          embeds: [errorEmbed],
-        });
-        */
-      } 
-      // Check that there are events to send notifications for
-      if (res && res.data.items) {
-        const events = res.data.items;
-        events.map((event, i) => {
-          if (event && event.start) {
-            // Send a specific embed for each meeting here
-            const start = event.start.dateTime || event.start.date;
-            console.log(`Happening now: ${start} - ${event.summary}`);
-          }
-        });
-      } else {
-        console.log('No upcoming events found occurring right now.');
-      }
-    });
+    this.sendMeetingPings(client, calendar, '', startTime);
 
     /*
-     * Querying the calendar and sending notifications for meetings happening an hour from now.
+     * Sending notifications for meetings happening a hour from now.
      */
     startTime.setHours(startTime.getHours() + 1);
-    endTime.setHours(startTime.getHours() + 1);
-
-    // Copy and pasted from a few lines earlier.
-    calendar.events.list({
-      calendarId: 'primary',
-      timeMin: startTime.toISOString(),
-      timeMax: endTime.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    }, (err, res) => {
-      // TODO: Abstract this away to another function
-      if (err) {
-        // We'll report if there's an API error to deal with the issue.
-        Logger.error('Error with Google Calendar API: ' + err);
-        const errorEmbed = new MessageEmbed()
-          .setTitle('⚠️ Error with Google Calendar API!')
-          .setDescription('' + err)
-          .setColor('DARK_RED');
-        // Figure out how to send to a specific channel from here.
-        /*
-        webhook.send({
-          content: `*Paging <@${client.settings.maintainerID}>!*`,
-          embeds: [errorEmbed],
-        });
-        */
-      } 
-      // Check that there are events to send notifications for
-      if (res && res.data.items) {
-        const events = res.data.items;
-        events.map((event, i) => {
-          if (event && event.start) {
-            // Send a specific embed for each meeting here
-            const start = event.start.dateTime || event.start.date;
-            console.log(`One hour from now: ${start} - ${event.summary}`);
-          }
-        });
-      } else {
-        console.log('No upcoming events found occurring an hour from now.');
-      }
-    });
+    this.sendMeetingPings(client, calendar, '', startTime);
     return;
   }
 
