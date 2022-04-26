@@ -612,7 +612,7 @@ export const notionCalSchema = {
         {
           'id': '079df246-e630-438e-9a5d-a9e17d8a819d',
           'name': 'ACM General',
-          'color': 'gray',
+          'color': 'blue',
         },
         {
           'id': 'bc88bab4-fe15-422b-bd06-dc87fbeb98b2',
@@ -622,7 +622,7 @@ export const notionCalSchema = {
         {
           'id': '85c859fe-faa9-4eff-9d5e-242117dbe363',
           'name': 'ACM Cyber',
-          'color': 'blue',
+          'color': 'green',
         },
         {
           'id': 'bc303ba8-67e4-46f1-955e-c0b0a14ff525',
