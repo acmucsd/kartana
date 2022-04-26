@@ -127,14 +127,14 @@ export const notionCalSchema = {
           'color': 'brown',
         },
         {
-          'id': 'd54031b1-9449-4198-adbe-477c2cec7753',
-          'name': 'Other (See Comments)',
-          'color': 'pink',
-        },
-        {
           'id': '28c77a2a-f1c6-4746-817f-0cbee8ad8a1e',
           'name': 'Talk',
           'color': 'purple',
+        },
+        {
+          'id': 'dd8839f8-08df-4ff9-a568-566f3eb48269',
+          'name': 'Sponsored Event',
+          'color': 'orange',
         },
         {
           'id': '69179491-8f97-4ba7-b07d-09af451cc78a',
@@ -160,6 +160,11 @@ export const notionCalSchema = {
           'id': '0d903a72-17d0-4e0f-a322-dc3cc2257190',
           'name': 'Info Session',
           'color': 'green',
+        },
+        {
+          'id': 'd54031b1-9449-4198-adbe-477c2cec7753',
+          'name': 'Other (See Comments)',
+          'color': 'pink',
         },
         {
           'id': '56410925-4f27-4c8f-b1bd-99ed593389f5',
