@@ -6,6 +6,7 @@ import Command from './Command';
 import ActionManager from './managers/ActionManager';
 import NotionEventSyncManager from './managers/NotionEventSyncManager';
 import configuration from './config/config';
+import GoogleCalendarManager from './managers/GoogleCalendarManager';
 
 /**
  * The class representing the Discord bot.
@@ -48,9 +49,12 @@ export default class Client extends DiscordClient implements BotClient {
    *
    * Begins the configuration process. Initialization is done in {@link initialize initialize()}.
    * @param actionManager An ActionManager class to run. Injected by TypeDI.
-   * @param portalAPIManager A PortalAPIManager class to run. Injected by TypeDI
+   * @param notionEventSyncManager A NotionEventSyncManager class to run. Injected by TypeDI.
+   * @param googleCalendarManager A GoogleCalendarManager class to run. Injected by TypeDI.
    */
-  constructor(private actionManager: ActionManager, public notionEventSyncManager: NotionEventSyncManager) {
+  constructor(private actionManager: ActionManager, 
+    public notionEventSyncManager: NotionEventSyncManager, 
+    public googleCalendarManager: GoogleCalendarManager) {
     super(configuration.clientOptions || {
       intents: [
         'GUILDS',
@@ -176,6 +180,7 @@ export default class Client extends DiscordClient implements BotClient {
       this.actionManager.initializeCommands(this);
       ActionManager.initializeEvents(this);
       this.notionEventSyncManager.initializeNotionSync(this);
+      this.googleCalendarManager.initializeMeetingPings(this);
       await this.login(configuration.token);
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);

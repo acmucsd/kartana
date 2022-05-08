@@ -15,7 +15,7 @@ export default class {
   /**
    * The Google Calendar Client that allows us to interact with the API.
    */
-  public calendar: calendar_v3.Calendar;
+  private calendar: calendar_v3.Calendar;
 
   /**
    * Cronjob to check for upcoming meetings every 15 minutes.
@@ -23,38 +23,41 @@ export default class {
   public meetingNotificationsJob!: schedule.Job;
 
   /**
-   * Queries the calendar for events happening in the given time window and sends
+   * Updates the Google Calendar auth and client before an API call.
+   * @param client The original client, for access to the configuration.
+   */
+  private async refreshAuth(client: BotClient) : Promise<void> {
+    const auth = new google.auth.GoogleAuth({
+      keyFilename: client.settings.googleSheetsKeyFile, 
+      scopes: ['https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/calendar'],
+    });
+    const authClient = await auth.getClient();
+    this.calendar = google.calendar({ version: 'v3', auth: authClient });
+  }
+
+  /**
+   * Queries all calendars for events happening in the given time window and sends
    * messages to the calendar's respective Discord channel for each meeting.
    * @param client The original client, for access to the configuration.
-   * @param calendarID The name of the specific calendar we're searching in. (ex. ACM General)
    * @param start Date object storing the start of the time window we are querying for.
    */
-  private sendMeetingPings(client: BotClient, calendarID: string, start: DateTime): void {
+  private async sendMeetingPings(client: BotClient, start: DateTime): Promise<void> {
     /**
      * The end of the time window of the query is one minute after the given start time.
      */
-    const end = start.plus({ minutes: 1 });
+    const end = start.plus({ days: 1 });
 
-    this.calendar.events.list({
-      calendarId: calendarID,
-      timeMin: start.toISO(),
-      timeMax: end.toISO(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    }, (err, res) => {
-      if (err) {
-        // We'll report if there's an API error to deal with the issue.
-        Logger.error('Error with Google Calendar API: ' + err);
-        const errorEmbed = new MessageEmbed()
-          .setTitle('⚠️ Error with Google Calendar API!')
-          .setDescription('' + err)
-          .setColor('DARK_RED');
-        const channel = client.channels.cache.get('channelID') as TextChannel;
-        channel.send({
-          content: `*Paging <@${client.settings.maintainerID}>!*`,
-          embeds: [errorEmbed],
-        });
-      } 
+    const calendarList = await this.calendar.calendarList.list();
+    for (const calendarListEntry in calendarList.data.items) {
+      const calendarID = (await JSON.parse(calendarListEntry)).id;
+      const res = await this.calendar.events.list({
+        calendarId: calendarID,
+        timeMin: start.toISO(),
+        timeMax: end.toISO(),
+        singleEvents: true,
+        orderBy: 'startTime',
+      });
+  
       // Check that there are events to send notifications for
       if (res && res.data.items) {
         const events = res.data.items;
@@ -69,7 +72,7 @@ export default class {
       } else {
         console.log('No upcoming events found occurring right now.');
       }
-    });
+    }
   }
 
   /**
@@ -78,20 +81,57 @@ export default class {
    * @param client The original client, for access to the configuration
    */
   public async runMeetingsPipeline(client: BotClient): Promise<void> {
-    /* 
-     * Google Calendar API selects all events where timeMin < eventTime < timeMax. 
-     * We want to get all events in this current minute, so we'll set 
-     * startTime to be (currentMinute-1):59.
-     */
-    const startTimeNow = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
-    this.sendMeetingPings(client, '', startTimeNow);
+    try {
+      /* 
+      * Google Calendar API selects all events where timeMin < eventTime < timeMax. 
+      * We want to get all events in this current minute, so we'll set 
+      * startTime to be (currentMinute-1):59.
+      */
+      const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
+      this.sendMeetingPings(client, now);
 
-    /*
-     * We'll also send notifications for meetings happening a hour from now.
-     */
-    const startTimeOneHour = startTimeNow.plus({ hours: 1 });
-    this.sendMeetingPings(client, '', startTimeOneHour);
-    return;
+      /*
+      * We'll also send notifications for meetings happening a hour from now.
+      */
+      const oneHourFromNow = now.plus({ hours: 1 });
+      this.sendMeetingPings(client, oneHourFromNow);
+    } catch (err) {
+      // We'll report if there's an API error to deal with the issue.
+      Logger.error('Error with Google Calendar API: ' + err);
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error with Google Calendar API!')
+        .setDescription('' + err)
+        .setColor('DARK_RED');
+      const channel = client.channels.cache.get('') as TextChannel;
+      /**
+      channel.send({
+        content: `*Paging <@${client.settings.maintainerID}>!*`,
+        embeds: [errorEmbed],
+      });
+      */
+      channel.send({
+        content: 'Error!',
+        embeds: [errorEmbed],
+      });
+    }
+  }
+
+  /**
+   * Attempts to add a new calendar to the list of calendars to send meeting pings for.
+   * @param client The original client, for access to the configuration.
+   * @param calendarID ID of the Google Calendar. Found through Google Calendar Settings -> Integrate calendar.
+   * @returns The response to original command, with information on the result of the API call.
+   */
+  public async addCalendar(client: BotClient, calendarID: string) : Promise<string> {
+    await this.refreshAuth(client);
+    const res = await this.calendar.calendars.get({ calendarId: 'primary' });
+    console.log(res.data.summary);
+    try {
+      await this.calendar.calendarList.insert({ requestBody: { id: calendarID } });
+      return 'Succesfully added calendar!';
+    } catch (err) {
+      return err + ' Tip: Make sure the calendar\'s shared with the Kartana service account!';
+    }
   }
 
   /**
@@ -102,12 +142,7 @@ export default class {
   public initializeMeetingPings(client: BotClient): void {
     this.meetingNotificationsJob = schedule.scheduleJob('*/15 * * * *', async () => {
       Logger.info('Running meeting notifications cronjob!');
-      const auth = new google.auth.GoogleAuth({
-        keyFilename: client.settings.googleSheetsKeyFile, 
-        scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
-      });
-      const authClient = await auth.getClient();
-      this.calendar = google.calendar({ version: 'v3', auth: authClient });
+      this.refreshAuth(client);
       this.runMeetingsPipeline(client);
     });
   }
