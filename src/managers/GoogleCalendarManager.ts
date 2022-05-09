@@ -40,38 +40,59 @@ export default class {
    * messages to the calendar's respective Discord channel for each meeting.
    * @param client The original client, for access to the configuration.
    * @param start Date object storing the start of the time window we are querying for.
+   * @param message The pre-built MessageEmbed we will send to Discord for each meeting notification.
    */
-  private async sendMeetingPings(client: BotClient, start: DateTime): Promise<void> {
+  private async sendMeetingPings(client: BotClient, start: DateTime, message: MessageEmbed): Promise<void> {
     /**
      * The end of the time window of the query is one minute after the given start time.
      */
-    const end = start.plus({ days: 1 });
+    const end = start.plus({ minutes: 30 });
 
     const calendarList = await this.calendar.calendarList.list();
-    for (const calendarListEntry in calendarList.data.items) {
-      const calendarID = (await JSON.parse(calendarListEntry)).id;
-      const res = await this.calendar.events.list({
-        calendarId: calendarID,
-        timeMin: start.toISO(),
-        timeMax: end.toISO(),
-        singleEvents: true,
-        orderBy: 'startTime',
-      });
-  
-      // Check that there are events to send notifications for
-      if (res && res.data.items) {
-        const events = res.data.items;
-        events.map((event, i) => {
-          if (event && event.start) {
-            // Send a specific embed for each meeting here
-            const eventStart = event.start.dateTime || event.start.date;
-            /** TODO: special text case for one hour from now, abstract embed building? */
-            console.log(`Happening now: ${eventStart} - ${event.summary}`);
-          }
+    /**
+     * Checking through all calendars in our calendar list...
+     */
+    if (calendarList.data.items) {
+      calendarList.data.items.map(async calendar => {
+        const res = await this.calendar.events.list({
+          calendarId: calendar.id as string,
+          timeMin: start.toISO(),
+          timeMax: end.toISO(),
+          singleEvents: true,
+          orderBy: 'startTime',
         });
-      } else {
-        console.log('No upcoming events found occurring right now.');
-      }
+    
+        // Check that there are events to send notifications for
+        if (res && res.data.items) {
+          const events = res.data.items;
+          events.map((event, i) => {
+            if (event && event.start && event.end && event.start.dateTime && event.end.dateTime) {
+              // Send a specific embed for each meeting to the specified channel
+              const startTime = DateTime.fromISO(event.start.dateTime);
+              /**
+              const searchInterval = Interval.fromDateTimes(start, end);
+              if (searchInterval.contains(startTime)) {} 
+              */
+              const endTime = DateTime.fromISO(event.end.dateTime);
+              const messageEmbed = message
+                .setTitle(event.summary || 'Untitled Event')
+                .setDescription(event.description || '')
+                .addField('Time', 
+                  `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`)
+                .addField('People', 'asdf')
+                .setColor('BLUE');
+              const channel = client.channels.cache.get('964648119184814152') as TextChannel;
+              // TODO: Add mentions to embed
+              channel.send({
+                content: `Meeting happening <t:${Math.trunc(startTime.toSeconds())}:R>!`,
+                embeds: [messageEmbed],
+              });
+            }
+          });
+        } else {
+          console.log('No upcoming events found occurring right now.');
+        }
+      });
     }
   }
 
@@ -88,13 +109,16 @@ export default class {
       * startTime to be (currentMinute-1):59.
       */
       const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
-      this.sendMeetingPings(client, now);
+      let message = new MessageEmbed().setTitle('Event happening now!');
+      this.sendMeetingPings(client, now, message);
 
       /*
       * We'll also send notifications for meetings happening a hour from now.
       */
       const oneHourFromNow = now.plus({ hours: 1 });
-      this.sendMeetingPings(client, oneHourFromNow);
+      message = new MessageEmbed().setTitle('Event happening in one hour!');
+      this.sendMeetingPings(client, oneHourFromNow, message);
+
     } catch (err) {
       // We'll report if there's an API error to deal with the issue.
       Logger.error('Error with Google Calendar API: ' + err);
@@ -102,7 +126,7 @@ export default class {
         .setTitle('⚠️ Error with Google Calendar API!')
         .setDescription('' + err)
         .setColor('DARK_RED');
-      const channel = client.channels.cache.get('') as TextChannel;
+      const channel = client.channels.cache.get('964648119184814152') as TextChannel;
       /**
       channel.send({
         content: `*Paging <@${client.settings.maintainerID}>!*`,
@@ -124,13 +148,12 @@ export default class {
    */
   public async addCalendar(client: BotClient, calendarID: string) : Promise<string> {
     await this.refreshAuth(client);
-    const res = await this.calendar.calendars.get({ calendarId: 'primary' });
-    console.log(res.data.summary);
+    this.runMeetingsPipeline(client);
     try {
       await this.calendar.calendarList.insert({ requestBody: { id: calendarID } });
       return 'Succesfully added calendar!';
     } catch (err) {
-      return err + ' Tip: Make sure the calendar\'s shared with the Kartana service account!';
+      return err + ' Tip: Make sure the calendar\'s shared with the Kartana service account first!';
     }
   }
 
