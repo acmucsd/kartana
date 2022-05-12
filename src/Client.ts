@@ -156,6 +156,13 @@ export default class Client extends DiscordClient implements BotClient {
       });
       throw new Error('Could not construct Client class: missing Discord Logistics Team Mention ID in envvars');
     }
+    if (!process.env.DISCORD_BOT_ERROR_CHANNEL_ID) {
+      Logger.error('Could not construct Client class: missing Discord Bot Error Channel ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Discord Bot Error Channel ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Discord Bot Error Channel ID in envvars');
+    }
     this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
     this.settings.notionCalendarID = process.env.NOTION_CALENDAR_ID;
     this.settings.googleSheetsServiceAccountEmail = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
@@ -165,6 +172,7 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.discordWebhookURL = process.env.DISCORD_WEBHOOK_URL;
     this.settings.maintainerID = process.env.DISCORD_MAINTAINER_MENTION_ID;
     this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;
+    this.settings.botErrorChannelID = process.env.DISCORD_BOT_ERROR_CHANNEL_ID;
     this.initialize().then();
   }
 
@@ -180,7 +188,7 @@ export default class Client extends DiscordClient implements BotClient {
       this.actionManager.initializeCommands(this);
       ActionManager.initializeEvents(this);
       this.notionEventSyncManager.initializeNotionSync(this);
-      this.googleCalendarManager.initializeMeetingPings(this);
+      await this.googleCalendarManager.initializeMeetingPings(this);
       await this.login(configuration.token);
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);

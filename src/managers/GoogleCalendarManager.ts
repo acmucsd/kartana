@@ -2,9 +2,10 @@ import { Service } from 'typedi';
 import schedule from 'node-schedule';
 import { BotClient } from '../types';
 import Logger from '../utils/Logger';
-import { DateTime } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
 import { MessageEmbed, TextChannel } from 'discord.js';
+import { MeetingPingsSchema,  DiscordInfo } from '../meeting-pings';
 
 /**
  * GoogleCalendarManager manages automatic event notifications on Discord of events on
@@ -21,6 +22,16 @@ export default class {
    * Cronjob to check for upcoming meetings every 15 minutes.
    */
   public meetingNotificationsJob!: schedule.Job;
+
+  /**
+   * List of all calendarIDs to search through when checking for upcoming events.
+   */
+  public calendarList: string[];
+
+  /**
+   * Mapping from each calendarID to the specific channel/people to notify for each event.
+   */
+  public calendarMapping: Map<string, DiscordInfo>;
 
   /**
    * Updates the Google Calendar auth and client before an API call.
@@ -46,54 +57,52 @@ export default class {
     /**
      * The end of the time window of the query is one minute after the given start time.
      */
-    const end = start.plus({ minutes: 30 });
+    const end = start.plus({ minutes: 1 });
 
-    const calendarList = await this.calendar.calendarList.list();
     /**
      * Checking through all calendars in our calendar list...
      */
-    if (calendarList.data.items) {
-      calendarList.data.items.map(async calendar => {
-        const res = await this.calendar.events.list({
-          calendarId: calendar.id as string,
-          timeMin: start.toISO(),
-          timeMax: end.toISO(),
-          singleEvents: true,
-          orderBy: 'startTime',
-        });
-    
-        // Check that there are events to send notifications for
-        if (res && res.data.items) {
-          const events = res.data.items;
-          events.map((event, i) => {
-            if (event && event.start && event.end && event.start.dateTime && event.end.dateTime) {
-              // Send a specific embed for each meeting to the specified channel
-              const startTime = DateTime.fromISO(event.start.dateTime);
-              /**
-              const searchInterval = Interval.fromDateTimes(start, end);
-              if (searchInterval.contains(startTime)) {} 
-              */
-              const endTime = DateTime.fromISO(event.end.dateTime);
+    this.calendarList.map(async calendarID => {
+      const res = await this.calendar.events.list({
+        calendarId: calendarID,
+        timeMin: start.toISO(),
+        timeMax: end.toISO(),
+        singleEvents: true,
+        orderBy: 'startTime',
+      });
+  
+      // Check that there are events to send notifications for
+      if (res && res.data.items) {
+        const events = res.data.items;
+        events.map((event, i) => {
+          if (event && event.start && event.end && event.start.dateTime && event.end.dateTime) {
+            // Send a specific embed for each meeting to the specified channel.
+            const startTime = DateTime.fromISO(event.start.dateTime);
+            const endTime = DateTime.fromISO(event.end.dateTime);
+            const searchInterval = Interval.fromDateTimes(start, end);
+            // We only send embeds for events that are just starting in our time window.
+            if (searchInterval.contains(startTime)) {
+              const mentions = this.calendarMapping[calendarID].getMentions();
               const messageEmbed = message
-                .setTitle(event.summary || 'Untitled Event')
+                .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
                 .setDescription(event.description || '')
-                .addField('Time', 
+                .addField('⏰ Time', 
                   `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`)
-                .addField('People', 'asdf')
+                .addField('👥 People', mentions)
                 .setColor('BLUE');
-              const channel = client.channels.cache.get('964648119184814152') as TextChannel;
+              const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
               // TODO: Add mentions to embed
               channel.send({
-                content: `Meeting happening <t:${Math.trunc(startTime.toSeconds())}:R>!`,
+                content: `${mentions} Event starting <t:${Math.trunc(startTime.toSeconds())}:R>!`,
                 embeds: [messageEmbed],
               });
             }
-          });
-        } else {
-          console.log('No upcoming events found occurring right now.');
-        }
-      });
-    }
+          }
+        });
+      } else {
+        Logger.info('No upcoming events found occurring right now.');
+      }
+    });
   }
 
   /**
@@ -126,7 +135,7 @@ export default class {
         .setTitle('⚠️ Error with Google Calendar API!')
         .setDescription('' + err)
         .setColor('DARK_RED');
-      const channel = client.channels.cache.get('964648119184814152') as TextChannel;
+      const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
       /**
       channel.send({
         content: `*Paging <@${client.settings.maintainerID}>!*`,
@@ -162,11 +171,24 @@ export default class {
    * upcoming meetings on the ACM Google Calendar.
    * @param client The original client, for access to the configuration.
    */
-  public initializeMeetingPings(client: BotClient): void {
+  public async initializeMeetingPings(client: BotClient): Promise<void> {
+    await this.refreshAuth(client);
+    this.calendarList = [];
+    this.calendarMapping = new Map<string, DiscordInfo>();
+    for (const entry of MeetingPingsSchema) {
+      this.calendarList.push(entry.calendarID);
+      this.calendarMapping[entry.calendarID] = new DiscordInfo(entry.channelID, entry.mentions);
+      try {
+        await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });
+      } catch (err) {
+        Logger.error(`Error importing calendar ${entry.name}!`);
+      }
+    }
     this.meetingNotificationsJob = schedule.scheduleJob('*/15 * * * *', async () => {
       Logger.info('Running meeting notifications cronjob!');
-      this.refreshAuth(client);
-      this.runMeetingsPipeline(client);
+      await this.refreshAuth(client);
+      await this.runMeetingsPipeline(client);
+      Logger.info('Finished running meeting notifications cronjob!');
     });
   }
 }
