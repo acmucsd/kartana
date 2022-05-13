@@ -330,6 +330,9 @@ export default class NotionEvent {
   // The Google Drive link for the recording assigned to this Event.
   private driveLink: URL | null;
 
+  // The time at which the food required for thie event needs to be picked up.
+  private foodPickupTime: DateTime | null;
+
   // TODO Consider replacing this with booleans.
   // To be honest, checking for strings named like this
   // is stupid. We should probably just use booleans
