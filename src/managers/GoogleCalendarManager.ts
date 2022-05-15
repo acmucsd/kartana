@@ -90,7 +90,7 @@ export default class {
                 .setColor('BLUE');
               const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
               channel.send({
-                content: `${mentions} Event starting <t:${Math.trunc(startTime.toSeconds())}:R>!`,
+                content: `${mentions} Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>!`,
                 embeds: [messageEmbed],
               });
             }

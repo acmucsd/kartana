@@ -257,3 +257,6 @@ gapi-service-account-creds.json
 
 # Notion Database properties
 database.properties
+
+# Meeting Pings Schema
+./meeting-pings/meetingPingsSchema.ts
