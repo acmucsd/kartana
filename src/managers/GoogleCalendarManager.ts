@@ -51,14 +51,12 @@ export default class {
    * messages to the calendar's respective Discord channel for each meeting.
    * @param client The original client, for access to the configuration.
    * @param start Date object storing the start of the time window we are querying for.
-   * @param message The pre-built MessageEmbed we will send to Discord for each meeting notification.
    */
-  private async sendMeetingPings(client: BotClient, start: DateTime, message: MessageEmbed): Promise<void> {
+  private async sendMeetingPings(client: BotClient, start: DateTime): Promise<void> {
     /**
      * The end of the time window of the query is one minute after the given start time.
      */
     const end = start.plus({ minutes: 1 });
-
     /**
      * Checking through all calendars in our calendar list...
      */
@@ -83,7 +81,7 @@ export default class {
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
               const mentions = this.calendarMapping[calendarID].getMentions();
-              const messageEmbed = message
+              const messageEmbed = new MessageEmbed()
                 .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
                 .setDescription(event.description || '')
                 .addField('⏰ Time', 
@@ -91,7 +89,6 @@ export default class {
                 .addField('👥 People', mentions)
                 .setColor('BLUE');
               const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
-              // TODO: Add mentions to embed
               channel.send({
                 content: `${mentions} Event starting <t:${Math.trunc(startTime.toSeconds())}:R>!`,
                 embeds: [messageEmbed],
@@ -118,15 +115,13 @@ export default class {
       * startTime to be (currentMinute-1):59.
       */
       const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
-      let message = new MessageEmbed().setTitle('Event happening now!');
-      this.sendMeetingPings(client, now, message);
+      this.sendMeetingPings(client, now);
 
       /*
       * We'll also send notifications for meetings happening a hour from now.
       */
       const oneHourFromNow = now.plus({ hours: 1 });
-      message = new MessageEmbed().setTitle('Event happening in one hour!');
-      this.sendMeetingPings(client, oneHourFromNow, message);
+      this.sendMeetingPings(client, oneHourFromNow);
 
     } catch (err) {
       // We'll report if there's an API error to deal with the issue.
@@ -150,23 +145,6 @@ export default class {
   }
 
   /**
-   * Attempts to add a new calendar to the list of calendars to send meeting pings for.
-   * @param client The original client, for access to the configuration.
-   * @param calendarID ID of the Google Calendar. Found through Google Calendar Settings -> Integrate calendar.
-   * @returns The response to original command, with information on the result of the API call.
-   */
-  public async addCalendar(client: BotClient, calendarID: string) : Promise<string> {
-    await this.refreshAuth(client);
-    this.runMeetingsPipeline(client);
-    try {
-      await this.calendar.calendarList.insert({ requestBody: { id: calendarID } });
-      return 'Succesfully added calendar!';
-    } catch (err) {
-      return err + ' Tip: Make sure the calendar\'s shared with the Kartana service account first!';
-    }
-  }
-
-  /**
    * Initialize the procedures involved to send Discord notifications for 
    * upcoming meetings on the ACM Google Calendar.
    * @param client The original client, for access to the configuration.
@@ -178,6 +156,7 @@ export default class {
     for (const entry of MeetingPingsSchema) {
       this.calendarList.push(entry.calendarID);
       this.calendarMapping[entry.calendarID] = new DiscordInfo(entry.channelID, entry.mentions);
+      Logger.info(`Successfully imported calendar ${entry.name}`);
       try {
         await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });
       } catch (err) {

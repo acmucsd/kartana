@@ -11,4 +11,10 @@ export const MeetingPingsSchema = [
     channelID: '964648119184814152',
     mentions: '974187756563623987',
   },
+  {
+    name: 'Test Calendar 2',
+    calendarID: 'm12q9i5i82hg8ces1t8nrsfo5g@group.calendar.google.com',
+    channelID: '975249348705271858',
+    mentions: '964649061443571715',
+  },
 ];
