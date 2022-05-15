@@ -259,4 +259,4 @@ gapi-service-account-creds.json
 database.properties
 
 # Meeting Pings Schema
-./meeting-pings/meetingPingsSchema.ts
+src/meeting-pings/meetingPingsSchema.ts
