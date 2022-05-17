@@ -131,14 +131,8 @@ export default class {
         .setDescription('' + err)
         .setColor('DARK_RED');
       const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
-      /**
       channel.send({
         content: `*Paging <@${client.settings.maintainerID}>!*`,
-        embeds: [errorEmbed],
-      });
-      */
-      channel.send({
-        content: 'Error!',
         embeds: [errorEmbed],
       });
     }
@@ -160,7 +154,17 @@ export default class {
       try {
         await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });
       } catch (err) {
-        Logger.error(`Error importing calendar ${entry.name}!`);
+        // We'll report if there's an API error to deal with the issue.
+        Logger.error(`Error importing calendar ${entry.name}: ${err}`);
+        const errorEmbed = new MessageEmbed()
+          .setTitle('⚠️ Error with Google Calendar API!')
+          .setDescription(`Error importing calendar ${entry.name}: ${err}`)
+          .setColor('DARK_RED');
+        const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+        channel.send({
+          content: `*Paging <@${client.settings.maintainerID}>!*`,
+          embeds: [errorEmbed],
+        });
       }
     }
     this.meetingNotificationsJob = schedule.scheduleJob('*/15 * * * *', async () => {
