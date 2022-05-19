@@ -81,13 +81,16 @@ export default class {
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
               const mentions = this.calendarMapping[calendarID].getMentions();
-              const messageEmbed = new MessageEmbed()
+              let messageEmbed = new MessageEmbed()
                 .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
                 .setDescription(event.description || '')
                 .addField('⏰ Time', 
                   `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`)
                 .addField('👥 People', mentions)
                 .setColor('BLUE');
+              if (event.location) {
+                messageEmbed = messageEmbed.addField('📍 Location', event.location);
+              }
               const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
               channel.send({
                 content: `${mentions} Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>!`,
