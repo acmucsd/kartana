@@ -4,7 +4,7 @@ import { BotClient } from '../types';
 import Logger from '../utils/Logger';
 import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
-import { MessageEmbed, TextChannel } from 'discord.js';
+import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
 import { MeetingPingsSchema,  DiscordInfo } from '../meeting-pings';
 
 /**
@@ -57,6 +57,8 @@ export default class {
      * The end of the time window of the query is one minute after the given start time.
      */
     const end = start.plus({ minutes: 1 });
+    // Reading in calendar colors from the Google API to color our embeds
+    const colors = await this.calendar.colors.get({});
     /**
      * Checking through all calendars in our calendar list...
      */
@@ -72,7 +74,10 @@ export default class {
       // Check that there are events to send notifications for
       if (res && res.data.items) {
         const events = res.data.items;
-        events.map((event, i) => {
+        // Getting the specific color ID of our current calendar to color our embeds later.
+        const calColorResponse = await this.calendar.calendarList.get({ calendarId: calendarID });
+        const calColorID = calColorResponse.data.colorId;
+        events.map(async (event, i) => {
           if (event && event.start && event.end && event.start.dateTime && event.end.dateTime) {
             // Send a specific embed for each meeting to the specified channel.
             const startTime = DateTime.fromISO(event.start.dateTime);
@@ -87,9 +92,20 @@ export default class {
                 .addField('⏰ Time', 
                   `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`)
                 .addField('👥 People', mentions)
-                .setColor('BLUE');
+                .setColor('WHITE');
+              // Add the location of the event to the embed if it exists.
               if (event.location) {
                 messageEmbed = messageEmbed.addField('📍 Location', event.location);
+              }
+              // Update the coloring for our embed.
+              if (event.colorId && colors.data.event) {
+                // Checking if the event has a special color first...
+                messageEmbed = messageEmbed.setColor(colors.data.event[event.colorId].background as ColorResolvable);
+              } else {
+                // Otherwise, we default to the color given by our calendar.
+                if (calColorID && colors.data.calendar) {
+                  messageEmbed = messageEmbed.setColor(colors.data.calendar[calColorID].background as ColorResolvable);
+                }
               }
               const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
               channel.send({
