@@ -5,7 +5,7 @@ import Logger from '../utils/Logger';
 import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
-import { MeetingPingsSchema,  DiscordInfo } from '../meeting-pings';
+import { MeetingPingsSchema, DiscordInfo } from '../meeting-pings';
 
 /**
  * GoogleCalendarManager manages automatic event notifications on Discord of events on
@@ -85,7 +85,7 @@ export default class {
             const searchInterval = Interval.fromDateTimes(start, end);
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
-              const mentions = this.calendarMapping[calendarID].getMentions();
+              const mentions = this.calendarMapping[calendarID].getMentions(event);
               let messageEmbed = new MessageEmbed()
                 .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
                 .setDescription(event.description || '')

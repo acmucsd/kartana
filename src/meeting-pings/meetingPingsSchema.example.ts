@@ -21,3 +21,16 @@ export const MeetingPingsSchema = [
     mentions: '0123456789010111213',
   },
 ];
+
+/**
+ * The schema/mapping for mentions to function in GoogleCalendarManager.
+ * Each entry of the array maps one email to the person's Discord ID so that
+ * when the email appears as a guest for a Google Calendar Event, Kartana will default
+ * to pinging the people under the guest list instead of the Discord role associated with the calendar.
+ */
+export const CalendarGuestSchema = [
+  {
+    email: 'email@email.com',
+    discordID: '0123456789010111213',
+  },
+];
