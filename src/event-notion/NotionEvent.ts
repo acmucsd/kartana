@@ -45,7 +45,7 @@ const toNotionRichText = (text: string) => {
  * @returns The Notion Option for TAP form status.
  */
 const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
-  return (response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room"
+  return (response['Where is your event taking place?'] === 'My event is on Zoom'
   || response['Where is your event taking place?'] === 'My event is on Discord only'
   || response['Where is your event taking place?'] === 'My event is off campus')
     ? 'TAP N/A'
@@ -64,7 +64,7 @@ const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
  * @returns The Notion Option for CSI Intake Form status.
  */
 const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intake Form TODO' => {
-  return (response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room"
+  return (response['Where is your event taking place?'] === 'My event is on Zoom'
   || response['Where is your event taking place?'] === 'My event is on Discord only'
   || response['Where is your event taking place?'] === 'My event is off campus')
     ? 'Intake Form N/A'
@@ -84,8 +84,7 @@ const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intak
  * @returns The Notion Option for Booking status.
  */
 const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO' => {
-  return (response['Where is your event taking place?'] === 'I need a room on campus'
-  || response['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room") 
+  return (response['Where is your event taking place?'] === 'I need a venue on campus') 
     ? 'Booking TODO'
     : 'Booking N/A';
 };
@@ -406,11 +405,11 @@ export default class NotionEvent {
     this.fundingManager = null;
     // This question is also equally long.
     // eslint-disable-next-line max-len
-    this.additionalFinanceInfo = formResponse['Anything else you would like to let the Finance Team know about your event?'];
+    this.additionalFinanceInfo = formResponse['Any additional funding details?'];
     this.location = notionLocationTag[formResponse['First choice for venue']] || 'Other (See Details)';
     this.locationBackup1 = notionLocationTag[formResponse['Second choice for venue']] || 'Other (See Details)';
     this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
-    if (formResponse['Where is your event taking place?'] === "My event is on Zoom, but I'll use a normal room") {
+    if (formResponse['Where is your event taking place?'] === 'My event is on Zoom') {
       this.location = 'Zoom (See Details)';
     }
     if (formResponse['Where is your event taking place?'] === 'My event is on Discord only') {
@@ -481,16 +480,16 @@ export default class NotionEvent {
     //
     // TODO Ask host form to validate URL input fields as URL's.
     try {
-      if (formResponse['What ACMURL do you want for the Facebook event page?'].startsWith('acmurl.com')) {
-        this.fbACMURL = new URL('https://' + formResponse['What ACMURL do you want for the Facebook event page?']);
+      if (formResponse['What FB ACMURL do you want for the Facebook event page?'].startsWith('acmurl.com')) {
+        this.fbACMURL = new URL('https://' + formResponse['What FB ACMURL do you want for the Facebook event page?']);
       } else {
-        this.fbACMURL = formResponse['What ACMURL do you want for the Facebook event page?'] !== ''
-          ? new URL(formResponse['What ACMURL do you want for the Facebook event page?'])
+        this.fbACMURL = formResponse['What FB ACMURL do you want for the Facebook event page?'] !== ''
+          ? new URL(formResponse['What FB ACMURL do you want for the Facebook event page?'])
           : null; 
       }
     } catch (e) {
       Logger.warn(`Event ${this.name} has erroneous FB ACMURL input! Setting as null.`, {
-        input: formResponse['What ACMURL do you want for the Facebook event page?'],
+        input: formResponse['What FB ACMURL do you want for the Facebook event page?'],
       });
       this.fbACMURL = null;
     }
