@@ -33,23 +33,28 @@ export class DiscordInfo {
   public getMentions(event: calendar_v3.Schema$Event): string {
     /**
      * If there are attendees in this event, we'll return their
-     * Discord IDs instead of pinging the Discord role.
+     * Discord IDs instead of pinging the Discord role if their email is 
+     * stored in our Calendar Guest mapping.
      */
     if (event.attendees && event.creator && event.creator.email) {
       let mentions = '';
-      if (calendarGuestMap[event.creator.email]) {
-        mentions = `<@${calendarGuestMap[event.creator.email]}>`;
-      }
       for (const attendee of event.attendees) {
         if (attendee.email && calendarGuestMap[attendee.email]) {
-          mentions += ` <@${calendarGuestMap[attendee.email]}>`;
+          mentions += `<@${calendarGuestMap[attendee.email]}>`;
         }
       }
       /**
-       * If none of their emails were in our mapping, we'll just default to pinging the role.
+       * If none of their emails were in our mapping, we'll default to pinging the role.
        */
       if (mentions === '') {
         return `<@&${this.mentions}>`;
+      }
+      /**
+       * We've now guaranteed that we're pinging guests about the event,
+       * so we'll add the mention for the creator of the event at the start.
+       */
+      if (calendarGuestMap[event.creator.email]) {
+        mentions = `<@${calendarGuestMap[event.creator.email]}>` + mentions;
       }
       return mentions;
     }

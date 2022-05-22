@@ -260,3 +260,4 @@ database.properties
 
 # Meeting Pings Schema
 src/meeting-pings/meetingPingsSchema.ts
+src/meeting-pings/meetingPingsSchema.production.ts
