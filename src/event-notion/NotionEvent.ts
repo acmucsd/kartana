@@ -464,13 +464,13 @@ export default class NotionEvent {
     this.prRequests = formResponse['Any additional comments or requests?'];
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
     this.driveLink = null;
-    this.projectorStatus = formResponse['Will you need a projector?'] === 'Yes' ? 'Yes' : 'No';
+    this.projectorStatus = formResponse['Will you need a projector and/or other tech?'] === 'Yes' ? 'Yes' : 'No';
     this.hostedBy = [];
     this.locationDetails = this.location === 'Other (See Details)' ? formResponse['Other venue details?'] : '';
     this.fundingSource = [];
     this.prManager = null;
     this.date = getEventInterval(formResponse);
-    this.requestedItems = formResponse['What do you need funding for?'];
+    this.requestedItems = formResponse['What food do you need funding for?'];
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
@@ -705,6 +705,7 @@ export default class NotionEvent {
       },
     };
 
+    console.log(createPagePayload);
     // Upload the event to Notion's API. If this errors, out, we'll need to
     // send a message to Discord paging me about the issue.
     //
