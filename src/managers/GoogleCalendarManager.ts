@@ -78,6 +78,8 @@ export default class {
         const calColorResponse = await this.calendar.calendarList.get({ calendarId: calendarID });
         const calColorID = calColorResponse.data.colorId;
         events.map(async (event, i) => {
+          // Note: All events in this list returned by the API are guaranteed to have these fields.
+          // I've included this statement so TypeScript won't complain about them potentially being undefined.
           if (event && event.start && event.end && event.start.dateTime && event.end.dateTime) {
             // Send a specific embed for each meeting to the specified channel.
             const startTime = DateTime.fromISO(event.start.dateTime);
