@@ -1252,7 +1252,7 @@ export const notionCalSchema = {
           'color': 'purple',
         },
         {
-          'id': '7be968f4-5363-4e57-9ed3-2c9fccaf70e4',
+          'id': '11a1da26-8ec0-4e7a-ae71-ada024205e24',
           'name': 'CSE B225 (Fishbowl)',
           'color': 'brown',
         },
