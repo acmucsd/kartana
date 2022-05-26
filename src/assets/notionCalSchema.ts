@@ -505,6 +505,11 @@ export const notionCalSchema = {
           'name': 'PC Bear Room',
           'color': 'default',
         },
+        {
+          'id': 'f937d411-cdab-4f54-b1c6-29944a662477',
+          'name': 'Student Services Center Conference Room',
+          'color': 'gray',
+        },
       ],
     },
   },

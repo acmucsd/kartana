@@ -37,4 +37,5 @@ export default {
   discordWebhookURL: '',
   maintainerID: '',
   logisticsTeamID: '',
+  botErrorChannelID: '',
 } as BotSettings;

@@ -11,6 +11,7 @@ import {
   InteractionReplyOptions,
 } from 'discord.js';
 import Command from '../Command';
+import GoogleCalendarManager from '../managers/GoogleCalendarManager';
 import NotionEventSyncManager from '../managers/NotionEventSyncManager';
   
 /**
@@ -137,6 +138,10 @@ export interface BotSettings {
    */
   maintainerID: string;
   logisticsTeamID: string;
+  /**
+   * Discord channel ID where Google Calendar bot error messages will be sent.
+   */
+  botErrorChannelID: string;
 }
   
 /**
@@ -165,6 +170,7 @@ export interface BotClient extends Client {
   }
 
   notionEventSyncManager: NotionEventSyncManager;
+  googleCalendarManager: GoogleCalendarManager;
 }
   
 /**
