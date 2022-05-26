@@ -169,11 +169,11 @@ export default class {
     this.calendarList = [];
     this.calendarMapping = new Map<string, DiscordInfo>();
     for (const entry of MeetingPingsSchema) {
-      this.calendarList.push(entry.calendarID);
-      this.calendarMapping[entry.calendarID] = new DiscordInfo(entry.channelID, entry.mentions);
-      Logger.info(`Successfully imported calendar ${entry.name}`);
       try {
         await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });
+        this.calendarList.push(entry.calendarID);
+        this.calendarMapping[entry.calendarID] = new DiscordInfo(entry.channelID, entry.mentions);
+        Logger.info(`Successfully imported calendar ${entry.name}`);
       } catch (err) {
         // We'll report if there's an API error to deal with the issue.
         Logger.error(`Error importing calendar ${entry.name}: ${err}`);
