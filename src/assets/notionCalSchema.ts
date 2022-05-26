@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Tue, Apr 19 2022 23:34:35 PST.
+ * Thu, May 12 2022 19:54:13 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -127,14 +127,14 @@ export const notionCalSchema = {
           'color': 'brown',
         },
         {
-          'id': 'd54031b1-9449-4198-adbe-477c2cec7753',
-          'name': 'Other (See Comments)',
-          'color': 'pink',
-        },
-        {
           'id': '28c77a2a-f1c6-4746-817f-0cbee8ad8a1e',
           'name': 'Talk',
           'color': 'purple',
+        },
+        {
+          'id': 'dd8839f8-08df-4ff9-a568-566f3eb48269',
+          'name': 'Sponsored Event',
+          'color': 'orange',
         },
         {
           'id': '69179491-8f97-4ba7-b07d-09af451cc78a',
@@ -160,6 +160,11 @@ export const notionCalSchema = {
           'id': '0d903a72-17d0-4e0f-a322-dc3cc2257190',
           'name': 'Info Session',
           'color': 'green',
+        },
+        {
+          'id': 'd54031b1-9449-4198-adbe-477c2cec7753',
+          'name': 'Other (See Comments)',
+          'color': 'pink',
         },
         {
           'id': '56410925-4f27-4c8f-b1bd-99ed593389f5',
@@ -500,6 +505,11 @@ export const notionCalSchema = {
           'name': 'PC Bear Room',
           'color': 'default',
         },
+        {
+          'id': 'f937d411-cdab-4f54-b1c6-29944a662477',
+          'name': 'Student Services Center Conference Room',
+          'color': 'gray',
+        },
       ],
     },
   },
@@ -607,7 +617,7 @@ export const notionCalSchema = {
         {
           'id': '079df246-e630-438e-9a5d-a9e17d8a819d',
           'name': 'ACM General',
-          'color': 'gray',
+          'color': 'blue',
         },
         {
           'id': 'bc88bab4-fe15-422b-bd06-dc87fbeb98b2',
@@ -617,7 +627,7 @@ export const notionCalSchema = {
         {
           'id': '85c859fe-faa9-4eff-9d5e-242117dbe363',
           'name': 'ACM Cyber',
-          'color': 'blue',
+          'color': 'green',
         },
         {
           'id': 'bc303ba8-67e4-46f1-955e-c0b0a14ff525',
@@ -923,6 +933,12 @@ export const notionCalSchema = {
     'number': {
       'format': 'number',
     },
+  },
+  'Food Pickup Time': {
+    'id': 'b%5DyD',
+    'name': 'Food Pickup Time',
+    'type': 'date',
+    'date': {},
   },
   'Location URL': {
     'id': 'cjEL',
