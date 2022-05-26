@@ -33,7 +33,8 @@ export type EventLocation = 'Zoom (See Details)'
 | 'Other (See Details)'
 | 'CSE B225 (Fishbowl)'
 | 'PC Forum'
-| 'PC Bear Room';
+| 'PC Bear Room'
+| 'Design and Innovation Building 202';
 
 /**
  * Converter from the Host Form's locations to the Notion Calendar
@@ -52,13 +53,14 @@ export const notionLocationTag = {
   'PC Red Shoe Room': 'PC Red Shoe Room',
   'PC Bear Room': 'PC Bear Room',
   'PC Forum': 'PC Forum',
-  'Student Services Center Multi-Purpose Room': 'Student Services Center Multi-Purpose Room',
+  'Student Services Center Multi-Purpose Room (Paid)': 'Student Services Center Multi-Purpose Room',
   'Qualcomm Room': 'Qualcomm Room',
   'Henry Booker Room': 'Henry Booker Room',
   'CSE 1202': 'CSE 1202',
   'CSE B225': 'CSE B225 (Fishbowl)',
   'CSE Labs': 'Other (See Details)',
-  'Fung Auditorium': 'Fung Auditorium',
+  'Design and Innovation Building Room 202': 'Design and Innovation Building 202',
+  'Fung Auditorium (Paid)': 'Fung Auditorium',
   'Warren Bear': 'Warren Bear',
   'Warren College SAC': 'Warren College SAC',
   'Warren Mall': 'Warren Mall',
@@ -81,7 +83,7 @@ export const notionYoutubeAnswer = {
   'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me': 'Yes but I will record it myself and send the Events team a link',
   'Yes, I would like the Events team to handle the all aspects of recording for my event (in person events only)': 'Yes I would like the Events team to handle the all aspects of recording for my event',
   'Yes, and I will upload it to the ACM YouTube channel myself': 'Yes and I will upload it to the ACM YouTube channel myself',
-  'Yes, but I will record it myself and send the Events team a link': 'Yes but I will record it myself and send the Events team a link',
+  'Yes, I will record it myself and send the Events team a link': 'Yes but I will record it myself and send the Events team a link',
   '': 'No I do not want anything uploaded to YouTube',
 };
 /* eslint-enable max-len */
@@ -163,7 +165,9 @@ export type StudentOrg = 'ACM General'
 | 'Phi Beta Lambda'
 | 'Quantum Computing at UCSD'
 | 'Girls Who Code'
-| 'The Zone';
+| 'The Zone'
+| 'csforeach'
+| 'SWE';
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -195,5 +199,7 @@ export const isStudentOrg = (org: string): org is StudentOrg => {
   || org === 'Phi Beta Lambda'
   || org === 'Quantum Computing at UCSD'
   || org === 'Girls Who Code'
-  || org === 'The Zone';
+  || org === 'The Zone'
+  || org === 'csforeach'
+  || org === 'SWE';
 };

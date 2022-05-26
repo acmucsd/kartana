@@ -1246,6 +1246,11 @@ export const notionCalSchema = {
           'name': 'PC Muir Room',
           'color': 'purple',
         },
+        {
+          'id': '7be968f4-5363-4e57-9ed3-2c9fccaf70e4',
+          'name': 'CSE B225 (Fishbowl)',
+          'color': 'brown',
+        },
       ],
     },
   },
