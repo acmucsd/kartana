@@ -64,11 +64,14 @@ const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
  * @returns The Notion Option for CSI Intake Form status.
  */
 const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intake Form TODO' => {
+  return 'Intake Form N/A';
+  /** We currently don't need intake forms, so this is commented out.
   return (response['Where is your event taking place?'] === 'My event is on Zoom'
   || response['Where is your event taking place?'] === 'My event is on Discord only'
   || response['Where is your event taking place?'] === 'My event is off campus')
     ? 'Intake Form N/A'
     : 'Intake Form TODO';
+  */
 };
 
 /**
@@ -144,6 +147,19 @@ const getEventInterval = (response: HostFormResponse): Interval => {
     DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'M/d/yyyy h:mm:ss a'),
     DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/d/yyyy h:mm:ss a'),
   );
+};
+
+/**
+ * Get the food pickup time for an event.
+ * 
+ * @param response The HostFormResponse for a given NotionEvent.
+ * @returns The DateTime when food is planned to be picked up, or null if the field is blank on the form.
+ */
+const getFoodPickupTime = (response: HostFormResponse): DateTime | null => {
+  if (response['Food Pickup Time']) {
+    return DateTime.fromFormat(`${response['Preferred date']} ${response['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a');
+  }
+  return null;
 };
 
 /**
@@ -464,6 +480,7 @@ export default class NotionEvent {
     this.prRequests = formResponse['Any additional comments or requests?'];
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
     this.driveLink = null;
+    this.foodPickupTime = getFoodPickupTime(formResponse);
     this.projectorStatus = formResponse['Will you need a projector and/or other tech?'] === 'Yes' ? 'Yes' : 'No';
     this.hostedBy = [];
     this.locationDetails = this.location === 'Other (See Details)' ? formResponse['Other venue details?'] : '';
@@ -657,6 +674,14 @@ export default class NotionEvent {
             return { name: fundingSource };
           }),
         },
+        
+        ...(this.foodPickupTime !== null ? {
+          'Food Pickup Time': {
+            date: { 
+              start: this.foodPickupTime.toISO(),
+            },
+          },
+        } : {}),
 
         ...(this.description !== '' ? {
           'Event Description': {
