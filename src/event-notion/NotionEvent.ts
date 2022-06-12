@@ -64,14 +64,11 @@ const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
  * @returns The Notion Option for CSI Intake Form status.
  */
 const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intake Form TODO' => {
-  return 'Intake Form N/A';
-  /** We currently don't need intake forms, so this is commented out.
   return (response['Where is your event taking place?'] === 'My event is on Zoom'
   || response['Where is your event taking place?'] === 'My event is on Discord only'
   || response['Where is your event taking place?'] === 'My event is off campus')
     ? 'Intake Form N/A'
     : 'Intake Form TODO';
-  */
 };
 
 /**
@@ -342,6 +339,9 @@ export default class NotionEvent {
   | 'From ACM'
   | 'N/A';
 
+  // Any additional tech requests by the submitters of this Event.
+  private techRequests: string;
+
   // The Google Drive link for the recording assigned to this Event.
   private driveLink: URL | null;
 
@@ -479,6 +479,7 @@ export default class NotionEvent {
     this.youtubeLink = null;
     this.prRequests = formResponse['Any additional comments or requests?'];
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
+    this.techRequests = formResponse['If you need tech or equipment, please specify here'];
     this.driveLink = null;
     this.foodPickupTime = getFoodPickupTime(formResponse);
     this.projectorStatus = formResponse['Will you need a projector and/or other tech?'] === 'Yes' ? 'Yes' : 'No';
@@ -550,9 +551,12 @@ export default class NotionEvent {
         'CSI Form Status': {
           select: { name: this.csiFormStatus },
         },
+        /**
+         * We currently don't need intake forms, so this is commented out.
         'Intake Form Status': {
           select: { name: this.intakeFormStatus },
         },
+        */
         'TAP Status': {
           select: { name: this.TAPStatus },
         },
@@ -651,6 +655,12 @@ export default class NotionEvent {
         // "Drive Link" omitted.
         //
         // We don't know how to set this yet.
+        ...(this.techRequests !== '' ? {
+          'Tech Requests': {
+            rich_text: toNotionRichText(this.techRequests),
+          },
+        } : {}),
+
         'Projector?': {
           select: { name: this.projectorStatus },
         },

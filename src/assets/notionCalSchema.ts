@@ -267,6 +267,12 @@ export const notionCalSchema = {
       ],
     },
   },
+  'Tech Requests': {
+    'id': '%3Enm%7D',
+    'name': 'Tech Requests',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
   'TAP Status': {
     'id': '%3Fz6_',
     'name': 'TAP Status',
@@ -340,6 +346,12 @@ export const notionCalSchema = {
   'Marketing Description': {
     'id': 'BW%2Cy',
     'name': 'Marketing Description',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
+  'Property': {
+    'id': 'C%7DSX',
+    'name': 'Property',
     'type': 'rich_text',
     'rich_text': {},
   },
