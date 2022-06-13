@@ -147,6 +147,19 @@ const getEventInterval = (response: HostFormResponse): Interval => {
 };
 
 /**
+ * Get the food pickup time for an event.
+ * 
+ * @param response The HostFormResponse for a given NotionEvent.
+ * @returns The DateTime when food is planned to be picked up, or null if the field is blank on the form.
+ */
+const getFoodPickupTime = (response: HostFormResponse): DateTime | null => {
+  if (response['Food Pickup Time']) {
+    return DateTime.fromFormat(`${response['Preferred date']} ${response['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a');
+  }
+  return null;
+};
+
+/**
  * NotionEvent is a representation of an event stored in the Notion Calendar.
  * 
  * This Event can be of any type and does not have to correspond directly to a hosted event
@@ -326,6 +339,9 @@ export default class NotionEvent {
   | 'From ACM'
   | 'N/A';
 
+  // Any additional tech requests by the submitters of this Event.
+  private techRequests: string;
+
   // The Google Drive link for the recording assigned to this Event.
   private driveLink: URL | null;
 
@@ -463,7 +479,9 @@ export default class NotionEvent {
     this.youtubeLink = null;
     this.prRequests = formResponse['Any additional comments or requests?'];
     this.avEquipment = this.recording === 'Yes' ?  'From Venue' : 'N/A';
+    this.techRequests = formResponse['If you need tech or equipment, please specify here'];
     this.driveLink = null;
+    this.foodPickupTime = getFoodPickupTime(formResponse);
     this.projectorStatus = formResponse['Will you need a projector and/or other tech?'] === 'Yes' ? 'Yes' : 'No';
     this.hostedBy = [];
     this.locationDetails = this.location === 'Other (See Details)' ? formResponse['Other venue details?'] : '';
@@ -533,9 +551,12 @@ export default class NotionEvent {
         'CSI Form Status': {
           select: { name: this.csiFormStatus },
         },
+        /**
+         * We currently don't need intake forms, so this is commented out.
         'Intake Form Status': {
           select: { name: this.intakeFormStatus },
         },
+        */
         'TAP Status': {
           select: { name: this.TAPStatus },
         },
@@ -634,6 +655,12 @@ export default class NotionEvent {
         // "Drive Link" omitted.
         //
         // We don't know how to set this yet.
+        ...(this.techRequests !== '' ? {
+          'Tech Requests': {
+            rich_text: toNotionRichText(this.techRequests),
+          },
+        } : {}),
+
         'Projector?': {
           select: { name: this.projectorStatus },
         },
@@ -657,6 +684,14 @@ export default class NotionEvent {
             return { name: fundingSource };
           }),
         },
+        
+        ...(this.foodPickupTime !== null ? {
+          'Food Pickup Time': {
+            date: { 
+              start: this.foodPickupTime.toISO(),
+            },
+          },
+        } : {}),
 
         ...(this.description !== '' ? {
           'Event Description': {
