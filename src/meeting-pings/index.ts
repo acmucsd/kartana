@@ -38,15 +38,27 @@ export class DiscordInfo {
      */
     if (event.attendees && event.creator && event.creator.email) {
       let mentions = '';
+      /** 
+       * Flag indicating if an attendee has successfully been 
+       * found in the mapping and added to the ping list.
+       */
+      let attendeeAdded = false;
+
       for (const attendee of event.attendees) {
         if (attendee.email && calendarGuestMap[attendee.email]) {
-          mentions += `<@${calendarGuestMap[attendee.email]}>`;
+          // Special case to make sure the formatted string is correctly separated by spaces.
+          if (!attendeeAdded) {
+            attendeeAdded = true;
+            mentions += `<@${calendarGuestMap[attendee.email]}>`;
+          } else {
+            mentions += ` <@${calendarGuestMap[attendee.email]}>`;
+          }
         }
       }
       /**
        * If none of their emails were in our mapping, we'll default to pinging the role.
        */
-      if (mentions === '') {
+      if (!attendeeAdded) {
         return `<@&${this.mentions}>`;
       }
       /**
@@ -54,7 +66,7 @@ export class DiscordInfo {
        * so we'll add the mention for the creator of the event at the start.
        */
       if (calendarGuestMap[event.creator.email]) {
-        mentions = `<@${calendarGuestMap[event.creator.email]}>` + mentions;
+        mentions = `<@${calendarGuestMap[event.creator.email]}> ` + mentions;
       }
       return mentions;
     }

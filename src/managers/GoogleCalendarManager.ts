@@ -111,7 +111,7 @@ export default class {
               }
               const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
               channel.send({
-                content: `${mentions} Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>!`,
+                content: `Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
                 embeds: [messageEmbed],
               });
             }

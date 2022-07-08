@@ -105,8 +105,8 @@ const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO
  * @returns The Notion Option for Recording requirement.
  */
 const needsRecording = (response: HostFormResponse): 'Yes' | 'No' => {
-  return (response['Will you want a recording of your event uploaded to the ACM YouTube channel?'] === 'Yes'
-  || response['Will you want a recording of your in person event uploaded to the ACM YouTube channel? '] === 'Yes')
+  return (response['Will you want a recording of your event uploaded to the ACM YouTube channel?'] 
+          === 'Yes, I will record it myself and send the Events team a link')
     ? 'Yes'
     : 'No';
 };
