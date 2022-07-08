@@ -567,7 +567,7 @@ export default class NotionEvent {
         // "Marketing Description" omitted.
         //
         // The form does not exactly provide a specific way to deduce this.
-        ...(this.additionalFinanceInfo !== '' ? {
+        ...(this.additionalFinanceInfo ? {
           'Additional Finance Info': {
             rich_text: toNotionRichText(this.additionalFinanceInfo),
           },
@@ -577,7 +577,7 @@ export default class NotionEvent {
         },
         // Booking Time omitted.
 
-        ...(this.recordingRequests !== '' ? {
+        ...(this.recordingRequests ? {
           'Recording Requests': {
             rich_text: toNotionRichText(this.recordingRequests),
           },
@@ -592,7 +592,7 @@ export default class NotionEvent {
         //
         // This is set by EC's and Marketing, not us.
 
-        ...(this.fbCoHost !== '' ? {
+        ...(this.fbCoHost ? {
           'FB CoHost': {
             rich_text: toNotionRichText(this.fbCoHost),
           },
@@ -616,12 +616,12 @@ export default class NotionEvent {
         // If we have any backup locations, add them. Else, just don't.
         //
         // FYI, spreading empty objects does nothing.
-        ...(this.locationBackup1 !== null ? {
+        ...(this.locationBackup1 ? {
           'Location Backup 1': {
             select: { name: this.locationBackup1 },
           },
         } : {}),
-        ...(this.locationBackup2 !== null ? {
+        ...(this.locationBackup2 ? {
           'Location Backup 2': {
             select: { name: this.locationBackup2 },
           },
@@ -634,7 +634,7 @@ export default class NotionEvent {
         // This is required until the Host Form guarantees the Event Link field
         // is filled regardless of situation.
         // TODO Remove this along with null check for Event Link field.
-        ...(this.locationURL !== null ? {
+        ...(this.locationURL ? {
           'Location URL': {
             url: this.locationURL.host + this.locationURL.pathname,
           },
@@ -643,7 +643,7 @@ export default class NotionEvent {
         // "YouTube Link" omitted.
         //
         // We don't get this from the host form.
-        ...(this.prRequests !== '' ? {
+        ...(this.prRequests ? {
           'PR Requests': {
             rich_text: toNotionRichText(this.prRequests),
           },
@@ -655,7 +655,7 @@ export default class NotionEvent {
         // "Drive Link" omitted.
         //
         // We don't know how to set this yet.
-        ...(this.techRequests !== '' ? {
+        ...(this.techRequests ? {
           'Tech Requests': {
             rich_text: toNotionRichText(this.techRequests),
           },
@@ -673,7 +673,7 @@ export default class NotionEvent {
         // This COULD be done if everyone had their names set on Notion,
         // but it'll be difficult to find them otherwise.
 
-        ...(this.locationDetails !== '' ? {
+        ...(this.locationDetails ? {
           'Location Details': {
             rich_text: toNotionRichText(this.locationDetails),
           },
@@ -685,7 +685,7 @@ export default class NotionEvent {
           }),
         },
         
-        ...(this.foodPickupTime !== null ? {
+        ...(this.foodPickupTime ? {
           'Food Pickup Time': {
             date: { 
               start: this.foodPickupTime.toISO(),
@@ -693,7 +693,7 @@ export default class NotionEvent {
           },
         } : {}),
 
-        ...(this.description !== '' ? {
+        ...(this.description ? {
           'Event Description': {
             rich_text: toNotionRichText(this.description),
           },
@@ -714,7 +714,7 @@ export default class NotionEvent {
           },
         },
 
-        ...(this.requestedItems !== '' ? {
+        ...(this.requestedItems ? {
           'Requested Items': {
             rich_text: toNotionRichText(this.requestedItems),
           },
@@ -723,13 +723,13 @@ export default class NotionEvent {
         'Upload to Youtube?': {
           select: { name: this.uploadToYoutube },
         },
-        ...(this.fbACMURL !== null ? {
+        ...(this.fbACMURL ? {
           'FB ACMURL': {
             url: this.fbACMURL.host + this.fbACMURL.pathname,
           },
         } : {}),
 
-        ...(this.dateTimeNotes !== '' ? {
+        ...(this.dateTimeNotes ? {
           'Date/Time Notes': {
             rich_text: toNotionRichText(this.dateTimeNotes),
           },
