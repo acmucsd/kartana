@@ -71,7 +71,7 @@ export default class {
           await webhook.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
-            content: `Paging <@&${client.settings.logisticsTeamID}> and <@${client.settings.maintainerID}>!`,
+            content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
             embeds: [errorEmbed],
           });
         }
@@ -89,7 +89,7 @@ export default class {
           await webhook.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
-            content: `Paging <@&${client.settings.logisticsTeamID}> and <@${client.settings.maintainerID}>!`,
+            content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
             embeds: [errorEmbed],
           });
         }
