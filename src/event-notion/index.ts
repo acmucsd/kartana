@@ -245,7 +245,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
         .setColor('DARK_RED');
       webhook.send({
-        content: `*Paging <@${config.maintainerId}>!*`,
+        content: `*Paging <@&${config.maintainerId}>!*`,
         embeds: [errorEmbed],
       });
       return [];
@@ -283,7 +283,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
         .setColor('RED');
       await webhook.send({
-        content: `*Paging <@${config.maintainerId}>!*`,
+        content: `*Paging <@&${config.maintainerId}>!*`,
         embeds: [errorEmbed],
       });
       return;

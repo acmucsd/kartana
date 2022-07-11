@@ -153,7 +153,7 @@ export default class {
         .setColor('DARK_RED');
       const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
       channel.send({
-        content: `*Paging <@${client.settings.maintainerID}>!*`,
+        content: `*Paging <@&${client.settings.maintainerID}>!*`,
         embeds: [errorEmbed],
       });
     }
@@ -183,7 +183,7 @@ export default class {
           .setColor('DARK_RED');
         const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
         channel.send({
-          content: `*Paging <@${client.settings.maintainerID}>!*`,
+          content: `*Paging <@&${client.settings.maintainerID}>!*`,
           embeds: [errorEmbed],
         });
       }
