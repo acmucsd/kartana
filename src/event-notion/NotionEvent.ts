@@ -28,7 +28,7 @@ import Logger from '../utils/Logger';
  * @param text The Markdown-compliant text to convert to Rich Text the Notion API takes.
  * @returns A Rich Text block for the Notion API to digest.
  */
-const toNotionRichText = (text: string) => {
+export const toNotionRichText = (text: string) => {
   return [ { text: { content: text } } ];
 };
 
