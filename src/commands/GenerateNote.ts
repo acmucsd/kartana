@@ -12,7 +12,7 @@ export default class GenerateNote extends Command {
     const definition = new SlashCommandBuilder()
       .setName('generatenote')
       .addStringOption((option) => option.setName('title')
-        .setDescription('The title of the meeting note (e.g. "Board Meeting"). Dates are automatically added!')
+        .setDescription('Meeting note title (e.g. "Board Meeting"). Dates are automatically added to the title!')
         .setRequired(true))
       .addStringOption((option) => option.setName('date')
         .setDescription('MM/DD/YYYY (Defaults to today\'s date)'))
@@ -51,11 +51,11 @@ export default class GenerateNote extends Command {
     if (url) {
       // If the url isn't empty, the note was successfully made!
       const messageEmbed = new MessageEmbed()
-        .setTitle('📝 ' + title)
+        .setTitle('📝 Created a new meeting note!')
         .setURL(url)
-        .addField('🔗 Link', url)
-        .setColor('WHITE');
-      super.edit(interaction, { content: 'Created a new meeting note!', embeds: [messageEmbed], ephemeral: false });
+        .setDescription(`**Title:** ${title}\n**Link:** ${url}`)
+        .setColor('BLUE');
+      super.edit(interaction, { embeds: [messageEmbed], ephemeral: false });
     } else {
       super.edit(interaction, { content: 'An error occurred when trying to generate a new note.', ephemeral: true });
     }
