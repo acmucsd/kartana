@@ -7,10 +7,10 @@ import { BotClient } from '../types';
 /**
  * Makes a new meeting note on Notion and provides a link to it.
  */
-export default class GenerateNote extends Command {
+export default class MeetingNotes extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
-      .setName('generatenote')
+      .setName('meetingnotes')
       .addStringOption((option) => option.setName('title')
         .setDescription('Meeting note title (e.g. "Board Meeting"). Dates are automatically added to the title!')
         .setRequired(true))
@@ -19,12 +19,12 @@ export default class GenerateNote extends Command {
       .setDescription('Makes a new meeting note on Notion with the given title and links to it.');
 
     super(client, {
-      name: 'generatenote',
+      name: 'meetingnotes',
       boardRequired: true,
       enabled: true,
       description: 'Makes a new meeting note on Notion with the given title and links to it.',
       category: 'Utility',
-      usage: client.settings.prefix.concat('generatenote'),
+      usage: client.settings.prefix.concat('meetingnotes'),
       requiredPermissions: ['SEND_MESSAGES'],
     }, definition);
   }
