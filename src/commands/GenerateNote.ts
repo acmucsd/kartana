@@ -33,8 +33,10 @@ export default class GenerateNote extends Command {
     await super.defer(interaction);
     let date = DateTime.now();
 
-    // We're going to try to parse the date out of the argument.
-    // If a date wasn't provided, we default to today's date.
+    /** 
+     * We're going to try to parse the date out of the argument.
+     * If a date wasn't provided, we default to today's date.
+     */
     const dateString = interaction.options.getString('date');
     if (dateString) {
       date = DateTime.fromFormat(dateString, 'MM/dd/yyyy');

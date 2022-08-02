@@ -21,9 +21,11 @@ export const generateNewNote = async (config: NotesNotionPipelineConfig): Promis
   // Next, we pull the database containing the meeting notes.
   const databaseId = config.notionNotesId;
 
-  // We won't validate the meeting notes for now since we essentially
-  // only make a blank page with a title for the meeting note.
-  // TODO: Consider tracking the database schema for more involved page-making that requires other fields.
+  /**
+   * We won't validate the meeting notes for now since we essentially
+   * only make a blank page with a title for the meeting note.
+   * TODO: Consider tracking the database schema for more involved page-making that requires other fields.
+   */
   // const database = await notion.databases.retrieve({ database_id: databaseId });
 
   // Convert our note to a NotionNote to simplify importing it to Notion.

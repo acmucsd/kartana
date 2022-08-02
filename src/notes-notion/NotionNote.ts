@@ -46,20 +46,20 @@ export default class NotionNote {
   }
   
   /**
-     * Uploads this note to Notion.
-     * 
-     * This operation simply creates a page on Notion Meeting Notes.
-     * It will not keep track of it once it is created. This uses the Notion API
-     * to submit.
-     * 
-     * This is done by taking the properties of the event and converting
-     * them into the properties payload the Notion API requests for. See
-     * the API documentation for details of each property's type and contents.
-     * 
-     * @see https://developers.notion.com/reference/post-page
-     * @see https://developers.notion.com/reference/page#all-property-values
-     * @returns the URL of the created Page for the event.
-     */
+   * Uploads this note to Notion.
+   * 
+   * This operation simply creates a page on Notion Meeting Notes.
+   * It will not keep track of it once it is created. This uses the Notion API
+   * to submit.
+   * 
+   * This is done by taking the properties of the event and converting
+   * them into the properties payload the Notion API requests for. See
+   * the API documentation for details of each property's type and contents.
+   * 
+   * @see https://developers.notion.com/reference/post-page
+   * @see https://developers.notion.com/reference/page#all-property-values
+   * @returns the URL of the created Page for the event.
+   */
   public async uploadToNotion(client: Client): Promise<string> {
     const createPagePayload: CreatePageParameters = {
       parent: {
