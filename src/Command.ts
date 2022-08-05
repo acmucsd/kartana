@@ -29,7 +29,7 @@ export default abstract class Command {
    * The Slash Command definition to upload to the Discord Gateway.
    * This can be used to register a Slash Command.
    */
-  public definition: SlashCommandBuilder;
+  public definition: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
 
   /**
    * The default constructor for Commands.
@@ -42,7 +42,7 @@ export default abstract class Command {
    */
   constructor(protected client: BotClient,
     options: CommandOptions,
-    definition: SlashCommandBuilder) {
+    definition: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>) {
     this.conf = {
       enabled: options.enabled,
       name: options.name,
