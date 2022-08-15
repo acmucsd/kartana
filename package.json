@@ -11,6 +11,7 @@
     "start": "node build/src/index.js",
     "lint": "eslint ./ --ext .ts",
     "dev": "tsc && node build/src/index.js",
+    "hot": "nodemon -e ts --exec \"yarn dev\"",
     "lint:fix": "eslint ./ --ext .ts --fix"
   },
   "dependencies": {
