@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction } from 'discord.js';
-import Command from '../Command';
-import { BotClient } from '../types';
+import Command from 'src/Command';
+import { BotClient } from 'src/types';
 
 /**
  * Pings the user.

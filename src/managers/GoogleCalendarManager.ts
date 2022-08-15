@@ -1,11 +1,11 @@
 import { Service } from 'typedi';
 import schedule from 'node-schedule';
-import { BotClient } from '../types';
-import Logger from '../utils/Logger';
+import { BotClient } from 'src/types';
+import Logger from 'src/utils/Logger';
 import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
-import { MeetingPingsSchema, DiscordInfo } from '../meeting-pings';
+import { MeetingPingsSchema, DiscordInfo } from 'src/meeting-pings';
 
 /**
  * GoogleCalendarManager manages automatic event notifications on Discord of events on

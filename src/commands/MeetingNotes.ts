@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, MessageEmbed } from 'discord.js';
 import { DateTime } from 'luxon';
-import Command from '../Command';
-import { BotClient } from '../types';
+import Command from 'src/Command';
+import { BotClient } from 'src/types';
 
 /**
  * Makes a new meeting note on Notion and provides a link to it.

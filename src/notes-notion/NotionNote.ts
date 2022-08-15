@@ -1,8 +1,8 @@
 import { Client } from '@notionhq/client/build/src';
 import { CreatePageParameters } from '@notionhq/client/build/src/api-endpoints';
 import { DateTime } from 'luxon';
-import { toNotionRichText } from '../event-notion/NotionEvent';
-import Logger from '../utils/Logger';
+import { toNotionRichText } from 'src/event-notion/NotionEvent';
+import Logger from 'src/utils/Logger';
 
 /**
  * NotionNote is a representation of an note stored in Notion Meeting Notes.

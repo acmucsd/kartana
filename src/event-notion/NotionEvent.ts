@@ -11,8 +11,8 @@ import {
   StudentOrg,
   isStudentOrg,
   notionYoutubeAnswer,
-} from '../types';
-import Logger from '../utils/Logger';
+} from 'src/types';
+import Logger from 'src/utils/Logger';
 
 /**
  * Convert a piece of Markdown-compliant text to a RichTextItemRequest for

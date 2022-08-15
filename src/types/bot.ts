@@ -10,9 +10,9 @@ import {
   MessagePayload,
   InteractionReplyOptions,
 } from 'discord.js';
-import Command from '../Command';
-import GoogleCalendarManager from '../managers/GoogleCalendarManager';
-import NotionEventSyncManager from '../managers/NotionEventSyncManager';
+import Command from 'src/Command';
+import GoogleCalendarManager from 'src/managers/GoogleCalendarManager';
+import NotionEventSyncManager from 'src/managers/NotionEventSyncManager';
   
 /**
  * The options for a Command.

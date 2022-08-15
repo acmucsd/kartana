@@ -1,5 +1,5 @@
-import Logger from '../utils/Logger';
-import { BotClient, BotEvent } from '../types';
+import Logger from 'src/utils/Logger';
+import { BotClient, BotEvent } from 'src/types';
 
 /**
  * The Ready event is triggered when the bot is fully connected to the Discord API.

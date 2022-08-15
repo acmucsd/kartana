@@ -1,4 +1,4 @@
-import { BotSettings } from '../types';
+import { BotSettings } from 'src/types';
 
 export default {
   apiKeys: {

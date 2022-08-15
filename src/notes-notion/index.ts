@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { getNotionAPI } from '../event-notion';
+import { getNotionAPI } from 'src/event-notion';
 import NotionNote from './NotionNote';
 
 export interface NotesNotionPipelineConfig {

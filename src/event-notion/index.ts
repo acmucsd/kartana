@@ -1,11 +1,11 @@
 import { Client } from '@notionhq/client';
-import Logger from '../utils/Logger';
-import { notionCalSchema, googleSheetSchema } from '../assets';
+import Logger from 'src/utils/Logger';
+import { notionCalSchema, googleSheetSchema } from 'src/assets';
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { groupBy, isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
-import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
+import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from 'src/types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
 import { MessageEmbed, WebhookClient } from 'discord.js';
 import { DateTime } from 'luxon';

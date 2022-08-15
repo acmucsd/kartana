@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction } from 'discord.js';
-import Command from '../Command';
-import { BotClient } from '../types';
+import Command from 'src/Command';
+import { BotClient } from 'src/types';
 
 /**
  * Manually syncs the Event Host Form with the Notion Events calendar. 

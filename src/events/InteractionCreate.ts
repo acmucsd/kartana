@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { CommandInteraction } from 'discord.js';
-import Logger from '../utils/Logger';
-import { BotEvent, BotClient } from '../types';
+import Logger from 'src/utils/Logger';
+import { BotEvent, BotClient } from 'src/types';
 
 /**
  * The InteractionCreate Event is called whenever someone creates an interaction with a bot,

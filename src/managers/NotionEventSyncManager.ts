@@ -1,13 +1,13 @@
 
 import { Service } from 'typedi';
 import schedule from 'node-schedule';
-import { BotClient } from '../types';
-import Logger from '../utils/Logger';
-import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders } from '../event-notion';
+import { BotClient } from 'src/types';
+import Logger from 'src/utils/Logger';
+import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders } from 'src/event-notion';
 import { readFileSync } from 'fs';
 import { MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
-import { GoogleSheetsSchemaMismatchError, NotionSchemaMismatchError } from '../types';
-import { generateNewNote } from '../notes-notion';
+import { GoogleSheetsSchemaMismatchError, NotionSchemaMismatchError } from 'src/types';
+import { generateNewNote } from 'src/notes-notion';
 import { DateTime } from 'luxon';
 
 /**

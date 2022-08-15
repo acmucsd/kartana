@@ -4,9 +4,9 @@ import { Service } from 'typedi';
 import { join } from 'path';
 import { readdir, statSync } from 'fs';
 import { Routes } from 'discord-api-types/v9';
-import { BotClient } from '../types';
-import Command from '../Command';
-import Logger from '../utils/Logger';
+import { BotClient } from 'src/types';
+import Command from 'src/Command';
+import Logger from 'src/utils/Logger';
 
 /**
  * ActionManager dynamically managed all of the respective Commands and Events
