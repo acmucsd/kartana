@@ -5,8 +5,10 @@ import { BotClient } from '../types';
 import Logger from '../utils/Logger';
 import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders } from '../event-notion';
 import { readFileSync } from 'fs';
-import { MessageEmbed, WebhookClient } from 'discord.js';
+import { MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
 import { GoogleSheetsSchemaMismatchError, NotionSchemaMismatchError } from '../types';
+import { generateNewNote } from '../notes-notion';
+import { DateTime } from 'luxon';
 
 /**
  * NotionEventSyncManager manages the automatic import of new events on the Events
@@ -150,6 +152,37 @@ export default class {
           });
         }
       }
+    }
+  }
+
+  /**
+   * Creates a new meeting note in Board Notion Meeting Notes and returns a link to it.
+   * @param client client The original client, for access to the configuration
+   * @param title The title of the Note to be created.
+   * @param date The date the Note was created.
+   * @returns A link to the newly created meeting note on Notion.
+   */
+  public async generateMeetingNotes(client: BotClient, title: string, date: DateTime): Promise<string> {
+    try {
+      const url = await generateNewNote({
+        noteTitle: title,
+        noteDate: date,
+        notionNotesId: client.settings.notionMeetingNotesID,
+        notionToken: client.settings.notionIntegrationToken,
+      });
+      return url;
+    } catch (err) {
+      Logger.error(`Error generating new meeting note: ${err}`);
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error with Notion Meeting Notes!')
+        .setDescription(`Error generating new meeting note ${title}: ${err}`)
+        .setColor('DARK_RED');
+      const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+      channel.send({
+        content: `*Paging <@&${client.settings.maintainerID}>!*`,
+        embeds: [errorEmbed],
+      });
+      return '';
     }
   }
 

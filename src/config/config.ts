@@ -30,6 +30,7 @@ export default {
   },
   notionIntegrationToken: '',
   notionCalendarID: '',
+  notionMeetingNotesID: '',
   googleSheetsServiceAccountEmail: '',
   googleSheetsKeyFile: '',
   googleSheetsDocID: '',

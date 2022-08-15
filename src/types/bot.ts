@@ -110,6 +110,7 @@ export interface BotSettings {
    */
   notionIntegrationToken: string;
   notionCalendarID: string;
+  notionMeetingNotesID: string;
   /**
    * The credentials for the GCS service account with access to the
    * Host Form Response Google Sheet.

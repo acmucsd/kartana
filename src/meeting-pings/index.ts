@@ -43,15 +43,24 @@ export class DiscordInfo {
        * found in the mapping and added to the ping list.
        */
       let attendeeAdded = false;
+      // Flag indicating if we added the creator's email to the ping list.
+      let creatorAdded = false;
 
       for (const attendee of event.attendees) {
         if (attendee.email && calendarGuestMap[attendee.email]) {
-          // Special case to make sure the formatted string is correctly separated by spaces.
           if (!attendeeAdded) {
+            // Special case to make sure the formatted string is correctly separated by spaces.
             attendeeAdded = true;
             mentions += `<@${calendarGuestMap[attendee.email]}>`;
           } else {
             mentions += ` <@${calendarGuestMap[attendee.email]}>`;
+          }
+          if (attendee.email === event.creator.email) {
+            /**
+             * If we added the event creator's email to the mention list, we set this
+             * flag to true so we don't accidentally add it to the list a second time later.
+             */
+            creatorAdded = true;
           }
         }
       }
@@ -62,10 +71,10 @@ export class DiscordInfo {
         return `<@&${this.mentions}>`;
       }
       /**
-       * We've now guaranteed that we're pinging guests about the event,
-       * so we'll add the mention for the creator of the event at the start.
+       * We've now guaranteed that we're pinging guests about the event, so we'll add 
+       * the mention for the creator of the event at the start if we haven't already.
        */
-      if (calendarGuestMap[event.creator.email]) {
+      if (!creatorAdded && calendarGuestMap[event.creator.email]) {
         mentions = `<@${calendarGuestMap[event.creator.email]}> ` + mentions;
       }
       return mentions;
