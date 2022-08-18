@@ -65,6 +65,7 @@ export default class {
           if (command.conf.enabled && command.definition !== undefined) {
             this.commands.set(command.conf.name, command);
             slashCommands.push(command.definition.toJSON());
+            Logger.info('File being added', { file: command.conf.name });
           }
         }
       });
@@ -77,9 +78,15 @@ export default class {
           eventType: 'slashCommandLoading',
         });
         await restAPI.put(
+          Routes.applicationGuildCommands(client.settings.clientID, '964648118618570803'),
+          { body: slashCommands },
+        );
+        
+        await restAPI.put(
           Routes.applicationCommands(client.settings.clientID),
           { body: slashCommands },
         );
+        
         Logger.info('Loaded Slash Commands on Discord Gateway!', {
           eventType: 'slashCommandLoaded',
         });
