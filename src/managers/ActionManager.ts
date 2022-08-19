@@ -65,7 +65,6 @@ export default class {
           if (command.conf.enabled && command.definition !== undefined) {
             this.commands.set(command.conf.name, command);
             slashCommands.push(command.definition.toJSON());
-            Logger.info('File being added', { file: command.conf.name });
           }
         }
       });
