@@ -77,11 +77,6 @@ export default class {
           eventType: 'slashCommandLoading',
         });
         await restAPI.put(
-          Routes.applicationGuildCommands(client.settings.clientID, '964648118618570803'),
-          { body: slashCommands },
-        );
-        
-        await restAPI.put(
           Routes.applicationCommands(client.settings.clientID),
           { body: slashCommands },
         );

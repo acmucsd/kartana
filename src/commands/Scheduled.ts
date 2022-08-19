@@ -84,7 +84,8 @@ export default class Scheduled extends Command {
       //If the date is not valid and does not have format 'MM/dd/yyyy'
       if (!date.isValid) {
         super.edit(interaction, 
-          { content: 'Invalid date! Use MM/DD/YYYY formatting (e.g. 08/01/2022)', ephemeral: true });
+          { content: 'Invalid date! Use MM/DD/YYYY formatting (e.g. 08/01/2022)'
+            , ephemeral: true });
         return;
       }
     }
