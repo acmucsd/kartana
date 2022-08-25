@@ -48,7 +48,7 @@ export default class MeetingNotes extends Command {
     }
     
     // We automatically add the date of the note to the start of the title.
-    const title = date.toLocaleString(DateTime.DATE_SHORT) + ' ' + interaction.options.getString('title', true);
+    const title = date.toFormat('MM/dd/yyyy') + ' ' + interaction.options.getString('title', true);
     const url = await this.client.notionEventSyncManager.generateMeetingNotes(this.client, title, date);
     if (url) {
       // If the url isn't empty, the note was successfully made!
