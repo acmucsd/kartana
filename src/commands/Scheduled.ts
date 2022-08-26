@@ -36,8 +36,6 @@ export default class Scheduled extends Command {
         .setDescription('user to be pinged'))
       .addRoleOption((option) => option.setName('role')
         .setDescription('role to be pinged'))
-      .addChannelOption((option) => option.setName('channel')
-        .setDescription('channel to be pinged'))
       .setDescription('sends a scheduled message');
 
  
@@ -53,11 +51,6 @@ export default class Scheduled extends Command {
   }
   
   public async run(interaction: CommandInteraction): Promise<void> {
-    
-    /**
-     * We will defer the interaction...
-     */
-    await super.defer(interaction);
 
     /**
      * User input values
@@ -65,7 +58,6 @@ export default class Scheduled extends Command {
     const message = interaction.options.getString('message', true);
     const user = interaction.options.getUser('user', false); 
     const role = interaction.options.getRole('role', false);
-    const channel = interaction.options.getChannel('channel', false);
     const member = interaction.member;
     const datestring = interaction.options.getString('date', true);
     const timestring = interaction.options.getString('time', true);
@@ -87,8 +79,8 @@ export default class Scheduled extends Command {
      * Checks to see if there is a user, role, or channel
      * specified for message to be addressed to
      */
-    if (!user && !role && !channel){
-      super.edit(interaction, 
+    if (!user && !role){
+      super.respond(interaction, 
         { content: 'Must specify a user, role, or channel to send messge to'
           , ephemeral: true });
       return; 
@@ -100,7 +92,7 @@ export default class Scheduled extends Command {
       let date = DateTime.fromFormat(datestring, 'MM/dd/yyyy');
       //If the date is not valid and does not have format 'MM/dd/yyyy'
       if (!date.isValid) {
-        super.edit(interaction, 
+        super.respond(interaction, 
           { content: 'Invalid date! Use MM/DD/YYYY formatting (e.g. 08/01/2022)'
             , ephemeral: true });
         return;
@@ -114,7 +106,7 @@ export default class Scheduled extends Command {
       //If time does not follow 'hh:mm' format or hour > 12 or minute >= 60
       //Since we are in 12hr time 
       if (!time.isValid || Number(timeArray[0]) > 12 || Number(timeArray[1]) >= 60){
-        super.edit(interaction, 
+        super.respond(interaction, 
           { content: 'Invalid time! Use hh:mm formatting (e.g. 04:04), hr must be from 1-12 & min must be from 0-59'
             , ephemeral: true });
         return; 
@@ -126,7 +118,7 @@ export default class Scheduled extends Command {
     if (shift) {
       //If the shift is not included in the shifts array
       if (!shifts.includes(shift)) {
-        super.edit(interaction, 
+        super.respond(interaction, 
           { content: 'Invalid shift! Type am or pm'
             , ephemeral: true });
         return;  
@@ -134,14 +126,14 @@ export default class Scheduled extends Command {
     }
     
     //If it passes all above edge cases then reply...
-    await super.edit(interaction, {
+    await super.respond(interaction, {
       content: 'Message Received!',
       ephemeral: true,
     });
 
     //Creates embeded message to send
     const title = 'New Message!';
-    const author = `To: ${!user ? '' : user} ${!role ? '' : role} ${!channel ? '' : channel} From: ${member}`;
+    const author = `To: ${!user ? '' : user} ${!role ? '' : role} From: ${member}`;
     const messageToSend = new MessageEmbed()
       .setColor(0x0099FF)
       .setTitle(title)
