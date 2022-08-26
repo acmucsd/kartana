@@ -1,11 +1,12 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, MessageEmbed } from 'discord.js';
 import Command from '../Command';
 import { BotClient } from '../types';
 import { DateTime } from 'luxon';
 import schedule from 'node-schedule';
 import { v4 as newUUID } from 'uuid';
 import Logger from '../utils/Logger';
+
 
 /**
  * This command allows users to send scheduled messsages
@@ -19,9 +20,6 @@ export default class Scheduled extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
       .setName('scheduled')
-      .addUserOption((option) => option.setName('user')
-        .setDescription('users to be added')
-        .setRequired(true))
       .addStringOption((option) => option.setName('message')
         .setDescription('message to be sent')
         .setRequired(true))
@@ -34,6 +32,12 @@ export default class Scheduled extends Command {
       .addStringOption((option) => option.setName('shift')
         .setDescription('specify either am or pm')
         .setRequired(true))
+      .addUserOption((option) => option.setName('user')
+        .setDescription('user to be pinged'))
+      .addRoleOption((option) => option.setName('role')
+        .setDescription('role to be pinged'))
+      .addChannelOption((option) => option.setName('channel')
+        .setDescription('channel to be pinged'))
       .setDescription('sends a scheduled message');
 
  
@@ -59,7 +63,9 @@ export default class Scheduled extends Command {
      * User input values
      */
     const message = interaction.options.getString('message', true);
-    const user = interaction.options.getUser('user', true); 
+    const user = interaction.options.getUser('user', false); 
+    const role = interaction.options.getRole('role', false);
+    const channel = interaction.options.getChannel('channel', false);
     const member = interaction.member;
     const datestring = interaction.options.getString('date', true);
     const timestring = interaction.options.getString('time', true);
@@ -76,6 +82,17 @@ export default class Scheduled extends Command {
      */
     let timeArray = timestring.split(':'); 
     let dateArray = datestring.split('/');
+
+    /**
+     * Checks to see if there is a user, role, or channel
+     * specified for message to be addressed to
+     */
+    if (!user && !role && !channel){
+      super.edit(interaction, 
+        { content: 'Must specify a user, role, or channel to send messge to'
+          , ephemeral: true });
+      return; 
+    }
 
     // Date checker copied from meeting notes command
     // If there is a datestring...
@@ -116,15 +133,21 @@ export default class Scheduled extends Command {
       } 
     }
     
-    //If it passes all above edge cases say...
+    //If it passes all above edge cases then reply...
     await super.edit(interaction, {
       content: 'Message Received!',
       ephemeral: true,
     });
 
-    //Creates messsage to send
-    const messageToSend = `From: ${member} To: ${user}, ${message}`;
-    
+    //Creates embeded message to send
+    const title = 'New Message!';
+    const author = `To: ${!user ? '' : user} ${!role ? '' : role} ${!channel ? '' : channel} From: ${member}`;
+    const messageToSend = new MessageEmbed()
+      .setColor(0x0099FF)
+      .setTitle(title)
+      .setDescription(author)
+      .addField('Message:', `${message}`);
+
     //Gets the minute
     let minute = Number(timeArray[1]);
     
@@ -169,7 +192,7 @@ export default class Scheduled extends Command {
       }
 
       //Sends the message to the channel
-      await interaction.channel.send(messageToSend); 
+      await interaction.channel.send({ embeds: [messageToSend] }); 
     });
     
     

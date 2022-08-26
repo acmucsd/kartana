@@ -134,6 +134,7 @@ export default abstract class Command {
    * @returns The original command, supports method chaining.
    */
   public async edit(interaction: CommandInteraction, message: InteractionPayload) {
+    
     await interaction.editReply(message);
     return this;
   }
