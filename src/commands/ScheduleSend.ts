@@ -78,6 +78,15 @@ export default class ScheduleSend extends Command {
       return;
     }
 
+    // Cap wait time, strange behavior occurs if time overflows and becomes NaN
+    if (hoursFromNow > 1000) {
+      super.respond(interaction, {
+        content: 'Exceeded maximum wait time! I won\'t wait longer than 1000 hours to send a message.',
+        ephemeral: true,
+      });
+      return;
+    }
+
     // Creates date object with time to send
     const dateToSend = date.plus({ hours: hoursFromNow, minutes: minutesFromNow });
 
