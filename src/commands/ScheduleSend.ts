@@ -78,6 +78,13 @@ export default class ScheduleSend extends Command {
       return;
     }
 
+    if (hoursFromNow > 1000) {
+      super.respond(interaction, {
+        content: 'Exceeded maximum wait time! We cap it at 1000 hours in the future',
+        ephemeral: true,
+      });
+    }
+
     // Creates date object with time to send
     const dateToSend = date.plus({ hours: hoursFromNow, minutes: minutesFromNow });
 
