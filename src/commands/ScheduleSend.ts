@@ -1,0 +1,115 @@
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { CommandInteraction, MessageEmbed, TextChannel } from 'discord.js';
+import Command from '../Command';
+import { BotClient } from '../types';
+import { DateTime } from 'luxon';
+import schedule from 'node-schedule';
+import Logger from '../utils/Logger';
+
+/**
+ * This command will send a scheduled message after waiting
+ * for a user specified time.
+ * 
+ * 
+ * The command will run a cronjob to send the message. Currently
+ * there is a 1 day limit on scheduled messages but that will likely
+ * change soon.
+ */
+export default class ScheduleSend extends Command {
+  constructor(client: BotClient) {
+    const definition = new SlashCommandBuilder()
+      .setName('schedulesend')
+      .addStringOption((option) => option.setName('message')
+        .setDescription('Message to be sent')
+        .setRequired(true))
+      .addStringOption((option) => option.setName('wait')
+        .setDescription('Time to wait before sending message. Use hh:mm format!')
+        .setRequired(true))
+      .setDescription('Sends a scheduled message to the channel');
+
+ 
+    super(client, {
+      name: 'schedulesend',
+      boardRequired: true,
+      enabled: true,
+      description: 'Sends a scheduled message to the channel',
+      category: 'Utility',
+      usage: client.settings.prefix.concat('schedulesend'),
+      requiredPermissions: ['SEND_MESSAGES'],
+    }, definition);
+  }
+  
+  public async run(interaction: CommandInteraction): Promise<void> {
+    /**
+     * Pull the user input values from the command
+     */
+    const message = interaction.options.getString('message', true);
+    const member = interaction.member;
+    const wait = interaction.options.getString('wait', true);
+
+    // Checking if the time is valid
+    const timeValidation = new RegExp('^[0-9]+:[0-5][0-9]$');
+    if (!timeValidation.test(wait)){
+      super.respond(interaction, 
+        { content: 'Invalid wait time! Use hours:minutes formatting (e.g. 4:04)', ephemeral: true });
+      return; 
+    }
+
+    /**
+     * Pulling the numbers out of the string since we've guaranteed the formatting of the string
+     */
+    const timeArray = wait.split(':'); 
+    const hoursFromNow = Number(timeArray[0]);
+    const minutesFromNow = Number(timeArray[1]);
+
+    // Gets the current time
+    const date = DateTime.now();
+  
+    // Message to be sent
+    const messageToSend = `**Scheduled Message from ${member}:** \n>>> ${message}`;
+
+    // Special case when there is no wait time: we send the message without scheduling anything
+    if (hoursFromNow == 0 && minutesFromNow == 0 && interaction.channel !== null) {
+      super.respond(interaction, { 
+        content: `Message received! I'll send it at <t:${Math.trunc(date.toSeconds())}:F>`, 
+        ephemeral: true, 
+      });
+      await interaction.channel.send(messageToSend); 
+      return;
+    }
+
+    // Creates date object with time to send
+    const dateToSend = date.plus({ hours: hoursFromNow, minutes: minutesFromNow });
+
+    // If it passes all above edge cases then reply...
+    await super.respond(interaction, {
+      content: `Message received! I'll send it at <t:${Math.trunc(dateToSend.toSeconds())}:F>`,
+      ephemeral: true,
+    });
+
+    // Schedules when to send the message 
+    schedule.scheduleJob(dateToSend.toJSDate(), async () => {
+      Logger.info(`Scheduled a message to be sent at ${dateToSend.toLocaleString(DateTime.DATETIME_SHORT)}`);
+      
+      /**
+       * Alert someone if the channel went missing between now and when the message is sent
+       */
+      if (interaction.channel === null) {
+        Logger.error('Channel for scheduled message no longer exists.');
+        const errorEmbed = new MessageEmbed()
+          .setTitle('⚠️ Error with ScheduleSend!')
+          .setDescription('Error sending scheduled message: Channel no longer exists!')
+          .setColor('DARK_RED');
+        const channel = this.client.channels.cache.get(this.client.settings.botErrorChannelID) as TextChannel;
+        channel.send({
+          content: `*Paging <@&${this.client.settings.maintainerID}>!*`,
+          embeds: [errorEmbed],
+        });
+        return;
+      }
+      
+      // Sends the message to the channel
+      await interaction.channel.send(messageToSend); 
+    });
+  }
+}
