@@ -133,7 +133,7 @@ export default abstract class Command {
    * @param interaction The Command Interaction to defer for later.
    * @returns The original command, supports method chaining.
    */
-  public async edit(interaction: CommandInteraction, message: InteractionPayload) { 
+  public async edit(interaction: CommandInteraction, message: InteractionPayload) {
     await interaction.editReply(message);
     return this;
   }

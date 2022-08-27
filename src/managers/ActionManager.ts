@@ -80,7 +80,6 @@ export default class {
           Routes.applicationCommands(client.settings.clientID),
           { body: slashCommands },
         );
-        
         Logger.info('Loaded Slash Commands on Discord Gateway!', {
           eventType: 'slashCommandLoaded',
         });

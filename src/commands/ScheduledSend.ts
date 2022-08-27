@@ -61,8 +61,9 @@ export default class ScheduledSend extends Command {
       super.respond(interaction, 
         { content: 'Wait time must be given as a parameter'
           , ephemeral: true });
+      return;
     }
-    let time = DateTime.fromFormat(wait, 'hh:mm');
+    const time = DateTime.fromFormat(wait, 'hh:mm');
     if (!time.isValid){
       super.respond(interaction, 
         { content: 'Invalid wait! Use hh:mm formatting (e.g. 04:04)'
@@ -71,10 +72,10 @@ export default class ScheduledSend extends Command {
     }
 
     //Gets the current time
-    let date = DateTime.now();
+    const date = DateTime.now();
 
     //Creates date object with time to send
-    let dateToSend = date.plus({ hours: Number(timeArray[0]), minutes: Number(timeArray[1]), seconds: 3 });
+    const dateToSend = date.plus({ hours: Number(timeArray[0]), minutes: Number(timeArray[1]), seconds: 3 });
     
     const messageReceived = `Message Received! I will send it at <t:${Math.trunc(dateToSend.toSeconds())}:F>`;
     //If it passes all above edge cases then reply...
