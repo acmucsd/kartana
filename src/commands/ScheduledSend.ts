@@ -16,24 +16,24 @@ import Logger from '../utils/Logger';
  * there is a 1 day limit on scheduled messages but that will likely
  * change soon.
  */
-export default class Scheduled extends Command {
+export default class ScheduledSend extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
       .setName('schedulesend')
       .addStringOption((option) => option.setName('message')
-        .setDescription('message to be sent')
+        .setDescription('Message to be sent')
         .setRequired(true))
       .addStringOption((option) => option.setName('wait')
         .setDescription('Time to wait before sending message. Use hh:mm format!')
         .setRequired(true))
-      .setDescription('sends a scheduled message to the channel');
+      .setDescription('Sends a scheduled message to the channel');
 
  
     super(client, {
       name: 'schedulesend',
       boardRequired: true,
       enabled: true,
-      description: 'sends a scheduled message',
+      description: 'Sends a scheduled message to the channel',
       category: 'Utility',
       usage: client.settings.prefix.concat('schedulesend'),
       requiredPermissions: ['SEND_MESSAGES'],
@@ -53,18 +53,21 @@ export default class Scheduled extends Command {
      * Arrays to help check whether time values are valid
      * and to configure Date object
      */
-    let timeArray = wait.split(':'); 
+    const timeArray = wait.split(':'); 
 
     //Checks if the timestring is valid
     //If there exists a timestring
-    if (wait) {
-      let time = DateTime.fromFormat(wait, 'hh:mm');
-      if (!time.isValid){
-        super.respond(interaction, 
-          { content: 'Invalid wait! Use hh:mm formatting (e.g. 04:04)'
-            , ephemeral: true });
-        return; 
-      }
+    if (!wait) {
+      super.respond(interaction, 
+        { content: 'Wait time must be given as a parameter'
+          , ephemeral: true });
+    }
+    let time = DateTime.fromFormat(wait, 'hh:mm');
+    if (!time.isValid){
+      super.respond(interaction, 
+        { content: 'Invalid wait! Use hh:mm formatting (e.g. 04:04)'
+          , ephemeral: true });
+      return; 
     }
 
     //Gets the current time
@@ -77,12 +80,12 @@ export default class Scheduled extends Command {
     //If it passes all above edge cases then reply...
     await super.respond(interaction, {
       content: messageReceived,
-      ephemeral: false,
+      ephemeral: true,
     });
 
   
     //Message to be sent
-    const messageToSend = `**Scheduled Message from ${member}:**` + `\n\n ${message}`;
+    const messageToSend = `**Scheduled Message from ${member}:** \n>>> ${message}`;
 
     //Schedules cronJob 
     schedule.scheduleJob(dateToSend.toJSDate(), async () => {
