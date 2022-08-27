@@ -107,6 +107,13 @@ export default class Client extends DiscordClient implements BotClient {
       });
       throw new Error('Could not construct Client class: missing Notion Calendar ID in envvars');
     }
+    if (!process.env.NOTION_MEETING_NOTES_ID) {
+      Logger.error('Could not construct Client class: missing Notion Meeting Notes ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Notion Meeting Notes ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Notion Meeting Notes ID in envvars');
+    }
     if (!process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL) {
       Logger.error('Could not construct Client class: missing Google Sheets Service Account Email in envvars', {
         eventType: 'initError',
@@ -165,6 +172,7 @@ export default class Client extends DiscordClient implements BotClient {
     }
     this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
     this.settings.notionCalendarID = process.env.NOTION_CALENDAR_ID;
+    this.settings.notionMeetingNotesID = process.env.NOTION_MEETING_NOTES_ID;
     this.settings.googleSheetsServiceAccountEmail = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
     this.settings.googleSheetsKeyFile = process.env.GOOGLE_SHEETS_KEY_FILE;
     this.settings.googleSheetsDocID = process.env.GOOGLE_SHEETS_DOC_ID;
