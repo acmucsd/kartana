@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction } from 'discord.js';
 import Command from '../Command';
 import { BotClient } from '../types';
 import { DateTime } from 'luxon';
@@ -7,45 +7,35 @@ import schedule from 'node-schedule';
 import { v4 as newUUID } from 'uuid';
 import Logger from '../utils/Logger';
 
-
 /**
- * This command allows users to send scheduled messsages
+ * This command will send a scheduled message after waiting
+ * for a user specified time.
  * 
- * Runs a cronjob based on the time the user wants the message
- * to be sent. Currently operates on 12hr time. Note it will 
- * send messages based on the timezone of the machine running
- * Kartana. 
+ * 
+ * The command will run a cronjob to send the message. Currently
+ * there is a 1 day limit on scheduled messages but that will likely
+ * change soon.
  */
 export default class Scheduled extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
-      .setName('scheduled')
+      .setName('schedulesend')
       .addStringOption((option) => option.setName('message')
         .setDescription('message to be sent')
         .setRequired(true))
-      .addStringOption((option) => option.setName('date')
-        .setDescription('enter date in mm/dd/yyyy format')
+      .addStringOption((option) => option.setName('wait')
+        .setDescription('Time to wait before sending message. Use hh:mm format!')
         .setRequired(true))
-      .addStringOption((option) => option.setName('time')
-        .setDescription('enter time in hh:mm format')
-        .setRequired(true))
-      .addStringOption((option) => option.setName('shift')
-        .setDescription('specify either am or pm')
-        .setRequired(true))
-      .addUserOption((option) => option.setName('user')
-        .setDescription('user to be pinged'))
-      .addRoleOption((option) => option.setName('role')
-        .setDescription('role to be pinged'))
-      .setDescription('sends a scheduled message');
+      .setDescription('sends a scheduled message to the channel');
 
  
     super(client, {
-      name: 'scheduled',
+      name: 'schedulesend',
       boardRequired: true,
       enabled: true,
       description: 'sends a scheduled message',
       category: 'Utility',
-      usage: client.settings.prefix.concat('scheduled'),
+      usage: client.settings.prefix.concat('schedulesend'),
       requiredPermissions: ['SEND_MESSAGES'],
     }, definition);
   }
@@ -56,118 +46,53 @@ export default class Scheduled extends Command {
      * User input values
      */
     const message = interaction.options.getString('message', true);
-    const user = interaction.options.getUser('user', false); 
-    const role = interaction.options.getRole('role', false);
     const member = interaction.member;
-    const datestring = interaction.options.getString('date', true);
-    const timestring = interaction.options.getString('time', true);
-    const shift = interaction.options.getString('shift', true);
-    
-    /**
-     * Array to check whether user specifies am/pm
-     */
-    const shifts = ['am', 'pm'];
+    const wait = interaction.options.getString('wait', true);
 
     /**
      * Arrays to help check whether time values are valid
-     * and to configure cronjob
+     * and to configure Date object
      */
-    let timeArray = timestring.split(':'); 
-    let dateArray = datestring.split('/');
-
-    /**
-     * Checks to see if there is a user, role, or channel
-     * specified for message to be addressed to
-     */
-    if (!user && !role){
-      super.respond(interaction, 
-        { content: 'Must specify a user, role, or channel to send messge to'
-          , ephemeral: true });
-      return; 
-    }
-
-    // Date checker copied from meeting notes command
-    // If there is a datestring...
-    if (datestring) {
-      let date = DateTime.fromFormat(datestring, 'MM/dd/yyyy');
-      //If the date is not valid and does not have format 'MM/dd/yyyy'
-      if (!date.isValid) {
-        super.respond(interaction, 
-          { content: 'Invalid date! Use MM/DD/YYYY formatting (e.g. 08/01/2022)'
-            , ephemeral: true });
-        return;
-      }
-    }
+    let timeArray = wait.split(':'); 
 
     //Checks if the timestring is valid
     //If there exists a timestring
-    if (timestring) {
-      let time = DateTime.fromFormat(timestring, 'hh:mm');
-      //If time does not follow 'hh:mm' format or hour > 12 or minute >= 60
-      //Since we are in 12hr time 
-      if (!time.isValid || Number(timeArray[0]) > 12 || Number(timeArray[1]) >= 60){
+    if (wait) {
+      let time = DateTime.fromFormat(wait, 'hh:mm');
+      if (!time.isValid){
         super.respond(interaction, 
-          { content: 'Invalid time! Use hh:mm formatting (e.g. 04:04), hr must be from 1-12 & min must be from 0-59'
+          { content: 'Invalid wait! Use hh:mm formatting (e.g. 04:04)'
             , ephemeral: true });
         return; 
       }
     }
 
-    //Checks whether the shift is valid
-    //If there exists a shift
-    if (shift) {
-      //If the shift is not included in the shifts array
-      if (!shifts.includes(shift)) {
-        super.respond(interaction, 
-          { content: 'Invalid shift! Type am or pm'
-            , ephemeral: true });
-        return;  
-      } 
-    }
+    //Gets the current time
+    let date = DateTime.now();
+
+    //Creates date object with time to send
+    let dateToSend = date.plus({ hours: Number(timeArray[0]), minutes: Number(timeArray[1]), seconds: 3 });
     
+    const messageReceived = `Message Received! I will send it at <t:${Math.trunc(dateToSend.toSeconds())}:F>`;
     //If it passes all above edge cases then reply...
     await super.respond(interaction, {
-      content: 'Message Received!',
-      ephemeral: true,
+      content: messageReceived,
+      ephemeral: false,
     });
 
-    //Creates embeded message to send
-    const title = 'New Message!';
-    const author = `To: ${!user ? '' : user} ${!role ? '' : role} From: ${member}`;
-    const messageToSend = new MessageEmbed()
-      .setColor(0x0099FF)
-      .setTitle(title)
-      .setDescription(author)
-      .addField('Message:', `${message}`);
-
-    //Gets the minute
-    let minute = Number(timeArray[1]);
-    
-    /**
-     * Converts hour into 24hr time
-     */
-    let hour = 0;
-    if (shift === 'am' && Number(timeArray[0]) !== 12) {
-      hour = Number(timeArray[0]);
-    }
-    if (shift === 'pm') {
-      hour = Number(timeArray[0]) !== 12 ? Number(timeArray[0]) + 12 : 12;
-    }
-    
-    //Gets the month and day
-    let month = Number(dateArray[0]);
-    let day = Number(dateArray[1]);
-
+  
+    //Message to be sent
+    const messageToSend = `**Scheduled Message from ${member}:**` + `\n\n ${message}`;
 
     //Schedules cronJob 
-    schedule.scheduleJob(`0 ${minute} ${hour} ${day} ${month} *`, async () => {
+    schedule.scheduleJob(dateToSend.toJSDate(), async () => {
       //Notfies that job has been scheduled
       Logger.info('Message to be sent scheduled}');
       
       /**
-       * Checks if the channel is still there or if it
-       * got deleted before the job could be executed
-       */
+      * Checks if the channel is still there or if it
+      * got deleted before the job could be executed
+      */
       if (interaction.channel === null) {
         const uuid = newUUID();
         Logger.error('Channel is null', {
@@ -182,13 +107,10 @@ export default class Scheduled extends Command {
         });
         return;
       }
-
+      
       //Sends the message to the channel
-      await interaction.channel.send({ embeds: [messageToSend] }); 
+      await interaction.channel.send(messageToSend); 
     });
-    
-    
-
 
   }
 }
