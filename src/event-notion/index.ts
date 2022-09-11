@@ -452,9 +452,15 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
     if (event.properties.Name.type !== 'title') {
       return false;
     }
+    let tapStatus = 'TAP N/A';
+    let csiStatus = 'Intake Form N/A';
+    if (event.properties['TAP Status'].select) {
+      tapStatus = event.properties['TAP Status'].select.name;
+    }
+    if (event.properties['Intake Form Status'].select) {
+      csiStatus = event.properties['Intake Form Status'].select.name;
+    }
     const date = event.properties.Date.date.start;
-    const tapStatus = event.properties['TAP Status'].select.name;
-    const csiStatus = event.properties['Intake Form Status'].select.name;
     
     if (orgPing === 'TAP') {
       return date === deadlineDate.toISODate() && tapStatus === status;
