@@ -64,11 +64,14 @@ const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
  * @returns The Notion Option for CSI Intake Form status.
  */
 const needsIntakeForm = (response: HostFormResponse): 'Intake Form N/A' | 'Intake Form TODO' => {
+  return 'Intake Form N/A';
+  /** We currently don't need intake forms, so this is commented out.
   return (response['Where is your event taking place?'] === 'My event is on Zoom'
   || response['Where is your event taking place?'] === 'My event is on Discord only'
   || response['Where is your event taking place?'] === 'My event is off campus')
     ? 'Intake Form N/A'
     : 'Intake Form TODO';
+  */
 };
 
 /**
@@ -551,12 +554,9 @@ export default class NotionEvent {
         'CSI Form Status': {
           select: { name: this.csiFormStatus },
         },
-        /**
-         * We currently don't need intake forms, so this is commented out.
         'Intake Form Status': {
           select: { name: this.intakeFormStatus },
         },
-        */
         'TAP Status': {
           select: { name: this.TAPStatus },
         },

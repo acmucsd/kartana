@@ -452,9 +452,16 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
     if (event.properties.Name.type !== 'title') {
       return false;
     }
+
+    // If the field is left blank on Notion, event.properties[...].select
+    // will be null, so we'll automatically fill it to 'N/A' if so.
+    const tapSelect = event.properties['TAP Status'].select;
+    const tapStatus = tapSelect ? tapSelect.name : 'TAP N/A';
+
+    const csiSelect = event.properties['Intake Form Status'].select;
+    const csiStatus = csiSelect ? csiSelect.name : 'Intake Form N/A';
+
     const date = event.properties.Date.date.start;
-    const tapStatus = event.properties['TAP Status'].select.name;
-    const csiStatus = event.properties['Intake Form Status'].select.name;
     
     if (orgPing === 'TAP') {
       return date === deadlineDate.toISODate() && tapStatus === status;
