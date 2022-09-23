@@ -78,7 +78,7 @@ export default class {
         });
         await restAPI.put(
           Routes.applicationCommands(client.settings.clientID),
-          { body: slashCommands },
+          { body: slashCommands }, 
         );
         Logger.info('Loaded Slash Commands on Discord Gateway!', {
           eventType: 'slashCommandLoaded',

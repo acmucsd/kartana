@@ -5,6 +5,7 @@ import { BotClient } from '../types';
 import { DateTime } from 'luxon';
 import schedule from 'node-schedule';
 import Logger from '../utils/Logger';
+//import { DiscordInfo } from '../meeting-pings';
 
 /**
  * This command will send a scheduled message after waiting
@@ -12,10 +13,11 @@ import Logger from '../utils/Logger';
  * 
  * 
  * The command will run a cronjob to send the message. Currently
- * there is a 1 day limit on scheduled messages but that will likely
- * change soon.
+ * there is a 1000 hour limit on scheduled messages.
  */
 export default class ScheduleSend extends Command {
+  //private calendar: calendar_v3.Calendar;
+  
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
       .setName('schedulesend')
@@ -95,6 +97,28 @@ export default class ScheduleSend extends Command {
       content: `Message received! I'll send it at <t:${Math.trunc(dateToSend.toSeconds())}:F>`,
       ephemeral: true,
     });
+    
+    if (interaction.channel === null) {
+      Logger.error('Channel for scheduled message no longer exists.');
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error with ScheduleSend!')
+        .setDescription('Error sending scheduled message: Channel no longer exists!')
+        .setColor('DARK_RED');
+      const channel = this.client.channels.cache.get(this.client.settings.botErrorChannelID) as TextChannel;
+      channel.send({
+        content: `*Paging <@&${this.client.settings.maintainerID}>!*`,
+        embeds: [errorEmbed],
+      });
+      return;
+    }
+
+    this.client.googleCalendarManager
+      .addScheduledMessage(
+        this.client, 
+        interaction.channel.toString(),
+        member?.toString(), 
+        message, 
+        dateToSend);
 
     // Schedules when to send the message 
     schedule.scheduleJob(dateToSend.toJSDate(), async () => {

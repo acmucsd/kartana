@@ -5,7 +5,7 @@ import Logger from '../utils/Logger';
 import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
-import { MeetingPingsSchema, DiscordInfo } from '../meeting-pings';
+import { MeetingPingsSchema, DiscordInfo, ScheduledMessageSchema } from '../meeting-pings';
 
 /**
  * GoogleCalendarManager manages automatic event notifications on Discord of events on
@@ -195,4 +195,39 @@ export default class {
       Logger.info('Finished running meeting notifications cronjob!');
     });
   }
+
+  public async addScheduledMessage(client: BotClient, 
+    channelID: string, mentions: string | undefined, message: string, date: DateTime): 
+    Promise<void> {
+    await this.refreshAuth(client);
+    const entry = ScheduledMessageSchema;
+    try {
+      this.calendar.events.insert({
+        'calendarId': entry.calendarID,
+        'requestBody': {
+          'summary' : 'Scheduled Message',
+          'description' : message + ' ' + channelID + ' ' + mentions,
+          start : {
+            'dateTime' : date.toString(),
+          },
+          end : {
+            'dateTime' : date.plus({ seconds: 5 }).toString(),
+          },
+        },
+      });
+    } catch (err) {
+      // We'll report if there's an API error to deal with the issue.
+      Logger.error(`Error importing calendar ${entry.name}: ${err}`);
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error with Google Calendar API!')
+        .setDescription(`Error importing calendar ${entry.name}: ${err}`)
+        .setColor('DARK_RED');
+      const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+      channel.send({
+        content: `*Paging <@&${client.settings.maintainerID}>!*`,
+        embeds: [errorEmbed],
+      });
+    } 
+  }
+  
 }
