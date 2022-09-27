@@ -693,15 +693,14 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
 /**
  * Pings the Logistics Team to remind them to get keys for particular rooms that require them.
  * 
- * Every event in the Qualcomm Conference Room or in any CSE building room that is not CSE B225
- * ("The Fishbowl") requires keys.
+ * Every event in any CSE building room that is not CSE B225 ("The Fishbowl") requires keys.
  */
 export const pingForKeys = async (notion: Client,
   webhook: WebhookClient,
   databaseId: string,
   config: EventNotionPipelineConfig) => {
   const tomorrow = DateTime.now().setZone('America/Los_Angeles').plus({ days: 1 });
-  Logger.debug(`Querying Notion API for events on date ${tomorrow.toISODate()} in Qualcomm or CSE rooms...`);
+  Logger.debug(`Querying Notion API for events on date ${tomorrow.toISODate()} in CSE rooms...`);
   const eventsResponse = await notion.databases.query({
     database_id: databaseId,
     filter: {
@@ -713,7 +712,7 @@ export const pingForKeys = async (notion: Client,
           },
         },
         {
-          or: ['Qualcomm Room', 'CSE 1202', 'CSE 2154', 'CSE 4140'].map((location) => {
+          or: ['CSE 1202', 'CSE 2154', 'CSE 4140'].map((location) => {
             return {
               property: 'Location',
               select: {
