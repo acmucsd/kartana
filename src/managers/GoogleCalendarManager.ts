@@ -196,17 +196,26 @@ export default class {
     });
   }
 
-  public async addScheduledMessage(client: BotClient, 
-    channelID: string, mentions: string | undefined, message: string, date: DateTime): 
-    Promise<void> {
+  /**
+   * This method adds a new scheduled message event to the google calendar
+   * @param client The original client, for access to the configuration
+   * @param channelID The id of the channel for the message to be sent to
+   * @param message The message to be sent
+   * @param date The datetime object which specifies when the message should be sent
+   */
+  public async addScheduledMessage(client: BotClient, channelID: string, message: string, date: DateTime): 
+  Promise<void> {
+    //Get the auth token
     await this.refreshAuth(client);
     const entry = ScheduledMessageSchema;
+    //Try adding a event to the calendar
+    //Note event has end time is 5 seconds after start time
     try {
       this.calendar.events.insert({
         'calendarId': entry.calendarID,
         'requestBody': {
           'summary' : 'Scheduled Message',
-          'description' : message + ' ' + channelID + ' ' + mentions,
+          'description' : message + ' ' + channelID,
           start : {
             'dateTime' : date.toString(),
           },
