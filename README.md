@@ -23,6 +23,25 @@ Kartana does so by:
 - sending a notification to Events team that something new has been added
   through Discord.
 
+**Note:**
+If the Notion calendar schema is edited, corresponding changes need to be made in [src/assets/notionCalSchema.ts](./src/assets/notionCalSchema.ts)
+
+To update the schema:
+- make sure `NOTION_CALENDAR_ID` in the .env file matches with the Notion Calendar
+- run `node get-database-props.js`
+- copy the contents that appear in the file `database.properties`
+- format the contents using a JSON formatter and paste it in `src/assets/notionCalSchema.ts`
+
+## Meeting Pings
+
+Kartana can automatically send meeting notification messages to our
+Discord server corresponding to events on our team Google Calendars.
+
+Kartana does so by:
+- reading each Google Calendar for meetings occurring an hour from now or right now every 30 minutes
+- building a message embed on Discord with information taken from the Google Calendar event
+- sending the message to the team's corresponding Discord channel and notifying the people involved.
+
 # Usage
 
 Fill the `.env.example` file with the necessary credentials and URL's and save it

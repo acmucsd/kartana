@@ -35,6 +35,7 @@ export default {
   googleSheetsKeyFile: '',
   googleSheetsDocID: '',
   googleSheetsSheetName: '',
+  discordGuildID: '',
   discordWebhookURL: '',
   maintainerID: '',
   logisticsTeamID: '',

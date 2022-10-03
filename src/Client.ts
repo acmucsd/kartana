@@ -142,6 +142,13 @@ export default class Client extends DiscordClient implements BotClient {
       });
       throw new Error('Could not construct Client class: missing Google Sheets Sheet Name in envvars');
     }
+    if (!process.env.DISCORD_GUILD_ID) {
+      Logger.error('Could not construct Client class: missing Discord Guild ID in envvars', {
+        eventType: 'initError',
+        error: 'missing Discord Guild ID in envvars',
+      });
+      throw new Error('Could not construct Client class: missing Discord Guild ID in envvars');
+    }
     if (!process.env.DISCORD_WEBHOOK_URL) {
       Logger.error('Could not construct Client class: missing Discord Webhook URL in envvars', {
         eventType: 'initError',
@@ -177,6 +184,7 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.googleSheetsKeyFile = process.env.GOOGLE_SHEETS_KEY_FILE;
     this.settings.googleSheetsDocID = process.env.GOOGLE_SHEETS_DOC_ID;
     this.settings.googleSheetsSheetName = process.env.GOOGLE_SHEETS_SHEET_NAME;
+    this.settings.discordGuildID = process.env.DISCORD_GUILD_ID;
     this.settings.discordWebhookURL = process.env.DISCORD_WEBHOOK_URL;
     this.settings.maintainerID = process.env.DISCORD_MAINTAINER_MENTION_ID;
     this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;

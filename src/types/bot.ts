@@ -131,6 +131,10 @@ export interface BotSettings {
   googleSheetsDocID: string;
   googleSheetsSheetName: string;
   /**
+   * Discord Guild (server) ID to speed up porting of new slash commands.
+   */
+  discordGuildID: string;
+  /**
    * Discord webhook URL for any alerts pipeline makes.
    */
   discordWebhookURL: string;
