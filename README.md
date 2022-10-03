@@ -21,7 +21,7 @@ Kartana does so by:
 - forming a Notion card that can be added to the Notion Calendar base
 - creating the Notion card on the calendar
 - sending a notification to Events team that something new has been added
-  through Discord.
+  through Discord
 
 **Note:**
 If the Notion calendar schema is edited, corresponding changes need to be made in [src/assets/notionCalSchema.ts](./src/assets/notionCalSchema.ts)
@@ -38,9 +38,9 @@ Kartana can automatically send meeting notification messages to our
 Discord server corresponding to events on our team Google Calendars.
 
 Kartana does so by:
-- reading each Google Calendar for meetings occurring an hour from now or right now every 30 minutes
-- building a message embed on Discord with information taken from the Google Calendar event
-- sending the message to the team's corresponding Discord channel and notifying the people involved.
+- checking each Google Calendar every 15 minutes for meetings occurring right now or an hour from now
+- building a message embed on Discord with information taken from the upcoming Google Calendar event
+- sending the message to the team's corresponding Discord channel and notifying the people involved
 
 # Usage
 
