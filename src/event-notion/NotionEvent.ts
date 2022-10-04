@@ -446,7 +446,7 @@ export default class NotionEvent {
     // eslint-disable-next-line max-len
     this.recordingRequests = formResponse['If yes to the previous question, do you have any special recording requests?'];
     this.eventCoordinator = null;
-    this.checkinCode = '';
+    this.checkinCode = formResponse['Check-in Code'];
     this.fbCoHost = '';
     this.recording = needsRecording(formResponse);
     this.bookingStatus = needsBooking(formResponse);
@@ -643,6 +643,12 @@ export default class NotionEvent {
         // "YouTube Link" omitted.
         //
         // We don't get this from the host form.
+        ...(this.checkinCode ? {
+          'Check-in Code': {
+            rich_text: toNotionRichText(this.checkinCode),
+          },
+        } : {}),
+
         ...(this.prRequests ? {
           'PR Requests': {
             rich_text: toNotionRichText(this.prRequests),

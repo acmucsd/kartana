@@ -38,4 +38,5 @@ export const googleSheetSchema = [
   'If you need tech or equipment, please specify here',
   'Food Pickup Time',
   'I understand that I will arrange someone to pickup the food or other items required for my event',
+  'Check-in Code',
 ];
