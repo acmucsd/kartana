@@ -214,8 +214,8 @@ export default class {
       this.calendar.events.insert({
         'calendarId': entry.calendarID,
         'requestBody': {
-          'summary' : 'Scheduled Message',
-          'description' : message + ' ' + channelID,
+          'summary' : channelID,
+          'description' : message,
           start : {
             'dateTime' : date.toString(),
           },
@@ -237,6 +237,74 @@ export default class {
         embeds: [errorEmbed],
       });
     } 
+  }
+
+  /**
+   * This method schedules a message to be sent using a cronjob
+   * @param client 
+   * @param dateTime: Datetime object representing when message is to be sent
+   * @param message: The actual message being sent
+   * @param channelID: The channel id for which the message should be sent
+   */
+  public scheduleMessage(client: BotClient, dateTime: DateTime, message: string, channelID: string) {
+    schedule.scheduleJob(dateTime.toJSDate(), async () => {
+      Logger.info(`Scheduled a message to be sent at ${dateTime.toLocaleString(DateTime.DATETIME_SHORT)}`);
+      
+      const channelToSend = client.channels.cache.get(channelID) as TextChannel;
+      
+      /**
+       * Alert someone if the channel went missing between now and when the message is sent
+      */
+      if (channelToSend === null) {
+        Logger.error('Channel for scheduled message no longer exists.');
+        const errorEmbed = new MessageEmbed()
+          .setTitle('⚠️ Error with ScheduleSend!')
+          .setDescription('Error sending scheduled message: Channel no longer exists!')
+          .setColor('DARK_RED');
+        const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+        channel.send({
+          content: `*Paging <@&${client.settings.maintainerID}>!*`,
+          embeds: [errorEmbed],
+        });
+        return;
+      }
+      
+      // Sends the message to the channel
+      await channelToSend.send(message); 
+    });
+  }
+
+
+  public async initializeScheduledMessages(client: BotClient): Promise<void> {
+    await this.refreshAuth(client);
+    
+    //We want to check for events from now to 1000 hours from now
+    const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
+    const end = now.plus({ hours: 1000 });
+
+
+    const res = await this.calendar.events.list({
+      calendarId: ScheduledMessageSchema.calendarID,
+      timeMin: now.toISO(),
+      timeMax: end.toISO(),
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    if (res && res.data.items){
+      const events = res.data.items;
+      for (const event of events){
+        if (event.start && event.start.dateTime && event.description && event.summary){
+          const startTime = DateTime.fromISO(event.start.dateTime);
+          const message = event.description;
+          const channelID = event.summary.replace(/[^0-9]/gm, '');
+          this.scheduleMessage(client, startTime, message, channelID);
+        }
+      }
+
+    }
+ 
+
   }
   
 }

@@ -197,6 +197,7 @@ export default class Client extends DiscordClient implements BotClient {
       ActionManager.initializeEvents(this);
       this.notionEventSyncManager.initializeNotionSync(this);
       await this.googleCalendarManager.initializeMeetingPings(this);
+      await this.googleCalendarManager.initializeScheduledMessages(this);
       await this.login(configuration.token);
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);
