@@ -3,7 +3,6 @@ import { CommandInteraction, MessageEmbed, TextChannel } from 'discord.js';
 import Command from '../Command';
 import { BotClient } from '../types';
 import { DateTime } from 'luxon';
-import schedule from 'node-schedule';
 import Logger from '../utils/Logger';
 
 /**
@@ -111,33 +110,11 @@ export default class ScheduleSend extends Command {
     }
 
     // Add Message to the google calendar
-    this.client.googleCalendarManager.addScheduledMessage(this.client, interaction.channel.toString(),
+    this.client.googleCalendarManager.addScheduledMessage(this.client, interaction.channelId,
       messageToSend, dateToSend);
 
-    // Schedules when to send the message 
-    schedule.scheduleJob(dateToSend.toJSDate(), async () => {
-      Logger.info(`Scheduled a message to be sent at ${dateToSend.toLocaleString(DateTime.DATETIME_SHORT)}`);
-      
+    // Schedule the message to be sent
+    this.client.googleCalendarManager.scheduleMessage(this.client, dateToSend, messageToSend, interaction.channelId);
 
-      /**
-       * Alert someone if the channel went missing between now and when the message is sent
-      */
-      if (interaction.channel === null) {
-        Logger.error('Channel for scheduled message no longer exists.');
-        const errorEmbed = new MessageEmbed()
-          .setTitle('⚠️ Error with ScheduleSend!')
-          .setDescription('Error sending scheduled message: Channel no longer exists!')
-          .setColor('DARK_RED');
-        const channel = this.client.channels.cache.get(this.client.settings.botErrorChannelID) as TextChannel;
-        channel.send({
-          content: `*Paging <@&${this.client.settings.maintainerID}>!*`,
-          embeds: [errorEmbed],
-        });
-        return;
-      }
-      
-      // Sends the message to the channel
-      await interaction.channel.send(messageToSend); 
-    });
   }
 }

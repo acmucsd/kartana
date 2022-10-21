@@ -198,6 +198,12 @@ export default class {
 
   /**
    * This method adds a new scheduled message event to the google calendar
+   * 
+   * Note events will be created using the following format
+   * Summary (title) : channel ID
+   * Description: Will contain the message
+   * Start time: Will be time for message to be sent 
+   * End Time: Will be 5 seconds after message send time (note this is required by Google API)
    * @param client The original client, for access to the configuration
    * @param channelID The id of the channel for the message to be sent to
    * @param message The message to be sent
@@ -209,7 +215,7 @@ export default class {
     await this.refreshAuth(client);
     const entry = ScheduledMessageSchema;
     //Try adding a event to the calendar
-    //Note event has end time is 5 seconds after start time
+    //Note event has end time 5 seconds after start time
     try {
       this.calendar.events.insert({
         'calendarId': entry.calendarID,
@@ -241,15 +247,16 @@ export default class {
 
   /**
    * This method schedules a message to be sent using a cronjob
-   * @param client 
+   * @param client: The bot client
    * @param dateTime: Datetime object representing when message is to be sent
    * @param message: The actual message being sent
-   * @param channelID: The channel id for which the message should be sent
+   * @param channelID: The channel id as a string for where the message should be sent
    */
   public scheduleMessage(client: BotClient, dateTime: DateTime, message: string, channelID: string) {
     schedule.scheduleJob(dateTime.toJSDate(), async () => {
       Logger.info(`Scheduled a message to be sent at ${dateTime.toLocaleString(DateTime.DATETIME_SHORT)}`);
       
+      //Get the channel as a Text Channel
       const channelToSend = client.channels.cache.get(channelID) as TextChannel;
       
       /**
@@ -275,14 +282,20 @@ export default class {
   }
 
 
+  /**
+   * This command will initialize the scheduled messages command by pulling all events 
+   * from time of bot initialization till 1000 hours from now and schedule any events
+   * @param client: Bot client
+   */
   public async initializeScheduledMessages(client: BotClient): Promise<void> {
+    //Refresh the auth
     await this.refreshAuth(client);
     
     //We want to check for events from now to 1000 hours from now
     const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
     const end = now.plus({ hours: 1000 });
 
-
+    //Get all the calendar events
     const res = await this.calendar.events.list({
       calendarId: ScheduledMessageSchema.calendarID,
       timeMin: now.toISO(),
@@ -291,19 +304,22 @@ export default class {
       orderBy: 'startTime',
     });
 
+    //If any events exist
     if (res && res.data.items){
       const events = res.data.items;
       for (const event of events){
+        //Check to make sure event was created with propery format
         if (event.start && event.start.dateTime && event.description && event.summary){
+          //Get all necessary params
           const startTime = DateTime.fromISO(event.start.dateTime);
           const message = event.description;
-          const channelID = event.summary.replace(/[^0-9]/gm, '');
+          const channelID = event.summary;
+          //Schedule the message
           this.scheduleMessage(client, startTime, message, channelID);
         }
       }
 
     }
- 
 
   }
   
