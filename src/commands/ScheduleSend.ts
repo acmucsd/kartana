@@ -10,8 +10,10 @@ import Logger from '../utils/Logger';
  * for a user specified time.
  * 
  * 
- * The command will run a cronjob to send the message. Currently
- * there is a 1000 hour limit on scheduled messages.
+ * The command will first create a calendar event with details 
+ * necessary for sending the event (see Google Calendar Manager).
+ * It then schedules a message using a cronjob.
+ * Currently there is a 1000 hour limit on scheduled messages.
  */
 export default class ScheduleSend extends Command {
   
@@ -95,6 +97,10 @@ export default class ScheduleSend extends Command {
       ephemeral: true,
     });
     
+    /**
+     * Checks to make sure the interaction channel exists
+     * Necessary for accessing channel ID value in following channels 
+     */
     if (interaction.channel === null) {
       Logger.error('Channel for scheduled message no longer exists.');
       const errorEmbed = new MessageEmbed()
