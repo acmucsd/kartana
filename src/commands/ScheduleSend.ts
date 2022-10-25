@@ -43,7 +43,7 @@ export default class ScheduleSend extends Command {
      * Pull the user input values from the command
      */
     const message = interaction.options.getString('message', true);
-    const member = interaction.member ? interaction.member : '';
+    const member = interaction.member;
     const wait = interaction.options.getString('wait', true);
 
     // Checking if the time is valid

@@ -5,7 +5,7 @@ import Logger from '../utils/Logger';
 import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
-import { MeetingPingsSchema, DiscordInfo, ScheduledMessageSchema } from '../meeting-pings';
+import { MeetingPingsSchema, DiscordInfo } from '../meeting-pings';
 
 /**
  * GoogleCalendarManager manages automatic event notifications on Discord of events on
@@ -213,12 +213,11 @@ export default class {
   Promise<void> {
     //Get the auth token
     await this.refreshAuth(client);
-    const entry = ScheduledMessageSchema;
     //Try adding a event to the calendar
     //Note event has end time 5 seconds after start time
     try {
       this.calendar.events.insert({
-        'calendarId': entry.calendarID,
+        'calendarId': client.settings.scheduledMessageGoogleCalendarID,
         'requestBody': {
           'summary' : channelID,
           'description' : message,
@@ -232,10 +231,10 @@ export default class {
       });
     } catch (err) {
       // We'll report if there's an API error to deal with the issue.
-      Logger.error(`Error importing calendar ${entry.name}: ${err}`);
+      Logger.error(`Error importing scheduled message calendar}: ${err}`);
       const errorEmbed = new MessageEmbed()
         .setTitle('⚠️ Error with Google Calendar API!')
-        .setDescription(`Error importing calendar ${entry.name}: ${err}`)
+        .setDescription(`Error importing scheduled message calendar: ${err}`)
         .setColor('DARK_RED');
       const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
       channel.send({
@@ -297,7 +296,7 @@ export default class {
 
     //Get all the calendar events
     const res = await this.calendar.events.list({
-      calendarId: ScheduledMessageSchema.calendarID,
+      calendarId: client.settings.scheduledMessageGoogleCalendarID,
       timeMin: now.toISO(),
       timeMax: end.toISO(),
       singleEvents: true,
@@ -308,7 +307,7 @@ export default class {
     if (res && res.data.items){
       const events = res.data.items;
       for (const event of events){
-        //Check to make sure event was created with propery format
+        //Check to make sure event was created with proper format
         if (event.start && event.start.dateTime && event.description && event.summary){
           //Get all necessary params
           const startTime = DateTime.fromISO(event.start.dateTime);
