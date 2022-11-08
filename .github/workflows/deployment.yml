@@ -1,0 +1,8 @@
+name: Kartana Deployment
+on:
+  pull_request:
+    branches:
+      - main
+
+  
+
