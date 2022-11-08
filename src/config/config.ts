@@ -40,4 +40,5 @@ export default {
   maintainerID: '',
   logisticsTeamID: '',
   botErrorChannelID: '',
+  scheduledMessageGoogleCalendarID: '',
 } as BotSettings;

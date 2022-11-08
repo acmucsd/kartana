@@ -195,4 +195,131 @@ export default class {
       Logger.info('Finished running meeting notifications cronjob!');
     });
   }
+
+  /**
+   * This method adds a new scheduled message event to the google calendar
+   * 
+   * Note events will be created using the following format
+   * Summary (title) : channel ID
+   * Description: Will contain the message
+   * Start time: Will be time for message to be sent 
+   * End Time: Will be 5 seconds after message send time (note this is required by Google API)
+   * @param client The original client, for access to the configuration
+   * @param channelID The id of the channel for the message to be sent to
+   * @param message The message to be sent
+   * @param date The datetime object which specifies when the message should be sent
+   */
+  public async addScheduledMessage(client: BotClient, channelID: string, message: string, date: DateTime): 
+  Promise<void> {
+    //Get the auth token
+    await this.refreshAuth(client);
+    //Try adding a event to the calendar
+    //Note event has end time 5 seconds after start time
+    try {
+      this.calendar.events.insert({
+        'calendarId': client.settings.scheduledMessageGoogleCalendarID,
+        'requestBody': {
+          'summary' : channelID,
+          'description' : message,
+          start : {
+            'dateTime' : date.toString(),
+          },
+          end : {
+            'dateTime' : date.plus({ seconds: 5 }).toString(),
+          },
+        },
+      });
+    } catch (err) {
+      // We'll report if there's an API error to deal with the issue.
+      Logger.error(`Error importing scheduled message calendar}: ${err}`);
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error with Google Calendar API!')
+        .setDescription(`Error importing scheduled message calendar: ${err}`)
+        .setColor('DARK_RED');
+      const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+      channel.send({
+        content: `*Paging <@&${client.settings.maintainerID}>!*`,
+        embeds: [errorEmbed],
+      });
+    } 
+  }
+
+  /**
+   * This method schedules a message to be sent using a cronjob
+   * @param client: The bot client
+   * @param dateTime: Datetime object representing when message is to be sent
+   * @param message: The actual message being sent
+   * @param channelID: The channel id as a string for where the message should be sent
+   */
+  public scheduleMessage(client: BotClient, dateTime: DateTime, message: string, channelID: string) {
+    schedule.scheduleJob(dateTime.toJSDate(), async () => {
+      Logger.info(`Scheduled a message to be sent at ${dateTime.toLocaleString(DateTime.DATETIME_SHORT)}`);
+      
+      //Get the channel as a Text Channel
+      const channelToSend = client.channels.cache.get(channelID) as TextChannel;
+      
+      /**
+       * Alert someone if the channel went missing between now and when the message is sent
+      */
+      if (channelToSend === null) {
+        Logger.error('Channel for scheduled message no longer exists.');
+        const errorEmbed = new MessageEmbed()
+          .setTitle('⚠️ Error with ScheduleSend!')
+          .setDescription('Error sending scheduled message: Channel no longer exists!')
+          .setColor('DARK_RED');
+        const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+        channel.send({
+          content: `*Paging <@&${client.settings.maintainerID}>!*`,
+          embeds: [errorEmbed],
+        });
+        return;
+      }
+      
+      // Sends the message to the channel
+      await channelToSend.send(message); 
+    });
+  }
+
+
+  /**
+   * This command will initialize the scheduled messages command by pulling all events 
+   * from time of bot initialization till 1000 hours from now and schedule any events
+   * @param client: Bot client
+   */
+  public async initializeScheduledMessages(client: BotClient): Promise<void> {
+    //Refresh the auth
+    await this.refreshAuth(client);
+    
+    //We want to check for events from now to 1000 hours from now
+    const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
+    const end = now.plus({ hours: 1000 });
+
+    //Get all the calendar events
+    const res = await this.calendar.events.list({
+      calendarId: client.settings.scheduledMessageGoogleCalendarID,
+      timeMin: now.toISO(),
+      timeMax: end.toISO(),
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    //If any events exist
+    if (res && res.data.items){
+      const events = res.data.items;
+      for (const event of events){
+        //Check to make sure event was created with proper format
+        if (event.start && event.start.dateTime && event.description && event.summary){
+          //Get all necessary params
+          const startTime = DateTime.fromISO(event.start.dateTime);
+          const message = event.description;
+          const channelID = event.summary;
+          //Schedule the message
+          this.scheduleMessage(client, startTime, message, channelID);
+        }
+      }
+
+    }
+
+  }
+  
 }

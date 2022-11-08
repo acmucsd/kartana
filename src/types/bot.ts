@@ -147,6 +147,10 @@ export interface BotSettings {
    * Discord channel ID where Google Calendar bot error messages will be sent.
    */
   botErrorChannelID: string;
+  /**
+   * Scheduled Message Calendar ID, used for backing up scheduled messages.
+   */
+  scheduledMessageGoogleCalendarID: string;
 }
   
 /**

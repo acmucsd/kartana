@@ -78,7 +78,7 @@ export default class {
         });
         await restAPI.put(
           Routes.applicationCommands(client.settings.clientID),
-          { body: slashCommands },
+          { body: slashCommands }, 
         );
         // Adding the ID for our Discord Guild allows new slash commands to load faster than adding it globally.
         await restAPI.put(
