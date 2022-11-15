@@ -67,6 +67,11 @@ export const notionCalSchema = {
           'name': 'Internal Funding',
           'color': 'brown',
         },
+        {
+          'id': 'aec2b820-b44d-45fa-9525-e92d0c0bc0d8',
+          'name': 'PEEF suspended',
+          'color': 'brown',
+        },
       ],
     },
   },
