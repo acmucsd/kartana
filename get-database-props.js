@@ -9,6 +9,6 @@ dotenv.config();
     const database_info = await client.databases.retrieve({ database_id: process.env.NOTION_CALENDAR_ID })
     const database_props = await database_info.properties;
     console.log('Done querying! Saving to file...');
-    require('fs').writeFileSync('database.properties', JSON.stringify(database_props, 2));
+    require('fs').writeFileSync('database.properties', JSON.stringify(database_props, null, 2));
     console.log('Done!');
 })()
