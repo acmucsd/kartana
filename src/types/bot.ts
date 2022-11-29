@@ -133,7 +133,7 @@ export interface BotSettings {
   /**
    * Discord Guild (server) ID to speed up porting of new slash commands.
    */
-  discordGuildID: string;
+  discordGuildIDs: Array<string>;
   /**
    * Discord webhook URL for any alerts pipeline makes.
    */

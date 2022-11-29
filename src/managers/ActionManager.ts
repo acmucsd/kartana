@@ -81,10 +81,12 @@ export default class {
           { body: slashCommands }, 
         );
         // Adding the ID for our Discord Guild allows new slash commands to load faster than adding it globally.
-        await restAPI.put(
-          Routes.applicationGuildCommands(client.settings.clientID, client.settings.discordGuildID),
-          { body: slashCommands },
-        );
+        await Promise.all(client.settings.discordGuildIDs.map((id) => {
+          restAPI.put(
+            Routes.applicationGuildCommands(client.settings.clientID, id),
+            { body: slashCommands },
+          );
+        }));
         Logger.info('Loaded Slash Commands on Discord Gateway!', {
           eventType: 'slashCommandLoaded',
         });
