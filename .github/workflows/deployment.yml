@@ -4,5 +4,72 @@ on:
     branches:
       - main
 
-  
+jobs:
+  deploy:
+    name: Build And Deploy Package
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v3
+
+      - name: Create Meeting Pings Schema
+        env: 
+          MEETINGPINGSCHEMA: ${{ secrets.MEETINGPINGSCHEMA }}
+        run: |
+          touch src/meeting-pings/meetingPingSchema.ts
+          echo "$MEETINGPINGSCHEMA" >> src/meetingPingSchema.ts
+      
+      - name: Create Env File
+        env:
+          GOOGLE_SHEET_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SHEET_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_SHEETS_KEY_FILE: ${{ secrets.GOOGLE_SHEETS_KEY_FILE }}
+          GOOGLE_SHEETS_DOC_ID: ${{ secrets.GOOGLE_SHEETS_DOC_ID }}
+          GOOGLE_SHEETS_SHEET_NAME: ${{ secrets.GOOGLE_SHEETS_SHEET_NAME }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_LOGISTICS_TEAM_MENTION_ID: ${{ secrets.DISCORD_LOGISTICS_TEAM_MENTION_ID }}
+          DISCORD_MAINTAINER_MENTION_ID: ${{ secrets.DISCORD_MAINTAINER_MENTION_ID }}
+          DISCORD_BOT_ERROR_CHANNEL_ID: ${{ secrets.DISCORD_BOT_ERROR_CHANNEL_ID }}
+          SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID: ${{ secrets.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID }}
+        run: |
+          touch .env
+          echo GOOGLE_SHEET_SERVICE_ACCOUNT_EMAIL="$GOOGLE_SHEET_SERVICE_ACCOUNT_EMAIL" >> .env
+          echo GOOGLE_SHEETS_KEY_FILE="$GOOGLE_SHEETS_KEY_FILE" >> .env
+          echo GOOGLE_SHEETS_DOC_ID="$GOOGLE_SHEETS_DOC_ID" >> .env
+          echo GOOGLE_SHEETS_SHEET_NAME="$GOOGLE_SHEETS_SHEET_NAME" >> .env
+          echo DISCORD_WEBHOOK_URL="$DISCORD_WEBHOOK_URL" >> .env
+          echo DISCORD_LOGISTICS_TEAM_MENTION_ID="$DISCORD_LOGISTICS_TEAM_MENTION_ID" >> .env
+          echo DISCORD_MAINTAINER_MENTION_ID="$DISCORD_MAINTAINER_MENTION_ID" >> .env
+          echo DISCORD_BOT_ERROR_CHANNEL_ID="$DISCORD_BOT_ERROR_CHANNEL_ID" >> .env
+          echo SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID="$SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID" >> .env 
+
+      # install node
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: install # runs 'yarn install' command
+      
+      - uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: build # runs 'yarn build' command
+      
+      - name: Create Zip File
+        run: zip -r build.zip build .env
+
+      - name: Move Build To Server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          SOURCE: "build.zip"
+          TARGET: ${{ secrets.MY_REMOTE_TARGET }} # /opt/kartana
+
+      
+      
+    
+
+
+       
 
