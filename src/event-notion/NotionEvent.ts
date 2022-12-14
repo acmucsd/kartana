@@ -254,6 +254,9 @@ export default class NotionEvent {
   // A copy of the CSI Intake form approval.
   private approvedIntake: File | null;
 
+  // Whether this event has a sponsor that will pay for this event.
+  private fundingSponsor: 'Yes' | 'No';
+
   // The Funding Manager designated to get funding for this Event.
   private fundingManager: NotionUser | null;
   
@@ -387,6 +390,9 @@ export default class NotionEvent {
   // The items requests for this Event to be able to be run.
   private requestedItems: string;
 
+  // Non food requested items for the event.
+  private nonFoodRequests: string;
+
   // Specifications as to the YouTube video requirements for this Event, if any.
   private uploadToYoutube: 'Yes I would like the Events team to handle the all aspects of recording for my event'
   // This answer is SO long. This is making me consider
@@ -421,6 +427,7 @@ export default class NotionEvent {
       : 'PR TODO';
     this.intakeFormStatus = needsIntakeForm(formResponse);
     this.TAPStatus = needsTAPForm(formResponse);
+    this.fundingSponsor = formResponse['Is there a sponsor that will pay for this event?'] === 'Yes' ? 'Yes' : 'No';
     this.fundingManager = null;
     // This question is also equally long.
     // eslint-disable-next-line max-len
@@ -492,6 +499,7 @@ export default class NotionEvent {
     this.prManager = null;
     this.date = getEventInterval(formResponse);
     this.requestedItems = formResponse['What food do you need funding for?'];
+    this.nonFoodRequests = formResponse['Non-food system requests: Vendor website or menu'];
     // I'm so done with this.
     // eslint-disable-next-line max-len
     this.uploadToYoutube = notionYoutubeAnswer[formResponse['Will you want a recording of your event uploaded to the ACM YouTube channel?']];
@@ -685,6 +693,12 @@ export default class NotionEvent {
           },
         } : {}),
 
+        ...(this.fundingSponsor ? {
+          'Sponsor?': {
+            select: { name: this.fundingSponsor },
+          },
+        } : {}),
+
         'Funding Source': {
           multi_select: this.fundingSource.map((fundingSource) => {
             return { name: fundingSource };
@@ -723,6 +737,12 @@ export default class NotionEvent {
         ...(this.requestedItems ? {
           'Requested Items': {
             rich_text: toNotionRichText(this.requestedItems),
+          },
+        } : {}),
+
+        ...(this.nonFoodRequests ? {
+          'Non-food Requests': {
+            rich_text: toNotionRichText(this.nonFoodRequests),
           },
         } : {}),
 

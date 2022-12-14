@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Sun, Oct 2 2022 19:54:13 PST.
+ * Wed, Dec 14 2022 19:54:13 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -1084,6 +1084,12 @@ export const notionCalSchema = {
     'type': 'rich_text',
     'rich_text': {},
   },
+  'Non-food Requests': {
+    'id': 'pPDg',
+    'name': 'Non-food Requests',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
   'Funding Source': {
     'id': 'qiw%5E',
     'name': 'Funding Source',
@@ -1393,6 +1399,25 @@ export const notionCalSchema = {
     'name': 'Historian Onsite',
     'type': 'people',
     'people': {},
+  },
+  'Sponsor?': {
+    'id': '~y%40%5D',
+    'name': 'Sponsor?',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': 'e46012df-0bdd-4aba-bee8-b7b901108601',
+          'name': 'Yes',
+          'color': 'green',
+        },
+        {
+          'id': '5da9aea8-4789-47a4-bf3d-5406e87318be',
+          'name': 'No',
+          'color': 'blue',
+        },
+      ],
+    },
   },
   'Name': {
     'id': 'title',
