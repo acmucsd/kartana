@@ -7,7 +7,7 @@ import { groupBy, isEqual } from 'lodash';
 import NotionEvent from './NotionEvent';
 import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
-import { MessageEmbed, WebhookClient } from 'discord.js';
+import { MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 
 /**
@@ -110,7 +110,7 @@ export interface EventNotionPipelineConfig {
   hostFormSheetName: string;
   googleSheetAPICredentials: ServiceAccountCredentials;
   notionCalendarId: string;
-  webhook: WebhookClient;
+  channel: TextChannel;
   notionToken: string;
 }
 
@@ -132,7 +132,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   // The Notion API is easy enough to get.
   const notion = await getNotionAPI(config.notionToken);
   // Get the Discord webhook as well.
-  const webhook = config.webhook;
+  const channel = config.channel;
 
   // Getting our Google Spreasheet is harder, but not by much.
   // This is using the `google-spreadsheet` NPM package, but we need to basically
@@ -244,7 +244,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setTitle('⚠️ Error importing event!')
         .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
         .setColor('DARK_RED');
-      webhook.send({
+      channel.send({
         content: `*Paging <@&${config.maintainerId}>!*`,
         embeds: [errorEmbed],
       });
@@ -267,7 +267,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
           **URL:** ${url}
           **Hosted by:** ${event.getHostFormResponse()['Event director(s)']}`)
         .setColor('GREEN');
-      await webhook.send({
+      await channel.send({
         content: `<@&${config.logisticsTeamId}>`,
         embeds: [successEmbed],
       });
@@ -282,7 +282,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setTitle('⚠️ Error creating event on Notion!')
         .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
         .setColor('RED');
-      await webhook.send({
+      await channel.send({
         content: `*Paging <@&${config.maintainerId}>!*`,
         embeds: [errorEmbed],
       });
@@ -323,7 +323,6 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
  * - Adds all the events to two separate embed with a title and URL and pings the Logistics team about it.
  */
 export const pingForTAPandCSIDeadlines = async (notion: Client,
-  webhook: WebhookClient,
   databaseId: string,
   config: EventNotionPipelineConfig) => {
   // The day for which we ping for any non-submitted events.
@@ -627,7 +626,7 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
 
     Logger.info('Sections built! Sending TAP deadline embed...');
     // Send the embed!
-    await webhook.send({
+    await config.channel.send({
       content: `<@&${config.logisticsTeamId}>`,
       embeds: [tapDeadlineEmbed],
     });
@@ -683,7 +682,7 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
 
     Logger.info('Sections built! Sending CSI Intake deadline embed...');
     // Send the embed!
-    await webhook.send({
+    await config.channel.send({
       content: `<@&${config.logisticsTeamId}>`,
       embeds: [eventIntakeDeadlineEmbed],
     });
@@ -696,7 +695,6 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
  * Every event in any CSE building room that is not CSE B225 ("The Fishbowl") requires keys.
  */
 export const pingForKeys = async (notion: Client,
-  webhook: WebhookClient,
   databaseId: string,
   config: EventNotionPipelineConfig) => {
   const tomorrow = DateTime.now().setZone('America/Los_Angeles').plus({ days: 1 });
@@ -774,7 +772,7 @@ export const pingForKeys = async (notion: Client,
     .setDescription(keyPingDescription)
     .setFooter({ text: 'Note that the offices to pick up keys from close up at 4 PM!' });
 
-  await webhook.send({
+  await config.channel.send({
     content: `<@&${config.logisticsTeamId}>`,
     embeds: [keyPingEmbed],
   });
@@ -797,8 +795,6 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
   Logger.debug('Getting API clients...');
   // The Notion API is easy enough to get.
   const notion = await getNotionAPI(config.notionToken);
-  // Get the Discord webhook as well.
-  const webhook = config.webhook;
 
   Logger.info('Getting Notion Calendar...');
 
@@ -812,8 +808,8 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
 
   Logger.info('Pipeline ready! Running.');
   
-  pingForTAPandCSIDeadlines(notion, webhook, databaseId, config);
-  pingForKeys(notion, webhook, databaseId, config);
+  pingForTAPandCSIDeadlines(notion, databaseId, config);
+  pingForKeys(notion, databaseId, config);
 
   // Done!
   Logger.info('All reminders and deadlines pinged!');

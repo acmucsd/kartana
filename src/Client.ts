@@ -149,12 +149,12 @@ export default class Client extends DiscordClient implements BotClient {
       });
       throw new Error('Could not construct Client class: missing Discord Guild ID in envvars');
     }
-    if (!process.env.DISCORD_WEBHOOK_URL) {
-      Logger.error('Could not construct Client class: missing Discord Webhook URL in envvars', {
+    if (!process.env.DISCORD_EVENT_PIPELINE_CHANNEL_ID) {
+      Logger.error('Could not construct Client class: missing Discord Event Pipeline Channel ID in envvars', {
         eventType: 'initError',
-        error: 'missing Discord Webhook URL in envvars',
+        error: 'missing Discord Event Pipeline Channel ID in envvars',
       });
-      throw new Error('Could not construct Client class: missing Discord Webhook URL in envvars');
+      throw new Error('Could not construct Client class: missing Discord Event Pipeline Channel ID in envvars');
     }
     if (!process.env.DISCORD_MAINTAINER_MENTION_ID) {
       Logger.error('Could not construct Client class: missing Discord Maintainer Mention ID in envvars', {
@@ -194,7 +194,7 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.googleSheetsDocID = process.env.GOOGLE_SHEETS_DOC_ID;
     this.settings.googleSheetsSheetName = process.env.GOOGLE_SHEETS_SHEET_NAME;
     this.settings.discordGuildID = process.env.DISCORD_GUILD_ID;
-    this.settings.discordWebhookURL = process.env.DISCORD_WEBHOOK_URL;
+    this.settings.discordEventPipelineChannelID = process.env.DISCORD_EVENT_PIPELINE_CHANNEL_ID;
     this.settings.maintainerID = process.env.DISCORD_MAINTAINER_MENTION_ID;
     this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;
     this.settings.botErrorChannelID = process.env.DISCORD_BOT_ERROR_CHANNEL_ID;

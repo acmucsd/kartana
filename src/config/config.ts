@@ -36,7 +36,7 @@ export default {
   googleSheetsDocID: '',
   googleSheetsSheetName: '',
   discordGuildID: '',
-  discordWebhookURL: '',
+  discordEventPipelineChannelID: '',
   maintainerID: '',
   logisticsTeamID: '',
   botErrorChannelID: '',
