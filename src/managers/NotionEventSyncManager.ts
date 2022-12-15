@@ -5,7 +5,7 @@ import { BotClient } from '../types';
 import Logger from '../utils/Logger';
 import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders } from '../event-notion';
 import { readFileSync } from 'fs';
-import { MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
+import { MessageEmbed, TextChannel } from 'discord.js';
 import { GoogleSheetsSchemaMismatchError, NotionSchemaMismatchError } from '../types';
 import { generateNewNote } from '../notes-notion';
 import { DateTime } from 'luxon';
@@ -33,7 +33,7 @@ export default class {
    * @param client The original client, for access to the configuration
    */
   public async runNotionPipeline(client: BotClient): Promise<void> {
-    const webhook = new WebhookClient({ url: client.settings.discordWebhookURL });
+    const eventChannel = client.channels.cache.get(client.settings.discordEventPipelineChannelID) as TextChannel;
     try {
       await syncHostFormToNotionCalendar({
         logisticsTeamId: client.settings.logisticsTeamID,
@@ -42,7 +42,7 @@ export default class {
         hostFormSheetName: client.settings.googleSheetsSheetName,
         notionCalendarId: client.settings.notionCalendarID,
         notionToken: client.settings.notionIntegrationToken,
-        webhook,
+        channel: eventChannel,
         googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
       });
   
@@ -70,7 +70,7 @@ export default class {
               text: "I will not run the pipeline again until y'all confirm the Notion database changes.",
             })
             .setColor('DARK_RED');
-          await webhook.send({
+          await eventChannel.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
             content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
@@ -88,7 +88,7 @@ export default class {
               text: "I will not run the pipeline again until y'all confirm the Google Sheets table changes.",
             })
             .setColor('DARK_RED');
-          await webhook.send({
+          await eventChannel.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
             content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
@@ -104,7 +104,7 @@ export default class {
    * @param client The original client, for access to the configuration
    */
   public async runDeadlinesAndReminders(client: BotClient): Promise<void> {
-    const webhook = new WebhookClient({ url: client.settings.discordWebhookURL });
+    const eventChannel = client.channels.cache.get(client.settings.discordEventPipelineChannelID) as TextChannel;
     try {
       await pingForDeadlinesAndReminders({
         logisticsTeamId: client.settings.logisticsTeamID,
@@ -113,7 +113,7 @@ export default class {
         hostFormSheetName: client.settings.googleSheetsSheetName,
         notionCalendarId: client.settings.notionCalendarID,
         notionToken: client.settings.notionIntegrationToken,
-        webhook,
+        channel: eventChannel,
         googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
       });
   
@@ -144,7 +144,7 @@ export default class {
               "I will not run any Notion-related pipelines again until y'all confirm the Notion database changes.",
             })
             .setColor('DARK_RED');
-          await webhook.send({
+          await eventChannel.send({
             // No point in making this line shorter.
             // eslint-disable-next-line max-len
             content: `Paging <@&${process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID}> and <@${process.env.DISCORD_MAINTAINER_MENTION_ID}>!`,

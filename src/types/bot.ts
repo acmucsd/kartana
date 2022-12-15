@@ -135,9 +135,9 @@ export interface BotSettings {
    */
   discordGuildID: string;
   /**
-   * Discord webhook URL for any alerts pipeline makes.
+   * Channel ID to send any alerts the Notion Event pipeline makes.
    */
-  discordWebhookURL: string;
+  discordEventPipelineChannelID: string;
   /**
    * Discord mention ID's for Logistics team and maintainer of pipelines.
    */
