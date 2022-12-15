@@ -131,7 +131,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   Logger.debug('Getting API clients...');
   // The Notion API is easy enough to get.
   const notion = await getNotionAPI(config.notionToken);
-  // Get the Discord webhook as well.
+  // Get the Discord channel as well.
   const channel = config.channel;
 
   // Getting our Google Spreasheet is harder, but not by much.
