@@ -1,0 +1,19 @@
+# This file is used by AWS CodeDeploy to specify actions to be taken for code deployment
+# Note that currently AWS CodeDeploy will only move all files stored on github 
+# meaning that any secret files or changes to secret files will have to be moved manually
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /opt/kartana
+hooks:
+  #Triggers yarn build after installation
+  AfterInstall:
+    - location: scripts/createBuild.sh
+      timeout: 300
+      runas: root
+  #Deploy/Runs the bot after building script
+  ApplicationStart:
+    - location: scripts/startBot.sh
+      timeout: 300
+      runas: root
