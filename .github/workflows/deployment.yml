@@ -26,8 +26,8 @@ jobs:
         id: deploy
         run: |
           aws deploy create-deployment \
-            --application-name Git_Application \
-            --deployment-group-name Deployment_Group \
+            --application-name Discord_Deployment \
+            --deployment-group-name Kartana_Deployment \
             --deployment-config-name CodeDeployDefault.OneAtATime \
             --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
       
