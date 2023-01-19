@@ -4,7 +4,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /
+  - source: .
     destination: /opt/kartana
 hooks:
   #Triggers yarn build after installation
