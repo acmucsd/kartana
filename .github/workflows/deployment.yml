@@ -14,32 +14,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
-      # Set the node version
+        # Set the node version
       - name: Set Node.js 16.x
         uses: actions/setup-node@v3
         with: 
           node-version: 16.x
       
-      # Run the yarn install command
+        # Run the yarn install command
       - name: Run install
         uses: borales/actions-yarn@v4
         with:
           cmd: install
       
-      # Run yarn build
+        # Run yarn build
        - name: Build project
         uses: borales/actions-yarn@v4
         with:
           cmd: build
 
-      # Create build zip
+        # Create build zip
       - name: Zip build
         run: zip -r build.zip build
       
-      # Move file 
+        # Move file 
       - name: Deploy to Staging Server
         uses: easingthemes/ssh-deploy@main
         env:
@@ -63,7 +63,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       
-      # This step will trigger AWS Codedeploy to run using the files from the current commit
+        # This step will trigger AWS Codedeploy to run using the files from the current commit
       - name: Create CodeDeploy Development
         id: deploy
         run: |
