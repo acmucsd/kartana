@@ -4,8 +4,7 @@ name: Kartana Deployment
 # Trigger deployment when merging or pushing to main
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
 
