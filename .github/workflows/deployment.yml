@@ -9,8 +9,8 @@ on:
 
 jobs:
 
-  build:
-    name: Build Typescript Project
+  BuildMove:
+    name: Build Project and Move To AWS
     runs-on: ubuntu-latest
 
     steps:
@@ -38,26 +38,20 @@ jobs:
       # Create build zip
       - name: Zip build
         run: zip -r build.zip build
-
-  # Job to run rsync which will move build to AWS Instance  
-  rsync:
-      name: Move Build To AWS Instance
-      needs: [build]
-      runs-on: ubuntu-latest
       
-      steps:
-        - name: Deploy to Staging Server
-          uses: easingthemes/ssh-deploy@main
-          env:
-            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-            REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-            REMOTE_USER: ${{ secrets.REMOTE_USER }}
-            SOURCE: "build.zip"
-            TARGET: ${{ secrets.REMOTE_TARGET }}
+      # Move file 
+      - name: Deploy to Staging Server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          SOURCE: "build.zip"
+          TARGET: ${{ secrets.REMOTE_TARGET }}
 
   deploy:
     name: Configure AWS Deployment
-    needs: [rsync]
+    needs: [BuildMove]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
