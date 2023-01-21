@@ -8,8 +8,56 @@ on:
       - main
 
 jobs:
+
+  build:
+    name: Build Typescript Project
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Set the node version
+      - name: Set Node.js 16.x
+        uses: actions/setup-node@v3
+        with: 
+          node-version: 16.x
+      
+      # Run the yarn install command
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+      
+      # Run yarn build
+       - name: Build project
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+
+      # Create build zip
+      - name: Zip build
+        run: zip -r build.zip build
+
+  # Job to run rsync which will move build to AWS Instance  
+  rsync:
+      name: Move Build To AWS Instance
+      needs: [build]
+      runs-on: ubuntu-latest
+      
+      steps:
+        - name: Deploy to Staging Server
+          uses: easingthemes/ssh-deploy@main
+          env:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+            REMOTE_USER: ${{ secrets.REMOTE_USER }}
+            SOURCE: "build.zip"
+            TARGET: ${{ secrets.REMOTE_TARGET }}
+
   deploy:
     name: Configure AWS Deployment
+    needs: [rsync]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:

@@ -1,2 +1,3 @@
 #!/bin/bash
-yarn build
+cd /opt/kartana
+sudo unzip build.zip && rm build.zip
