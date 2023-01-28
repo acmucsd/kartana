@@ -151,6 +151,14 @@ export interface BotSettings {
    * Scheduled Message Calendar ID, used for backing up scheduled messages.
    */
   scheduledMessageGoogleCalendarID: string;
+
+  /** 
+   * ACMURL credentials. Used in the /meetingnotes command 
+   */
+  acmurl: {
+    username: string,
+    password: string,
+  }
 }
   
 /**

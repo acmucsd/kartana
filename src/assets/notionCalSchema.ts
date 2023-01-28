@@ -3,7 +3,7 @@
  * 
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Wed, Dec 14 2022 19:54:13 PST.
+ * Fri, Jan 27 2023 19:54:13 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -488,7 +488,7 @@ export const notionCalSchema = {
         },
         {
           'id': '1b940d3d-4d1b-49bd-869c-1819febb4a28',
-          'name': 'Design and Innovation Building 202',
+          'name': 'Design and Innovation Building 202/208',
           'color': 'gray',
         },
         {
@@ -882,7 +882,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'fcbc2e96-5248-4d6c-bfd2-ea254708e16c',
-          'name': 'Design and Innovation Building 202',
+          'name': 'Design and Innovation Building 202/208',
           'color': 'gray',
         },
         {
@@ -1268,7 +1268,7 @@ export const notionCalSchema = {
         },
         {
           'id': '62606abb-4b3e-4218-af53-2c7a0228707b',
-          'name': 'Design and Innovation Building 202',
+          'name': 'Design and Innovation Building 202/208',
           'color': 'gray',
         },
         {
