@@ -34,7 +34,7 @@ export type EventLocation = 'Zoom (See Details)'
 | 'CSE B225 (Fishbowl)'
 | 'PC Forum'
 | 'PC Bear Room'
-| 'Design and Innovation Building 202';
+| 'Design and Innovation Building 202/208';
 
 /**
  * Converter from the Host Form's locations to the Notion Calendar
@@ -59,7 +59,7 @@ export const notionLocationTag = {
   'CSE 1202': 'CSE 1202',
   'CSE B225': 'CSE B225 (Fishbowl)',
   'CSE Labs': 'Other (See Details)',
-  'Design and Innovation Building Room 202': 'Design and Innovation Building 202',
+  'Design and Innovation Building Room 202': 'Design and Innovation Building 202/208',
   'Fung Auditorium (Paid)': 'Fung Auditorium',
   'Warren Bear': 'Warren Bear',
   'Warren College SAC': 'Warren College SAC',

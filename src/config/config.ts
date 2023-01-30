@@ -41,4 +41,8 @@ export default {
   logisticsTeamID: '',
   botErrorChannelID: '',
   scheduledMessageGoogleCalendarID: '',
+  acmurl: {
+    username: '',
+    password: '',
+  },
 } as BotSettings;

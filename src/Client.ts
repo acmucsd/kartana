@@ -177,13 +177,26 @@ export default class Client extends DiscordClient implements BotClient {
       });
       throw new Error('Could not construct Client class: missing Discord Bot Error Channel ID in envvars');
     }
-
     if (!process.env.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID) {
       Logger.error('Could not construct Client class: missing Scheduled Message Calendar ID in envvars', {
         eventType: 'initError',
-        error: 'missing Discord Bot Error Channel ID in envvars',
+        error: 'missing Scheduled Message Calendar ID in envvars',
       });
       throw new Error('Could not construct Client class: missing Scheduled Message Calendar ID in envvars'); 
+    }
+    if (!process.env.ACMURL_USERNAME) {
+      Logger.error('Could not construct Client class: missing ACMURL Username in envvars', {
+        eventType: 'initError',
+        error: 'missing ACMURL Username in envvars',
+      });
+      throw new Error('Could not construct Client class: missing ACMURL Username in envvars');
+    }
+    if (!process.env.ACMURL_PASSWORD) {
+      Logger.error('Could not construct Client class: missing ACMURL Password in envvars', {
+        eventType: 'initError',
+        error: 'missing ACMURL Password in envvars',
+      });
+      throw new Error('Could not construct Client class: missing ACMURL Password in envvars');
     }
 
     this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
@@ -199,6 +212,8 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;
     this.settings.botErrorChannelID = process.env.DISCORD_BOT_ERROR_CHANNEL_ID;
     this.settings.scheduledMessageGoogleCalendarID = process.env.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID;
+    this.settings.acmurl.username = process.env.ACMURL_USERNAME;
+    this.settings.acmurl.password = process.env.ACMURL_PASSWORD;
     this.initialize().then();
   }
 
