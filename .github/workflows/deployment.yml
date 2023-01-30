@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
         # Set the node version
@@ -29,7 +28,7 @@ jobs:
           cmd: install
       
         # Run yarn build
-       - name: Build project
+      - name: Build project
         uses: borales/actions-yarn@v4
         with:
           cmd: build
