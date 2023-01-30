@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  BuildMove:
+  build:
     name: Build Project and Move To AWS
     runs-on: ubuntu-latest
 
