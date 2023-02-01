@@ -46,6 +46,11 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           SOURCE: "build.zip"
           TARGET: ${{ secrets.REMOTE_TARGET }}
+      
+      - name: Log Deployment
+        run: |
+          deployDate=date +"%d-%m-%y"
+          echo "Deployment made at $deployDate" >> deployLogs.txt
 
   deploy:
     name: Configure AWS Deployment
