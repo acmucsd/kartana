@@ -34,6 +34,11 @@ export default class {
   public calendarMapping: Map<string, DiscordInfo>;
 
   /**
+   * Mapping of discord id's to scheduled messages
+   */
+  public messageMapping: Map<string, string[]>;
+
+  /**
    * Updates the Google Calendar auth and client before an API call.
    * @param client The original client, for access to the configuration.
    */
@@ -320,6 +325,19 @@ export default class {
 
     }
 
+  }
+
+  /**
+   * This method will map a discord id to a calendar event to be used to pull all 
+   * scheduled messages that a user has.
+   */
+  public async addToMessageMapping(member: string, eventId: string): Promise<boolean> {
+    const memberList = this.messageMapping.get(member);
+    if (memberList && memberList.includes(eventId)) {
+      return false;
+    } 
+    
+    return true;
   }
   
 }
