@@ -331,13 +331,24 @@ export default class {
    * This method will map a discord id to a calendar event to be used to pull all 
    * scheduled messages that a user has.
    */
-  public async addToMessageMapping(member: string, eventId: string): Promise<boolean> {
+  public addToMessageMapping(member: string, eventId: string): boolean {
     const memberList = this.messageMapping.get(member);
-    if (memberList && memberList.includes(eventId)) {
+    
+    if (!memberList) {
+      const eventList: string[] = [eventId];
+      this.messageMapping.set(member, eventList);
+      return true;
+    }
+    
+    if (memberList.includes(eventId)) {
       return false;
     } 
-    
+
+    memberList.push(eventId);
+    this.messageMapping.set(member, memberList);
     return true;
   }
+
+  
   
 }
