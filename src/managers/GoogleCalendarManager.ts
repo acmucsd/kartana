@@ -214,14 +214,15 @@ export default class {
    * @param message The message to be sent
    * @param date The datetime object which specifies when the message should be sent
    */
-  public async addScheduledMessage(client: BotClient, channelID: string, message: string, date: DateTime): 
-  Promise<void> {
+  public async addScheduledMessage(client: BotClient, channelID: string, message: string, date: DateTime, 
+    member: string): 
+    Promise<void> {
     //Get the auth token
     await this.refreshAuth(client);
     //Try adding a event to the calendar
     //Note event has end time 5 seconds after start time
     try {
-      this.calendar.events.insert({
+      const event = await this.calendar.events.insert({
         'calendarId': client.settings.scheduledMessageGoogleCalendarID,
         'requestBody': {
           'summary' : channelID,
@@ -234,6 +235,11 @@ export default class {
           },
         },
       });
+      console.log(event.data.id);
+      if (event.data.id) {
+        this.addToMessageMapping(member, event.data.id);
+        console.log(this.calendarMapping);
+      }
     } catch (err) {
       // We'll report if there's an API error to deal with the issue.
       Logger.error(`Error importing scheduled message calendar}: ${err}`);

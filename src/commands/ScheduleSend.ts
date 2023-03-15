@@ -115,9 +115,11 @@ export default class ScheduleSend extends Command {
       return;
     }
 
-    // Add Message to the google calendar
-    this.client.googleCalendarManager.addScheduledMessage(this.client, interaction.channelId,
-      messageToSend, dateToSend);
+    if (member) {
+      // Add Message to the google calendar
+      this.client.googleCalendarManager.addScheduledMessage(this.client, interaction.channelId,
+        messageToSend, dateToSend, member?.toString()); 
+    }
 
     // Schedule the message to be sent
     this.client.googleCalendarManager.scheduleMessage(this.client, dateToSend, messageToSend, interaction.channelId);
