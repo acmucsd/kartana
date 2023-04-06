@@ -13,7 +13,8 @@ import {
 import Command from '../Command';
 import GoogleCalendarManager from '../managers/GoogleCalendarManager';
 import NotionEventSyncManager from '../managers/NotionEventSyncManager';
-  
+import Logger from '../utils/Logger';
+
 /**
  * The options for a Command.
  * Copied verbatim from BreadBot.
@@ -52,7 +53,7 @@ export interface CommandOptions {
    * @example "!command <somethingWeNeed> [someExtraArgument]"
    */
   usage?: string;
-  
+
   /**
    * Category of the command.
    *
@@ -60,7 +61,7 @@ export interface CommandOptions {
    * but there are too few Commands right now.
    */
   category?: string;
-  
+
   /**
    * Required permissions to run the Command.
    *
@@ -70,7 +71,7 @@ export interface CommandOptions {
    */
   requiredPermissions: PermissionString[];
 }
-  
+
 /**
  * The configuration for the Bot.
  *
@@ -85,7 +86,7 @@ export interface BotSettings {
    * Discord.js-specific Client options. Currently unused.
    */
   clientOptions?: ClientOptions;
-  
+
   /**
    * Client ID of the application that BreadBot is made in.
    *
@@ -104,7 +105,7 @@ export interface BotSettings {
   /**
    * The credentials required for the Notion Integration
    * connected to the ACM UCSD Board Notion.
-   * 
+   *
    * This Integration needs read-write access to the Notion Calendar
    * in order for the Event Notion Pipeline to function properly.
    */
@@ -114,7 +115,7 @@ export interface BotSettings {
   /**
    * The credentials for the GCS service account with access to the
    * Host Form Response Google Sheet.
-   * 
+   *
    * The first should link to the email, but the second environment variable
    * should be a relative path to the JSON file acquired from GCS for the
    * service account.
@@ -123,7 +124,7 @@ export interface BotSettings {
   googleSheetsKeyFile: string;
   /**
    * The information required to access the Host Form Response Google Sheet.
-   * 
+   *
    * The ID can be extracted from the first part of the Google Sheet URL, and the
    * sheet name MUST be a verbatim copy of the sheet from the Google Sheet that
    * contains all the response.
@@ -152,15 +153,15 @@ export interface BotSettings {
    */
   scheduledMessageGoogleCalendarID: string;
 
-  /** 
-   * ACMURL credentials. Used in the /meetingnotes command 
+  /**
+   * ACMURL credentials. Used in the /meetingnotes command
    */
   acmurl: {
-    username: string,
-    password: string,
-  }
+    username: string;
+    password: string;
+  };
 }
-  
+
 /**
  * Interface for BreadBot's dependency-injected Client.
  *
@@ -171,7 +172,7 @@ export interface BotClient extends Client {
    * Our client's settings.
    */
   settings: BotSettings;
-  
+
   /**
    * Map of Commands registered by name in order for quick retrieval of parameters
    * for other commands, like Help.
@@ -182,14 +183,31 @@ export interface BotClient extends Client {
    * Flags for Kartana to run properly.
    */
   flags: {
-    validNotionSchema: boolean,
-    validGoogleSchema: boolean,
-  }
+    validNotionSchema: boolean;
+    validGoogleSchema: boolean;
+  };
 
   notionEventSyncManager: NotionEventSyncManager;
   googleCalendarManager: GoogleCalendarManager;
 }
-  
+
+/**
+ * Error that occurs when a config variable is missing in .env.
+ * Generally called in Client.ts when initalizing Kartana.
+ */
+export class BotInitializationError extends Error {
+  constructor(missingEnvVar: string) {
+    super(`Could not construct Client class: missing ${missingEnvVar} in envvars`);
+    Logger.error(`Could not construct Client class: missing ${missingEnvVar} in envvars`, {
+      eventType: 'initError',
+      error: `missing ${missingEnvVar} in envvars`,
+    });
+
+    // Set the prototype explicitly.
+    Object.setPrototypeOf(this, BotInitializationError.prototype);
+  }
+}
+
 /**
  * A Client Event the bot will react to, returned by "Discord.js"
  * All of these must be events that "Discord.js" can accept callbacks for.
@@ -203,17 +221,17 @@ export interface BotEvent {
    */
   run(args?: any): void;
 }
-  
+
 /**
  * UUIDv4 string. Useful for the 'uuid' package to understand difference in code.
  */
 export type UUIDv4 = string;
-  
+
 /**
  * Any kind of channel we can send text to.
  */
 export type AnyChannel = TextChannel | DMChannel | NewsChannel;
-  
+
 /**
  * Wrapper type for Commands to be able to return proper Message responses.
  */
