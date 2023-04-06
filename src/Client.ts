@@ -55,7 +55,7 @@ export default class Client extends DiscordClient implements BotClient {
   constructor(
     private actionManager: ActionManager,
     public notionEventSyncManager: NotionEventSyncManager,
-    public googleCalendarManager: GoogleCalendarManager,
+    public googleCalendarManager: GoogleCalendarManager
   ) {
     super(
       configuration.clientOptions || {
@@ -68,7 +68,7 @@ export default class Client extends DiscordClient implements BotClient {
           'GUILD_MESSAGE_REACTIONS',
           'DIRECT_MESSAGE_REACTIONS',
         ],
-      },
+      }
     );
     this.settings = configuration;
     // We absolutely need some envvars, so if they're not in our .env file, nuke the initialization.
@@ -90,6 +90,9 @@ export default class Client extends DiscordClient implements BotClient {
     }
     if (!process.env.NOTION_MEETING_NOTES_ID) {
       throw new BotInitializationError('Notion Meeting Notes ID');
+    }
+    if (!process.env.NOTION_HOSTED_EVENTS_ID) {
+      throw new BotInitializationError('Notion Hosted Events ID');
     }
     if (!process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL) {
       throw new BotInitializationError('Google Sheets Service Account Email');

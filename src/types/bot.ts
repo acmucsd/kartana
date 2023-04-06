@@ -110,8 +110,12 @@ export interface BotSettings {
    * in order for the Event Notion Pipeline to function properly.
    */
   notionIntegrationToken: string;
+
+  // Database IDs for pages we want to automatically create and retrieve on Notion.
   notionCalendarID: string;
   notionMeetingNotesID: string;
+  notionHostedEventsID: string;
+
   /**
    * The credentials for the GCS service account with access to the
    * Host Form Response Google Sheet.
