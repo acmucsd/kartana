@@ -1,8 +1,7 @@
 import { BotSettings } from '../types';
 
 export default {
-  apiKeys: {
-  },
+  apiKeys: {},
   clientID: '',
   clientOptions: {
     intents: [
@@ -16,10 +15,12 @@ export default {
     ],
   },
   presence: {
-    activities: [{
-      type: 'PLAYING',
-      name: 'with Host Forms',
-    }],
+    activities: [
+      {
+        type: 'PLAYING',
+        name: 'with Host Forms',
+      },
+    ],
     status: 'online',
   },
   token: '',
@@ -31,6 +32,7 @@ export default {
   notionIntegrationToken: '',
   notionCalendarID: '',
   notionMeetingNotesID: '',
+  notionHostedEventsID: '',
   googleSheetsServiceAccountEmail: '',
   googleSheetsKeyFile: '',
   googleSheetsDocID: '',

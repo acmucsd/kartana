@@ -1,18 +1,18 @@
 import { Client } from '@notionhq/client';
 import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
-import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
+import { GetDatabaseResponse, PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { groupBy, isEqual } from 'lodash';
-import NotionEvent from './NotionEvent';
-import { GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
+import NotionCalEvent from './NotionCalEvent';
+import { BotSettings, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
 import { MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 
 /**
  * Logs into Notion.
- * 
+ *
  * @returns The Notion Client object.
  */
 export const getNotionAPI = async (notionToken: string) => {
@@ -22,7 +22,7 @@ export const getNotionAPI = async (notionToken: string) => {
 /**
  * Make sure that the current assigned Notion database has a proper schema for us
  * to run the sync script on.
- * 
+ *
  * This function should be run before any modifications to the database are made.
  * @param database The Notion Database we are running modifications on.
  */
@@ -31,7 +31,7 @@ export const validateNotionDatabase = (database: GetDatabaseResponse) => {
   if (databaseDiff.length !== 0) {
     Logger.error('Notion Calendar schema is mismatched! Halting!', {
       type: 'error',
-      diff: databaseDiff, 
+      diff: databaseDiff,
     });
     throw new NotionSchemaMismatchError(databaseDiff);
   }
@@ -39,7 +39,7 @@ export const validateNotionDatabase = (database: GetDatabaseResponse) => {
 
 /**
  * Validates the headers in the host form CSV to ensure they match the downloaded schema.
- * 
+ *
  * This should be run before any other modifications to the Notion database OR Google Sheet are made.
  * @param headers The headers from the Host Form response sheet.
  */
@@ -56,15 +56,15 @@ export const validateGoogleSheetsSchema = (headers) => {
 
 /**
  * Converts a Google Spreadsheets API row into our interface for host form responses.
- * 
+ *
  * We do this by creating an object with values obtained from each getter of our spreadsheet row.
  * In other words, iterate over our header values from the Google Sheet and get each value from the
  * original GoogleSpreadsheetRow, thus turning it into an object compliant to our HostFormResponse
  * interface.
- * 
+ *
  * This method is useful because it makes our code as type-safe as possible, making it easier to handle
  * business logic.
- * 
+ *
  * @param headers the headers of our Host Form.
  * @param row The Google Spreadsheet row from the Host Form.
  */
@@ -78,11 +78,11 @@ export const toHostFormResponse = (headers: string[], row: GoogleSpreadsheetRow)
 
 /**
  * Gets a parsed version of our Host Form response sheet.
- * 
+ *
  * This takes the Google Sheet we are interested in and converts each row
  * into a type-compliant interface. We also keep the original headers and rows
  * for later perusal.
- * 
+ *
  * @returns An object containing the header values of the host form, the rows themselves,
  * and their individual parsed versions.
  */
@@ -104,19 +104,14 @@ export const getHostForm = async (hostFormDoc: GoogleSpreadsheet, hostFormSheetN
 };
 
 export interface EventNotionPipelineConfig {
-  logisticsTeamId: string;
-  maintainerId: string;
-  hostFormSheetId: string;
-  hostFormSheetName: string;
-  googleSheetAPICredentials: ServiceAccountCredentials;
-  notionCalendarId: string;
+  settings: BotSettings;
   channel: TextChannel;
-  notionToken: string;
+  googleSheetAPICredentials: ServiceAccountCredentials;
 }
 
 /**
  * Sync the Host Form response Google Sheet to our internal Notion calendar.
- * 
+ *
  * This pipeline is fairly convoluted, but essentially it does the following:
  * - Read the entire host form response spreadsheet
  * - Look for any events that don’t have the “Imported to Notion” column checkbox ticked
@@ -124,13 +119,13 @@ export interface EventNotionPipelineConfig {
  * - Upload to Notion using their API.
  * - Tick the checkbox for “Imported to Notion” on the spreadsheet.
  * - Alert the Discord of any errors or successfuly imported events.
- * 
+ *
  */
 export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineConfig) => {
   Logger.info('Syncing Host Form to Notion Calendar...');
   Logger.debug('Getting API clients...');
   // The Notion API is easy enough to get.
-  const notion = await getNotionAPI(config.notionToken);
+  const notion = await getNotionAPI(config.settings.notionIntegrationToken);
   // Get the Discord channel as well.
   const channel = config.channel;
 
@@ -140,14 +135,14 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   //
   // This requires the Google Sheet to give Editor access to the pipeline GCS
   // service account, but that will be in the Markdown docs for the repo.
-  const hostFormDoc = new GoogleSpreadsheet(config.hostFormSheetId);
+  const hostFormDoc = new GoogleSpreadsheet(config.settings.googleSheetsDocID);
   // Jank file path hack because our code for the pipeline is not at root dir.
   await hostFormDoc.useServiceAccountAuth(config.googleSheetAPICredentials);
 
   Logger.info('Downloading Google Sheet data...');
-  const hostForm = await getHostForm(hostFormDoc, config.hostFormSheetName);
+  const hostForm = await getHostForm(hostFormDoc, config.settings.googleSheetsSheetName);
   Logger.info('Getting Notion Calendar...');
-  
+
   // TODO Consider making a function for this MAYBE.
   //
   // I mean, it's just two lines, but maybe some other part of the pipeline might
@@ -155,7 +150,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   //
   // Considering this microservice will probably do a ton of other things, this will probably
   // become a function, if not part of a manager.
-  const databaseId = config.notionCalendarId;
+  const databaseId = config.settings.notionCalendarID;
   const database = await notion.databases.retrieve({ database_id: databaseId });
 
   // Validate both the Notion Calendar and the Google Sheet.
@@ -202,16 +197,14 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
 
     // If the host form row has not been imported yet (checkbox not ticked) and it has ANY
     // non-empty values...
-    if (checkboxRow['Imported to Notion'] === 'FALSE'
-    && formResponse['Event name'] !== '') {
+    if (checkboxRow['Imported to Notion'] === 'FALSE' && formResponse['Event name'] !== '') {
       // Keep track of the GoogleSpreadsheetRow in newEventRows and keep it in our filtered array.
       newEventRows.push(eventRow);
       return true;
     } else {
       return false;
     }
-  },
-  ) as HostFormResponse[];
+  }) as HostFormResponse[];
 
   Logger.info(`${newEvents.length} new events detected.`);
 
@@ -228,8 +221,9 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   Logger.info('Syncing events to Notion calendar...');
   const notionEventsToImport = newEvents.flatMap((newEvent, index) => {
     try {
-      const event = new NotionEvent(newEvent);
+      const event = new NotionCalEvent(newEvent);
       event.setCalendarId(databaseId);
+      event.setHostedEventDatabaseID(config.settings.notionHostedEventsID);
       return event;
     } catch (error) {
       // If there was a TypeError (doubtful, but possible), we'll want to report it
@@ -245,7 +239,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
         .setColor('DARK_RED');
       channel.send({
-        content: `*Paging <@&${config.maintainerId}>!*`,
+        content: `*Paging <@&${config.settings.maintainerID}>!*`,
         embeds: [errorEmbed],
       });
       return [];
@@ -255,65 +249,68 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   // Then take all our events that we've converted and not only
   // upload them to notion, but ALSO make sure the Google spreadsheet
   // has the checkbox ticked if there were no errors with the import.
-  await Promise.all(notionEventsToImport.map(async (event: NotionEvent, index) => {
-    // Upload to Notion.
-    try {
-      const url = await event.uploadToNotion(notion);
-      // Report that we've successfully imported the event on Discord.
-      const successEmbed = new MessageEmbed()
-        .setTitle('📥 Imported new event!')
-        .setDescription(
-          `**Event name:** ${event.getName()}
+  await Promise.all(
+    notionEventsToImport.map(async (event: NotionCalEvent, index) => {
+      // Upload to Notion.
+      try {
+        const url = await event.uploadToNotion(notion);
+        // Report that we've successfully imported the event on Discord.
+        const successEmbed = new MessageEmbed()
+          .setTitle('📥 Imported new event!')
+          .setDescription(
+            `**Event name:** ${event.getName()}
           **URL:** ${url}
-          **Hosted by:** ${event.getHostFormResponse()['Event director(s)']}`)
-        .setColor('GREEN');
-      await channel.send({
-        content: `<@&${config.logisticsTeamId}>`,
-        embeds: [successEmbed],
-      });
-    } catch (error) {
-      // If we can't create the event, notify everone. Skip over the
-      // "tick the checkbox" part, since we didn't actually import the event.
-      Logger.error(`Error creating event "${event.getName()}: ${error}"`, {
-        error,
-        eventName: event.getName(),
-      });
-      const errorEmbed = new MessageEmbed()
-        .setTitle('⚠️ Error creating event on Notion!')
-        .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
-        .setColor('RED');
-      await channel.send({
-        content: `*Paging <@&${config.maintainerId}>!*`,
-        embeds: [errorEmbed],
-      });
-      return;
-    }
+          **Hosted by:** ${event.getHostFormResponse()['Event director(s)']}`,
+          )
+          .setColor('GREEN');
+        await channel.send({
+          content: `<@&${config.settings.logisticsTeamID}>`,
+          embeds: [successEmbed],
+        });
+      } catch (error) {
+        // If we can't create the event, notify everone. Skip over the
+        // "tick the checkbox" part, since we didn't actually import the event.
+        Logger.error(`Error creating event "${event.getName()}: ${error}"`, {
+          error,
+          eventName: event.getName(),
+        });
+        const errorEmbed = new MessageEmbed()
+          .setTitle('⚠️ Error creating event on Notion!')
+          .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
+          .setColor('RED');
+        await channel.send({
+          content: `*Paging <@&${config.settings.maintainerID}>!*`,
+          embeds: [errorEmbed],
+        });
+        return;
+      }
 
-    // Tick the checkbox.
-    //
-    // Google Spreadsheets is so jank.
-    // I'm surprised the 'TRUE' assignment didn't just convert the checkbox
-    // to a cell with the 'TRUE' string in it. I am also glad.
-    //
-    // Thank God.
-    const eventRow = newEventRows[index];
-    const checkboxRow = hostForm.checkboxRows[eventRow.rowIndex - 2];
-    checkboxRow['Imported to Notion'] = 'TRUE';
+      // Tick the checkbox.
+      //
+      // Google Spreadsheets is so jank.
+      // I'm surprised the 'TRUE' assignment didn't just convert the checkbox
+      // to a cell with the 'TRUE' string in it. I am also glad.
+      //
+      // Thank God.
+      const eventRow = newEventRows[index];
+      const checkboxRow = hostForm.checkboxRows[eventRow.rowIndex - 2];
+      checkboxRow['Imported to Notion'] = 'TRUE';
 
-    // Update the changes to Google Spreadsheets.
-    await checkboxRow.save();
-  }));
+      // Update the changes to Google Spreadsheets.
+      await checkboxRow.save();
+    }),
+  );
 
-  // Done! 
+  // Done!
   Logger.info('All events converted!');
 };
 
 /**
  * Pings the Logistics Team for any upcoming events that need the TAP Forms or CSI Event Intake forms submitted.
- * 
+ *
  * According to Logistics Team, TAP Forms or CSI Event Intake forms for any events that need them
  * need to be submitted 3 weeks before the event starts.
- * 
+ *
  * This pipeline does the following:
  * - Looks up all the events in the Notion calendar database
  * - Filters for any events that are specifically 3 weeks and 1, 2 or 3 days away from today,
@@ -322,9 +319,11 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
  * - Checks whether the events still need to have a TAP or CSI Event Intake form submitted.
  * - Adds all the events to two separate embed with a title and URL and pings the Logistics team about it.
  */
-export const pingForTAPandCSIDeadlines = async (notion: Client,
+export const pingForTAPandCSIDeadlines = async (
+  notion: Client,
   databaseId: string,
-  config: EventNotionPipelineConfig) => {
+  config: EventNotionPipelineConfig,
+) => {
   // The day for which we ping for any non-submitted events.
   // This is just basically to look for events that are 23 days away from now.
   //
@@ -415,7 +414,7 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
     },
   });
 
-  const allEvents = eventsResponse.results;
+  const allEvents = eventsResponse.results as PageObjectResponse[];
 
   Logger.debug(`Number of events with deadlines coming up: ${allEvents.length}`);
 
@@ -435,10 +434,12 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
    * @param orgPing The type of field to check whether it needs to be pinged or not.
    * @returns Whether the event should be pinged or not.
    */
-  const isEventPingable = (event: typeof allEvents[0],
+  const isEventPingable = (
+    event: (typeof allEvents)[0],
     deadlineDate: DateTime,
     orgPing: 'CSI' | 'TAP',
-    status: 'TAP TODO' | 'TAP In Progress' | 'Intake Form TODO') => {
+    status: 'TAP TODO' | 'TAP In Progress' | 'Intake Form TODO',
+  ) => {
     if (event.properties.Date.type !== 'date') {
       return false;
     }
@@ -460,14 +461,13 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
     const csiSelect = event.properties['Intake Form Status'].select;
     const csiStatus = csiSelect ? csiSelect.name : 'Intake Form N/A';
 
-    const date = event.properties.Date.date.start;
-    
+    const date = event.properties.Date.date?.start;
+
     if (orgPing === 'TAP') {
       return date === deadlineDate.toISODate() && tapStatus === status;
     } else {
       return date === deadlineDate.toISODate() && csiStatus === status;
     }
-    
   };
 
   // There are two separate embeds we are building. One for the TAP deadlines and one for the CSI deadlines.
@@ -522,11 +522,13 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
   // Begin with TAP deadline pings. For each embed, first check if we even have deadlines
   // coming up, and if we don't skip building the embed.
   Logger.info('Beginning TAP deadline embed build...');
-  if (!(Object.values(tapDeadlineEvents.firstDeadline).every((array) => array.length === 0) &&
-      Object.values(tapDeadlineEvents.secondDeadline).every((array) => array.length === 0))) {
-    tapDeadlineEmbed = new MessageEmbed()
-      .setTitle('TAP forms are due!')
-      .setColor('YELLOW');
+  if (
+    !(
+      Object.values(tapDeadlineEvents.firstDeadline).every((array) => array.length === 0) &&
+      Object.values(tapDeadlineEvents.secondDeadline).every((array) => array.length === 0)
+    )
+  ) {
+    tapDeadlineEmbed = new MessageEmbed().setTitle('TAP forms are due!').setColor('YELLOW');
 
     // Build separate strings for each section.
     let firstDeadlineSection = '_21-day Deadline_\n';
@@ -550,9 +552,9 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         // More often than not, this will just be 1 single string, but we're accounting for all
         // possible cases here.
         // Look into whether this needs spaces between the title string components or not.
-        firstDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
@@ -562,9 +564,9 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
@@ -574,9 +576,9 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
@@ -587,21 +589,21 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        secondDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        secondDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
-    
+
     if (tapDeadlineEvents.secondDeadline.twoDays.length !== 0) {
       secondDeadlineSection += '\nTAP forms due 1 day from now\n';
       tapDeadlineEvents.secondDeadline.twoDays.forEach((event) => {
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        secondDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        secondDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
@@ -611,23 +613,24 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        secondDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        secondDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
-    
+
     // Set the final text of the embed. We want to check so as to not add random text
     // for empty sections and reduce the amount of clutter. We also add a newline after
     // the first deadline section in case of the new section as well.
     tapDeadlineEmbed.setDescription(
-      (firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '')
-      + (secondDeadlineSection !== '_14-day Deadline_\n' ? secondDeadlineSection : ''));
+      (firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '') +
+        (secondDeadlineSection !== '_14-day Deadline_\n' ? secondDeadlineSection : ''),
+    );
 
     Logger.info('Sections built! Sending TAP deadline embed...');
     // Send the embed!
     await config.channel.send({
-      content: `<@&${config.logisticsTeamId}>`,
+      content: `<@&${config.settings.logisticsTeamID}>`,
       embeds: [tapDeadlineEmbed],
     });
   }
@@ -636,9 +639,7 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
   // need to add the 21-day deadline part, so no need for a lot more string building.
   if (!Object.values(eventIntakeEvents).every((array) => array.length === 0)) {
     Logger.info('Beginning CSI Intake deadline embed build...');
-    eventIntakeDeadlineEmbed = new MessageEmbed()
-      .setTitle('CSI Intake forms are due!')
-      .setColor('YELLOW');
+    eventIntakeDeadlineEmbed = new MessageEmbed().setTitle('CSI Intake forms are due!').setColor('YELLOW');
 
     let firstDeadlineSection = '_21-day Deadline_\n';
     if (eventIntakeEvents.oneDay.length !== 0) {
@@ -647,9 +648,9 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
@@ -659,9 +660,9 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
@@ -671,19 +672,20 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        firstDeadlineSection += `- [${
-          event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-        }](${event.url})\n`;
+        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+          event.url
+        })\n`;
       });
     }
 
     eventIntakeDeadlineEmbed.setDescription(
-      firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '');
+      firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '',
+    );
 
     Logger.info('Sections built! Sending CSI Intake deadline embed...');
     // Send the embed!
     await config.channel.send({
-      content: `<@&${config.logisticsTeamId}>`,
+      content: `<@&${config.settings.logisticsTeamID}>`,
       embeds: [eventIntakeDeadlineEmbed],
     });
   }
@@ -691,12 +693,10 @@ export const pingForTAPandCSIDeadlines = async (notion: Client,
 
 /**
  * Pings the Logistics Team to remind them to get keys for particular rooms that require them.
- * 
+ *
  * Every event in any CSE building room that is not CSE B225 ("The Fishbowl") requires keys.
  */
-export const pingForKeys = async (notion: Client,
-  databaseId: string,
-  config: EventNotionPipelineConfig) => {
+export const pingForKeys = async (notion: Client, databaseId: string, config: EventNotionPipelineConfig) => {
   const tomorrow = DateTime.now().setZone('America/Los_Angeles').plus({ days: 1 });
   Logger.debug(`Querying Notion API for events on date ${tomorrow.toISODate()} in CSE rooms...`);
   const eventsResponse = await notion.databases.query({
@@ -723,13 +723,13 @@ export const pingForKeys = async (notion: Client,
     },
   });
 
-  const allEvents = eventsResponse.results;
+  const allEvents = eventsResponse.results as PageObjectResponse[];
 
   const activeEvents = allEvents.filter((event) => {
     if (event.properties.Type.type !== 'select') {
       throw new TypeError(`Event Type field for event not a SELECT! (Event URL: ${event.url}`);
     }
-    return event.properties.Type.select.name !== 'CANCELLED';
+    return event.properties.Type.select?.name !== 'CANCELLED';
   });
 
   // Check if there are any events to actually ping for.
@@ -744,7 +744,7 @@ export const pingForKeys = async (notion: Client,
     if (event.properties.Location.type !== 'select') {
       throw new TypeError(`Location field for event not a SELECT! (Event URL: ${event.url}`);
     }
-    return event.properties.Location.select.name;
+    return event.properties.Location.select?.name;
   });
 
   let keyPingDescription = '';
@@ -758,9 +758,9 @@ export const pingForKeys = async (notion: Client,
       if (event.properties.Name.type !== 'title') {
         throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
       }
-      keyPingDescription += `- [${
-        event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')
-      }](${event.url})\n`;
+      keyPingDescription += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+        event.url
+      })\n`;
     });
     keyPingDescription += '\n';
   });
@@ -773,7 +773,7 @@ export const pingForKeys = async (notion: Client,
     .setFooter({ text: 'Note that the offices to pick up keys from close up at 4 PM!' });
 
   await config.channel.send({
-    content: `<@&${config.logisticsTeamId}>`,
+    content: `<@&${config.settings.logisticsTeamID}>`,
     embeds: [keyPingEmbed],
   });
 
@@ -782,7 +782,7 @@ export const pingForKeys = async (notion: Client,
 
 /**
  * Pings for any deadlines and reminders that the Teams might need for any sort of event-related task.
- * 
+ *
  * This includes:
  * - TAP and CSI Event Intake Form deadlines
  * - Key reminders for Qualcomm and CSE rooms
@@ -794,11 +794,11 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
   Logger.info('Setting up TAP deadline pings...');
   Logger.debug('Getting API clients...');
   // The Notion API is easy enough to get.
-  const notion = await getNotionAPI(config.notionToken);
+  const notion = await getNotionAPI(config.settings.notionIntegrationToken);
 
   Logger.info('Getting Notion Calendar...');
 
-  const databaseId = config.notionCalendarId;
+  const databaseId = config.settings.notionCalendarID;
   const database = await notion.databases.retrieve({ database_id: databaseId });
 
   // Validate the Notion Calendar.
@@ -807,7 +807,7 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
   validateNotionDatabase(database);
 
   Logger.info('Pipeline ready! Running.');
-  
+
   pingForTAPandCSIDeadlines(notion, databaseId, config);
   pingForKeys(notion, databaseId, config);
 

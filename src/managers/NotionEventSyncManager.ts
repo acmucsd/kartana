@@ -1,4 +1,3 @@
-
 import { Service } from 'typedi';
 import schedule from 'node-schedule';
 import { BotClient } from '../types';
@@ -36,16 +35,11 @@ export default class {
     const eventChannel = client.channels.cache.get(client.settings.discordEventPipelineChannelID) as TextChannel;
     try {
       await syncHostFormToNotionCalendar({
-        logisticsTeamId: client.settings.logisticsTeamID,
-        maintainerId: client.settings.maintainerID,
-        hostFormSheetId: client.settings.googleSheetsDocID,
-        hostFormSheetName: client.settings.googleSheetsSheetName,
-        notionCalendarId: client.settings.notionCalendarID,
-        notionToken: client.settings.notionIntegrationToken,
+        settings: client.settings,
         channel: eventChannel,
         googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
       });
-  
+
       // If the pipeline has run by now without throwing an Error, we must have
       // skipped any data schema related errors, so we can mark them off as fine.
       client.flags.validGoogleSchema = true;
@@ -59,7 +53,7 @@ export default class {
           // Mark it off as invalid. We'll validate it later when we run through one pipeline run
           // with no thrown Errors.
           client.flags.validNotionSchema = false;
-  
+
           // Send the error out on Discord. If we're in this "if", it means we've
           // not sent it before, so we'll only send once total between schema changes
           // (or restarts).
@@ -107,16 +101,11 @@ export default class {
     const eventChannel = client.channels.cache.get(client.settings.discordEventPipelineChannelID) as TextChannel;
     try {
       await pingForDeadlinesAndReminders({
-        logisticsTeamId: client.settings.logisticsTeamID,
-        maintainerId: client.settings.maintainerID,
-        hostFormSheetId: client.settings.googleSheetsDocID,
-        hostFormSheetName: client.settings.googleSheetsSheetName,
-        notionCalendarId: client.settings.notionCalendarID,
-        notionToken: client.settings.notionIntegrationToken,
+        settings: client.settings,
         channel: eventChannel,
         googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
       });
-  
+
       // If the pipeline has run by now without throwing an Error, we must have
       // skipped any data schema related errors, so we can mark them off as fine.
       //
@@ -132,7 +121,7 @@ export default class {
           // Mark it off as invalid. We'll validate it later when we run through one pipeline run
           // with no thrown Errors.
           client.flags.validNotionSchema = false;
-  
+
           // Send the error out on Discord. If we're in this "if", it means we've
           // not sent it before, so we'll only send once total between schema changes
           // (or restarts).
@@ -140,8 +129,7 @@ export default class {
             .setTitle('🚫 Notion database changed!')
             .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
             .setFooter({
-              text:
-              "I will not run any Notion-related pipelines again until y'all confirm the Notion database changes.",
+              text: "I won't run any Notion-related pipelines again until the Notion database changes are confirmed.",
             })
             .setColor('DARK_RED');
           await eventChannel.send({
@@ -196,7 +184,7 @@ export default class {
       Logger.info('Running notion event pipeline sync cron job!');
       this.runNotionPipeline(client);
     });
-    this.deadlineReminderPingJob = schedule.scheduleJob('0 10 * * *', async () =>{
+    this.deadlineReminderPingJob = schedule.scheduleJob('0 10 * * *', async () => {
       Logger.info('Running TAP and CSI deadline pings cron job!');
       this.runDeadlinesAndReminders(client);
     });
