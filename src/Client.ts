@@ -55,7 +55,7 @@ export default class Client extends DiscordClient implements BotClient {
   constructor(
     private actionManager: ActionManager,
     public notionEventSyncManager: NotionEventSyncManager,
-    public googleCalendarManager: GoogleCalendarManager
+    public googleCalendarManager: GoogleCalendarManager,
   ) {
     super(
       configuration.clientOptions || {
@@ -68,7 +68,7 @@ export default class Client extends DiscordClient implements BotClient {
           'GUILD_MESSAGE_REACTIONS',
           'DIRECT_MESSAGE_REACTIONS',
         ],
-      }
+      },
     );
     this.settings = configuration;
     // We absolutely need some envvars, so if they're not in our .env file, nuke the initialization.
@@ -137,6 +137,7 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
     this.settings.notionCalendarID = process.env.NOTION_CALENDAR_ID;
     this.settings.notionMeetingNotesID = process.env.NOTION_MEETING_NOTES_ID;
+    this.settings.notionHostedEventsID = process.env.NOTION_HOSTED_EVENTS_ID;
     this.settings.googleSheetsServiceAccountEmail = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
     this.settings.googleSheetsKeyFile = process.env.GOOGLE_SHEETS_KEY_FILE;
     this.settings.googleSheetsDocID = process.env.GOOGLE_SHEETS_DOC_ID;
@@ -146,8 +147,7 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.maintainerID = process.env.DISCORD_MAINTAINER_MENTION_ID;
     this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;
     this.settings.botErrorChannelID = process.env.DISCORD_BOT_ERROR_CHANNEL_ID;
-    this.settings.scheduledMessageGoogleCalendarID =
-      process.env.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID;
+    this.settings.scheduledMessageGoogleCalendarID = process.env.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID;
     this.settings.acmurl.username = process.env.ACMURL_USERNAME;
     this.settings.acmurl.password = process.env.ACMURL_PASSWORD;
     this.initialize().then();

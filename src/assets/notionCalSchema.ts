@@ -547,6 +547,19 @@ export const notionCalSchema = {
     type: 'files',
     files: {},
   },
+  'Hosted Events Sheet': {
+    id: 'SXzi',
+    name: 'Hosted Events Sheet',
+    type: 'relation',
+    relation: {
+      database_id: 'd26e4598-91dc-4222-895e-559b15d7cd19',
+      type: 'dual_property',
+      dual_property: {
+        synced_property_name: 'Calendar Event',
+        synced_property_id: 'scC%7B',
+      },
+    },
+  },
   'Event Coordinator': {
     id: 'TC0%24',
     name: 'Event Coordinator',
