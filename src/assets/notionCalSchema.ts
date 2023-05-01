@@ -112,6 +112,11 @@ export const notionCalSchema = {
           color: 'purple',
         },
         {
+          id: '36ab12c0-9331-4d9d-99d3-18ca8f0b989c',
+          name: 'Outreach',
+          color: 'purple',
+        },
+        {
           id: 'c11a4fd8-2787-41c9-ada7-65ea0b021170',
           name: 'Meeting',
           color: 'gray',
