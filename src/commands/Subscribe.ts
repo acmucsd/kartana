@@ -15,11 +15,11 @@ export default class Subscribe extends Command {
     const definition = new SlashCommandBuilder()
       .setName('subscribe')
       .addStringOption((option) =>
-        option.setName('email').setDescription('Your @acmucsd.org or @ucsd.edu email address.').setRequired(true)
+        option.setName('email').setDescription('Your @acmucsd.org or @ucsd.edu email address.').setRequired(true),
       )
       .addUserOption((option) => option.setName('user').setDescription('The user to subscribe to the email address.'))
       .setDescription(
-        "Subscribes a user to receive meeting pings when they're an event attendee on an ACM GCal event!."
+        "Subscribes a user to receive meeting pings when they're an event attendee on an ACM GCal event!.",
       );
 
     super(
@@ -32,7 +32,7 @@ export default class Subscribe extends Command {
         usage: client.settings.prefix.concat('subscribe'),
         requiredPermissions: ['SEND_MESSAGES'],
       },
-      definition
+      definition,
     );
   }
 
@@ -50,12 +50,12 @@ export default class Subscribe extends Command {
       if (schemaStoredUserID === userID) {
         await super.edit(
           interaction,
-          `<@${schemaStoredUserID}> is already subscribed to calendar invites for **${email}**!`
+          `<@${schemaStoredUserID}> is already subscribed to calendar invites for **${email}**!`,
         );
       } else {
         const row = new MessageActionRow().addComponents(
           new MessageButton().setCustomId('Confirm').setLabel('Confirm').setStyle('PRIMARY'),
-          new MessageButton().setCustomId('Cancel').setLabel('Cancel').setStyle('DANGER')
+          new MessageButton().setCustomId('Cancel').setLabel('Cancel').setStyle('DANGER'),
         );
         const message = (await interaction.editReply({
           // eslint-disable-next-line max-len

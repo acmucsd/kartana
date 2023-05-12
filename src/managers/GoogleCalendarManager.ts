@@ -93,7 +93,7 @@ export default class {
                 .setDescription(event.description || '')
                 .addField(
                   '⏰ Time',
-                  `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`
+                  `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`,
                 )
                 .addField('👥 People', mentions)
                 .setColor('WHITE');
@@ -112,7 +112,7 @@ export default class {
                 }
               }
               const channel = client.channels.cache.get(
-                this.meetingPingsSchema.getChannelID(calendarID)
+                this.meetingPingsSchema.getChannelID(calendarID),
               ) as TextChannel;
               channel.send({
                 content: `Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
@@ -215,7 +215,7 @@ export default class {
     client: BotClient,
     channelID: string,
     message: string,
-    date: DateTime
+    date: DateTime,
   ): Promise<void> {
     //Get the auth token
     await this.refreshAuth(client);

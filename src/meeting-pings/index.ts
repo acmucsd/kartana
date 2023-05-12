@@ -1,4 +1,3 @@
-export * from './meetingPingsSchema';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { calendar_v3 } from 'googleapis';
 
