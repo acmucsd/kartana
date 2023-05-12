@@ -44,6 +44,7 @@ export default class Subscribe extends Command {
 
     if (!isEmail(email) || (email.split('@')[1] !== 'acmucsd.org' && email.split('@')[1] !== 'ucsd.edu')) {
       await super.edit(interaction, 'Please enter a valid @acmucsd.org or @ucsd.edu email!');
+      return;
     }
     const schemaStoredUserID = meetingPingsSchema.getGuest(email);
     if (schemaStoredUserID !== null) {
