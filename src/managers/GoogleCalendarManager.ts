@@ -5,7 +5,7 @@ import Logger from '../utils/Logger';
 import { DateTime, Interval } from 'luxon';
 import { calendar_v3, google } from 'googleapis';
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
-import { MeetingPingsSchema, DiscordInfo } from '../meeting-pings';
+import { MeetingPingsSchema } from '../meeting-pings';
 
 /**
  * GoogleCalendarManager manages automatic event notifications on Discord of events on
@@ -31,15 +31,15 @@ export default class {
   /**
    * Mapping from each calendarID to the specific channel/people to notify for each event.
    */
-  public calendarMapping: Map<string, DiscordInfo>;
+  public meetingPingsSchema: MeetingPingsSchema;
 
   /**
    * Updates the Google Calendar auth and client before an API call.
    * @param client The original client, for access to the configuration.
    */
-  private async refreshAuth(client: BotClient) : Promise<void> {
+  private async refreshAuth(client: BotClient): Promise<void> {
     const auth = new google.auth.GoogleAuth({
-      keyFilename: client.settings.googleSheetsKeyFile, 
+      keyFilename: client.settings.googleSheetsKeyFile,
       scopes: ['https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/calendar'],
     });
     const authClient = await auth.getClient();
@@ -62,7 +62,7 @@ export default class {
     /**
      * Checking through all calendars in our calendar list...
      */
-    this.calendarList.map(async calendarID => {
+    this.calendarList.map(async (calendarID) => {
       const res = await this.calendar.events.list({
         calendarId: calendarID,
         timeMin: start.toISO(),
@@ -70,7 +70,7 @@ export default class {
         singleEvents: true,
         orderBy: 'startTime',
       });
-  
+
       // Check that there are events to send notifications for
       if (res && res.data.items) {
         const events = res.data.items;
@@ -87,12 +87,14 @@ export default class {
             const searchInterval = Interval.fromDateTimes(start, end);
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
-              const mentions = this.calendarMapping[calendarID].getMentions(event);
+              const mentions = this.meetingPingsSchema.getMentions(calendarID, event);
               let messageEmbed = new MessageEmbed()
                 .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
                 .setDescription(event.description || '')
-                .addField('⏰ Time', 
-                  `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`)
+                .addField(
+                  '⏰ Time',
+                  `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`
+                )
                 .addField('👥 People', mentions)
                 .setColor('WHITE');
               // Add the location of the event to the embed if it exists.
@@ -109,7 +111,9 @@ export default class {
                   messageEmbed = messageEmbed.setColor(colors.data.calendar[calColorID].background as ColorResolvable);
                 }
               }
-              const channel = client.channels.cache.get(this.calendarMapping[calendarID].getChannelID()) as TextChannel;
+              const channel = client.channels.cache.get(
+                this.meetingPingsSchema.getChannelID(calendarID)
+              ) as TextChannel;
               channel.send({
                 content: `Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
                 embeds: [messageEmbed],
@@ -130,20 +134,19 @@ export default class {
    */
   public async runMeetingsPipeline(client: BotClient): Promise<void> {
     try {
-      /* 
-      * Google Calendar API selects all events where timeMin < eventTime < timeMax. 
-      * We want to get all events in this current minute, so we'll set 
-      * startTime to be (currentMinute-1):59.
-      */
+      /*
+       * Google Calendar API selects all events where timeMin < eventTime < timeMax.
+       * We want to get all events in this current minute, so we'll set
+       * startTime to be (currentMinute-1):59.
+       */
       const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
       this.sendMeetingPings(client, now);
 
       /*
-      * We'll also send notifications for meetings happening a hour from now.
-      */
+       * We'll also send notifications for meetings happening a hour from now.
+       */
       const oneHourFromNow = now.plus({ hours: 1 });
       this.sendMeetingPings(client, oneHourFromNow);
-
     } catch (err) {
       // We'll report if there's an API error to deal with the issue.
       Logger.error('Error with Google Calendar API: ' + err);
@@ -160,19 +163,17 @@ export default class {
   }
 
   /**
-   * Initialize the procedures involved to send Discord notifications for 
+   * Initialize the procedures involved to send Discord notifications for
    * upcoming meetings on the ACM Google Calendar.
    * @param client The original client, for access to the configuration.
    */
   public async initializeMeetingPings(client: BotClient): Promise<void> {
     await this.refreshAuth(client);
     this.calendarList = [];
-    this.calendarMapping = new Map<string, DiscordInfo>();
-    for (const entry of MeetingPingsSchema) {
+    this.meetingPingsSchema = new MeetingPingsSchema();
+    for (const entry of this.meetingPingsSchema.calendarList) {
       try {
         await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });
-        this.calendarList.push(entry.calendarID);
-        this.calendarMapping[entry.calendarID] = new DiscordInfo(entry.channelID, entry.mentions);
         Logger.info(`Successfully imported calendar ${entry.name}`);
       } catch (err) {
         // We'll report if there's an API error to deal with the issue.
@@ -198,34 +199,38 @@ export default class {
 
   /**
    * This method adds a new scheduled message event to the google calendar
-   * 
+   *
    * Note events will be created using the following format
    * Summary (title) : channel ID
    * Description: Will contain the message
-   * Start time: Will be time for message to be sent 
+   * Start time: Will be time for message to be sent
    * End Time: Will be 5 seconds after message send time (note this is required by Google API)
    * @param client The original client, for access to the configuration
    * @param channelID The id of the channel for the message to be sent to
    * @param message The message to be sent
    * @param date The datetime object which specifies when the message should be sent
    */
-  public async addScheduledMessage(client: BotClient, channelID: string, message: string, date: DateTime): 
-  Promise<void> {
+  public async addScheduledMessage(
+    client: BotClient,
+    channelID: string,
+    message: string,
+    date: DateTime
+  ): Promise<void> {
     //Get the auth token
     await this.refreshAuth(client);
     //Try adding a event to the calendar
     //Note event has end time 5 seconds after start time
     try {
       this.calendar.events.insert({
-        'calendarId': client.settings.scheduledMessageGoogleCalendarID,
-        'requestBody': {
-          'summary' : channelID,
-          'description' : message,
-          start : {
-            'dateTime' : date.toString(),
+        calendarId: client.settings.scheduledMessageGoogleCalendarID,
+        requestBody: {
+          summary: channelID,
+          description: message,
+          start: {
+            dateTime: date.toString(),
           },
-          end : {
-            'dateTime' : date.plus({ seconds: 5 }).toString(),
+          end: {
+            dateTime: date.plus({ seconds: 5 }).toString(),
           },
         },
       });
@@ -241,7 +246,7 @@ export default class {
         content: `*Paging <@&${client.settings.maintainerID}>!*`,
         embeds: [errorEmbed],
       });
-    } 
+    }
   }
 
   /**
@@ -254,13 +259,13 @@ export default class {
   public scheduleMessage(client: BotClient, dateTime: DateTime, message: string, channelID: string) {
     schedule.scheduleJob(dateTime.toJSDate(), async () => {
       Logger.info(`Scheduled a message to be sent at ${dateTime.toLocaleString(DateTime.DATETIME_SHORT)}`);
-      
-      //Get the channel as a Text Channel
+
+      // Get the channel as a TextChannel
       const channelToSend = client.channels.cache.get(channelID) as TextChannel;
-      
+
       /**
        * Alert someone if the channel went missing between now and when the message is sent
-      */
+       */
       if (channelToSend === null) {
         Logger.error('Channel for scheduled message no longer exists.');
         const errorEmbed = new MessageEmbed()
@@ -274,27 +279,26 @@ export default class {
         });
         return;
       }
-      
+
       // Sends the message to the channel
-      await channelToSend.send(message); 
+      await channelToSend.send(message);
     });
   }
 
-
   /**
-   * This command will initialize the scheduled messages command by pulling all events 
+   * This command will initialize the scheduled messages command by pulling all events
    * from time of bot initialization till 1000 hours from now and schedule any events
    * @param client: Bot client
    */
   public async initializeScheduledMessages(client: BotClient): Promise<void> {
-    //Refresh the auth
+    // Refresh the auth
     await this.refreshAuth(client);
-    
-    //We want to check for events from now to 1000 hours from now
+
+    // We want to check for events from now to 1000 hours from now
     const now = DateTime.now().minus({ minutes: 1 }).set({ second: 59 });
     const end = now.plus({ hours: 1000 });
 
-    //Get all the calendar events
+    // Get all the calendar events
     const res = await this.calendar.events.list({
       calendarId: client.settings.scheduledMessageGoogleCalendarID,
       timeMin: now.toISO(),
@@ -303,23 +307,20 @@ export default class {
       orderBy: 'startTime',
     });
 
-    //If any events exist
-    if (res && res.data.items){
+    // If any events exist
+    if (res && res.data.items) {
       const events = res.data.items;
-      for (const event of events){
-        //Check to make sure event was created with proper format
-        if (event.start && event.start.dateTime && event.description && event.summary){
-          //Get all necessary params
+      for (const event of events) {
+        // Check to make sure event was created with proper format
+        if (event.start && event.start.dateTime && event.description && event.summary) {
+          // Get all necessary params
           const startTime = DateTime.fromISO(event.start.dateTime);
           const message = event.description;
           const channelID = event.summary;
-          //Schedule the message
+          // Schedule the message
           this.scheduleMessage(client, startTime, message, channelID);
         }
       }
-
     }
-
   }
-  
 }
