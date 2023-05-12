@@ -60,9 +60,7 @@ export default class {
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Notion database changed!')
             .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
-            .setFooter({
-              text: "I will not run the pipeline again until y'all confirm the Notion database changes.",
-            })
+            .setFooter("I will not run the pipeline again until y'all confirm the Notion database changes.")
             .setColor('DARK_RED');
           await eventChannel.send({
             // No point in making this line shorter.
@@ -78,9 +76,7 @@ export default class {
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Google Sheets table columns changed!')
             .setDescription(`Changes found in table:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
-            .setFooter({
-              text: "I will not run the pipeline again until y'all confirm the Google Sheets table changes.",
-            })
+            .setFooter("I will not run the pipeline again until y'all confirm the Google Sheets table changes.")
             .setColor('DARK_RED');
           await eventChannel.send({
             // No point in making this line shorter.
@@ -128,9 +124,9 @@ export default class {
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Notion database changed!')
             .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
-            .setFooter({
-              text: "I won't run any Notion-related pipelines again until the Notion database changes are confirmed.",
-            })
+            .setFooter(
+              "I won't run any Notion-related pipelines again until the Notion database changes are confirmed.",
+            )
             .setColor('DARK_RED');
           await eventChannel.send({
             // No point in making this line shorter.

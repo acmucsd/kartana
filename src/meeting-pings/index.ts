@@ -1,7 +1,6 @@
 export * from './meetingPingsSchema';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { calendar_v3 } from 'googleapis';
-import Logger from '../utils/Logger';
 
 const GUEST_SCHEMA_FILE_PATH = 'meetingPingsGuestSchema.json';
 const CALENDAR_SCHEMA_FILE_PATH = 'meetingPingsCalendarSchema.json';
@@ -45,9 +44,10 @@ export class MeetingPingsSchema {
    * @returns ID of the channel to send the notification of the event to.
    */
   public getChannelID(calendarID: string): string {
-    if (!this.calendarMapping.has(calendarID)) {
+    if (!this.calendarMapping[calendarID]) {
       return '';
     }
+    console.log(this.calendarMapping[calendarID].channelID);
     return this.calendarMapping[calendarID].channelID;
   }
 
@@ -65,47 +65,24 @@ export class MeetingPingsSchema {
      * stored in our Calendar Guest mapping.
      */
     if (event.attendees && event.creator && event.creator.email) {
-      let mentions = '';
-      /**
-       * Flag indicating if an attendee has successfully been
-       * found in the mapping and added to the ping list.
-       */
-      let attendeeAdded = false;
-      // Flag indicating if we added the creator's email to the ping list.
-      let creatorAdded = false;
-
-      for (const attendee of event.attendees) {
+      const mentions = new Set<string>();
+      event.attendees.forEach((attendee) => {
         if (attendee.email && this.guestMapping[attendee.email]) {
-          if (!attendeeAdded) {
-            // Special case to make sure the formatted string is correctly separated by spaces.
-            attendeeAdded = true;
-            mentions += `<@${this.guestMapping[attendee.email]}>`;
-          } else {
-            mentions += ` <@${this.guestMapping[attendee.email]}>`;
-          }
-          if (attendee.email === event.creator.email) {
-            /**
-             * If we added the event creator's email to the mention list, we set this
-             * flag to true so we don't accidentally add it to the list a second time later.
-             */
-            creatorAdded = true;
-          }
+          mentions.add(`<@${this.guestMapping[attendee.email]}>`);
         }
-      }
+      });
       /**
        * If none of their emails were in our mapping, we'll default to pinging the role.
        */
-      if (!attendeeAdded) {
+      if (mentions.size === 0) {
         return `<@&${calendarDiscordInfo.defaultMention}>`;
       }
       /**
        * We've now guaranteed that we're pinging guests about the event, so we'll add
        * the mention for the creator of the event at the start if we haven't already.
        */
-      if (!creatorAdded && this.guestMapping[event.creator.email]) {
-        mentions = `<@${this.guestMapping[event.creator.email]}> ` + mentions;
-      }
-      return mentions;
+      mentions.add(`<@${this.guestMapping[event.creator.email]}>`);
+      return Array.from(mentions.values()).join(' ');
     }
     // Note: The ampersand is specific to mentioning roles, not users.
     return `<@&${calendarDiscordInfo.defaultMention}>`;

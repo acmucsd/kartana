@@ -174,6 +174,7 @@ export default class {
     for (const entry of this.meetingPingsSchema.calendarList) {
       try {
         await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });
+        this.calendarList.push(entry.calendarID);
         Logger.info(`Successfully imported calendar ${entry.name}`);
       } catch (err) {
         // We'll report if there's an API error to deal with the issue.
