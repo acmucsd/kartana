@@ -15,7 +15,7 @@ export default class Subscribe extends Command {
     const definition = new SlashCommandBuilder()
       .setName('subscribe')
       .addStringOption((option) =>
-        option.setName('email').setDescription('Your @acmucsd.org or @ucsd.edu email address.').setRequired(true),
+        option.setName('email').setDescription('Your @acmucsd.org email address.').setRequired(true),
       )
       .addUserOption((option) => option.setName('user').setDescription('The user to subscribe to the email address.'))
       .setDescription(
@@ -42,8 +42,8 @@ export default class Subscribe extends Command {
     const email = interaction.options.getString('email', true);
     const userID = interaction.options.getUser('user')?.id || interaction.user.id;
 
-    if (!isEmail(email) || (email.split('@')[1] !== 'acmucsd.org' && email.split('@')[1] !== 'ucsd.edu')) {
-      await super.edit(interaction, 'Please enter a valid @acmucsd.org or @ucsd.edu email!');
+    if (!isEmail(email) || email.split('@')[1] !== 'acmucsd.org') {
+      await super.edit(interaction, 'Please enter a valid @acmucsd.org email!');
       return;
     }
     const schemaStoredUserID = meetingPingsSchema.getGuest(email);
