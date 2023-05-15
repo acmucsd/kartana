@@ -770,7 +770,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
     .setTitle("Don't forget to pick up keys for rooms tomorrow!")
     .setColor('GREEN')
     .setDescription(keyPingDescription)
-    .setFooter({ text: 'Note that the offices to pick up keys from close up at 4 PM!' });
+    .setFooter('Note that the offices to pick up keys from close up at 4 PM!');
 
   await config.channel.send({
     content: `<@&${config.settings.logisticsTeamID}>`,
