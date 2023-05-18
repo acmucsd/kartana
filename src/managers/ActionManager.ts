@@ -2,7 +2,7 @@ import { Collection } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Service } from 'typedi';
 import { join } from 'path';
-import { readdir, statSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { Routes } from 'discord-api-types/v9';
 import { BotClient } from '../types';
 import Command from '../Command';
@@ -28,7 +28,7 @@ export default class {
    * @param {BotClient} client The original client, for access to the configuration.
    * @returns {Collection<string, Command>} A dictionary of every command in a [name, object] pair
    */
-  public initializeCommands(client: BotClient): void {
+  public async initializeCommands(client: BotClient): Promise<void> {
     // Get our commands directory from the settings.
     const { commands } = client.settings.paths;
 
@@ -37,59 +37,59 @@ export default class {
     const slashCommands: any[] = [];
 
     // Go through every file in that directory.
-    readdir(commands, (err, files) => {
-      if (err) Logger.error(err);
+    try {
+      const files = readdirSync(commands);
 
       // For every Command file...
-      files.forEach(async (cmd) => {
-        // Check if it is a directory, because if it is...
-        if (statSync(join(commands, cmd)).isDirectory()) {
-          // Recursively deal with that, since we may want to split commands by module
-          // folder in the future.
-          this.initializeCommands(client);
-        } else {
-          // Import our Command file.
-          const commandImport = await import(join(
-            __dirname,
-            '../../',
-            `${commands}/${cmd.replace('ts', 'js')}`,
-          ));
+      await Promise.all(
+        files.map(async (cmd) => {
+          // Check if it is a directory, because if it is...
+          if (statSync(join(commands, cmd)).isDirectory()) {
+            // Recursively deal with that, since we may want to split commands by module
+            // folder in the future.
+            this.initializeCommands(client);
+          } else {
+            // Import our Command file.
+            const commandImport = await import(join(__dirname, '../../', `${commands}/${cmd.replace('ts', 'js')}`));
 
-          // Get the default export.
-          const LoadedCommand = commandImport.default;
-          // Construct the Command.
-          const command: Command = new LoadedCommand(client);
+            // Get the default export.
+            const LoadedCommand = commandImport.default;
+            // Construct the Command.
+            const command: Command = new LoadedCommand(client);
 
-          // If Command enabled, load it in our Client.
-          // Also add to Slash Command registration payload.
-          if (command.conf.enabled && command.definition !== undefined) {
-            this.commands.set(command.conf.name, command);
-            slashCommands.push(command.definition.toJSON());
+            // If Command enabled, load it in our Client.
+            // Also add to Slash Command registration payload.
+            if (command.conf.enabled && command.definition !== undefined) {
+              this.commands.set(command.conf.name, command);
+              slashCommands.push(command.definition.toJSON());
+            }
           }
-        }
-      });
+        })
+      );
+    } catch (error) {
+      Logger.error(error);
+    }
 
-      // Now we upload the Slash Command registration payload to Discord.
-      const restAPI = new REST({ version: '9' }).setToken(client.settings.token);
-
-      (async () => {
+    // Now we upload the Slash Command registration payload to Discord.
+    const restAPI = new REST({ version: '10' }).setToken(client.settings.token);
+    Logger.info(JSON.stringify(slashCommands, null, 2));
+    (async () => {
+      try {
         Logger.info('Loading Slash Commands on Discord Gateway...', {
           eventType: 'slashCommandLoading',
         });
-        await restAPI.put(
-          Routes.applicationCommands(client.settings.clientID),
-          { body: slashCommands }, 
-        );
+        await restAPI.put(Routes.applicationCommands(client.settings.clientID), { body: slashCommands });
         // Adding the ID for our Discord Guild allows new slash commands to load faster than adding it globally.
-        await restAPI.put(
-          Routes.applicationGuildCommands(client.settings.clientID, client.settings.discordGuildID),
-          { body: slashCommands },
-        );
+        await restAPI.put(Routes.applicationGuildCommands(client.settings.clientID, client.settings.discordGuildID), {
+          body: slashCommands,
+        });
         Logger.info('Loaded Slash Commands on Discord Gateway!', {
           eventType: 'slashCommandLoaded',
         });
-      })();
-    });
+      } catch (error) {
+        Logger.error(error);
+      }
+    })();
   }
 
   /**
@@ -101,17 +101,13 @@ export default class {
     const { events } = client.settings.paths;
 
     // Go through every file in that directory.
-    readdir(events, (err, files) => {
-      if (err) Logger.error(err);
+    try {
+      const files = readdirSync(events);
 
       // For every Event file...
       files.forEach(async (evt) => {
         // Import our Event file.
-        const eventImport = await import(join(
-          __dirname,
-          '../../',
-          `${events}/${evt.replace('ts', 'js')}`,
-        ));
+        const eventImport = await import(join(__dirname, '../../', `${events}/${evt.replace('ts', 'js')}`));
 
         // Get the default export.
         const LoadedEvent = eventImport.default;
@@ -125,11 +121,10 @@ export default class {
         // We lowercase the first letter, since that's how events are written down in Discord.js,
         // and use the abstract `run` method we implemented in the file as the callback for our
         // event.
-        client.on(
-          eventName.charAt(0).toLowerCase() + eventName.slice(1),
-          (...args: string[]) => event.run(...args),
-        );
+        client.on(eventName.charAt(0).toLowerCase() + eventName.slice(1), (...args: string[]) => event.run(...args));
       });
-    });
+    } catch (error) {
+      Logger.error(error);
+    }
   }
 }
