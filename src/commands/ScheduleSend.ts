@@ -95,7 +95,7 @@ export default class ScheduleSend extends Command {
 
     // Setting up the confirmation buttons...
     const row = new MessageActionRow().addComponents(
-      new MessageButton().setCustomId('Confirm').setLabel('Schedule Message').setStyle('PRIMARY'),
+      new MessageButton().setCustomId('Schedule Message').setLabel('Schedule Message').setStyle('PRIMARY'),
       new MessageButton().setCustomId('Cancel').setLabel('Cancel').setStyle('DANGER'),
     );
 
