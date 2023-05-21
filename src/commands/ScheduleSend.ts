@@ -74,16 +74,6 @@ export default class ScheduleSend extends Command {
     // Message to be sent
     const messageToSend = `**Scheduled Message from ${member}:** \n>>> ${message}`;
 
-    // Special case when there is no wait time: we send the message without scheduling anything
-    if (hoursFromNow == 0 && minutesFromNow == 0 && interaction.channel !== null) {
-      super.edit(interaction, {
-        content: `Message received! I'll send it at <t:${Math.trunc(date.toSeconds())}:F>`,
-        ephemeral: true,
-      });
-      await interaction.channel.send(messageToSend);
-      return;
-    }
-
     // Cap wait time, strange behavior occurs if time overflows and becomes NaN
     if (hoursFromNow > 1000) {
       super.edit(interaction, {
@@ -122,6 +112,17 @@ export default class ScheduleSend extends Command {
 
       // Otherwise, the schedule send was confirmed.
 
+      await super.edit(interaction, {
+        content: `**Done! I'll send this message at** <t:${Math.trunc(dateToSend.toSeconds())}:F>:\n>>> ${message}`,
+        components: [],
+      });
+
+      // Special case when there is no wait time: we send the message without scheduling anything
+      if (hoursFromNow == 0 && minutesFromNow == 0 && interaction.channel !== null) {
+        await interaction.channel.send(messageToSend);
+        return;
+      }
+
       // Add message to the Google Calendar for persistence (i.e. the bot goes down).
       this.client.googleCalendarManager.addScheduledMessage(
         this.client,
@@ -132,11 +133,6 @@ export default class ScheduleSend extends Command {
 
       // Schedule the message to be sent
       this.client.googleCalendarManager.scheduleMessage(this.client, dateToSend, messageToSend, interaction.channelId);
-
-      await super.edit(interaction, {
-        content: `**Done! I'll send this message at** <t:${Math.trunc(dateToSend.toSeconds())}:F>:\n>>> ${message}`,
-        components: [],
-      });
     });
 
     collector.on('end', async () => {
