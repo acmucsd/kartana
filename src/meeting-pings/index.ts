@@ -80,7 +80,9 @@ export class MeetingPingsSchema {
        * We've now guaranteed that we're pinging guests about the event, so we'll add
        * the mention for the creator of the event at the start if we haven't already.
        */
-      mentions.add(`<@${this.guestMapping[event.creator.email]}>`);
+      if (event.creator.email && this.guestMapping[event.creator.email]) {
+        mentions.add(`<@${this.guestMapping[event.creator.email]}>`);
+      }
       return Array.from(mentions.values()).join(' ');
     }
     // Note: The ampersand is specific to mentioning roles, not users.
