@@ -88,9 +88,12 @@ export default class {
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
               const mentions = this.meetingPingsSchema.getMentions(calendarID, event);
+              // Replace all br tags with newlines and remove all other HTML tags.
+              const description = event.description?.replace(/<br>/g, '\n')?.replace(/<[^<]*>|&[^&]*;/g, '');
+
               let messageEmbed = new MessageEmbed()
                 .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
-                .setDescription(event.description || '')
+                .setDescription(description || '')
                 .addField(
                   '⏰ Time',
                   `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`,
