@@ -89,6 +89,7 @@ export default class {
             if (searchInterval.contains(startTime)) {
               const mentions = this.meetingPingsSchema.getMentions(calendarID, event);
               // Replace all br tags with newlines and remove all other HTML tags.
+              // <[^]*> matches any HTML tag (anything with <>), and &[^]*; matches any HTML entity (anything with &;).
               const description = event.description?.replace(/<br>/g, '\n')?.replace(/<[^<]*>|&[^&]*;/g, '');
 
               let messageEmbed = new MessageEmbed()
