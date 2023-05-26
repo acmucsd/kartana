@@ -119,7 +119,7 @@ export default class {
                 this.meetingPingsSchema.getChannelID(calendarID),
               ) as TextChannel;
               channel.send({
-                content: `Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
+                content: `${event.summary} starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
                 embeds: [messageEmbed],
               });
             }
