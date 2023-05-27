@@ -88,9 +88,29 @@ export default class {
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
               const mentions = this.meetingPingsSchema.getMentions(calendarID, event);
-              // Replace all br tags with newlines and remove all other HTML tags.
+              const htmlTagReplacements = {
+                '<br>': '\n',
+                '<br/>': '\n',
+                '<br />': '\n',
+                '<p>': '\n',
+                '</p>': '\n',
+              };
+              const entityCodesReplacements = {
+                '&amp;': '&',
+                '&lt;': '<',
+                '&gt;': '>',
+                '&nbsp;': ' ',
+                '&quot;': '"',
+                '&apos;': "'",
+              };
+
+              // Replaces all values from entityCodesReplacements in the string with their corresponding values.
+              // Then removes all other HTML tags.
               // <[^]*> matches any HTML tag (anything with <>), and &[^]*; matches any HTML entity (anything with &;).
-              const description = event.description?.replace(/<br>/g, '\n')?.replace(/<[^<]*>|&[^&]*;/g, '');
+              const description = event.description
+                ?.replace(/<[^<]*>/g, (match: string) => htmlTagReplacements[match] || match)
+                ?.replace(/<[^<]*>/g, '')
+                ?.replace(/&[^&]*;/g, (match: string) => entityCodesReplacements[match] || match);
 
               let messageEmbed = new MessageEmbed()
                 .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
@@ -119,7 +139,7 @@ export default class {
                 this.meetingPingsSchema.getChannelID(calendarID),
               ) as TextChannel;
               channel.send({
-                content: `${event.summary} starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
+                content: `**${event.summary}** starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
                 embeds: [messageEmbed],
               });
             }
