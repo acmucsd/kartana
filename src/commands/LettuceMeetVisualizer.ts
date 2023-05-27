@@ -93,7 +93,7 @@ export default class LettuceMeetVisualizer extends Command {
     const definition = new SlashCommandBuilder()
       .setName('lettucemeetvisualizer')
       .addStringOption((option) => 
-        option.setName('boardcode').setDescription('Lettuce Meet board code').setRequired(true))
+        option.setName('boardcode').setDescription('Lettuce Meet board code').setRequired(false))
       .addStringOption((option) => option.setName('name').setDescription('Name of the user').setRequired(false))
       .addStringOption((option) => option.setName('email').setDescription('Email of the user').setRequired(false))
       .setDescription('Visualizes lettuce meet board.');
@@ -112,16 +112,41 @@ export default class LettuceMeetVisualizer extends Command {
   public async run(interaction: CommandInteraction): Promise<void> {
     await super.defer(interaction, true);
     
-    const boardCode = interaction.options.getString('boardcode')!;
-    const name = interaction.options.getString('name');
-    const email = interaction.options.getString('email');
+    // const boardCode = interaction.options.getString('boardcode')!;
+    // const name = interaction.options.getString('name');
+    // const email = interaction.options.getString('email');
 
-    // const boardCode = 'VpJg7';
+    const boardCode = 'VpJg7';
     // const name = 'Aniket';
     // const email = '';
 
-    const userAvailability = await this.getUserAvailability(boardCode, { name, email });
-    console.log(userAvailability);
+    const bestTimes = await this.getBestTimes(boardCode);
+    console.log(bestTimes);
+  }
+
+  private async getBestTimes(boardCode: string) {
+    const boardData = await this.getBoardData(boardCode);
+    const pollResponses = boardData.data.event.pollResponses;
+    const interval = 30;
+
+    const availabilityMap = new Map<string, number>();
+    pollResponses.forEach((pollResponse) => {
+      pollResponse.availabilities.forEach((availability) => {
+        // Substring to remove the 'Z' at the end of the string.
+        const start = new Date(availability.start.substring(0, availability.start.length - 1));
+        const end = new Date(availability.end.substring(0, availability.end.length - 1));
+        
+        for (let i = start.getTime(); i < end.getTime(); i += interval * 60 * 1000) {
+          const key = new Date(i).toString();
+          const currentNumber = availabilityMap.get(key) || 0;
+          availabilityMap.set(key, currentNumber + 1);
+        }
+      });
+    });
+
+    const availabilityArray = Array.from(availabilityMap.entries());
+    availabilityArray.sort((a, b) => b[1] - a[1]);
+    return availabilityArray;
   }
 
   private async getUserAvailability(boardCode: string, 
