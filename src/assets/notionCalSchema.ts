@@ -1025,40 +1025,6 @@ export const notionCalSchema = {
       format: 'number',
     },
   },
-  'AV Equipment': {
-    id: 'hYL%3D',
-    name: 'AV Equipment',
-    type: 'select',
-    select: {
-      options: [
-        {
-          id: 'ad6f5f84-1f88-4152-97f9-43f8b85c3ed5',
-          name: 'From Venue',
-          color: 'yellow',
-        },
-        {
-          id: '01c3ca8c-53db-4a01-abdf-4c71eba32e4c',
-          name: 'From ECE Department',
-          color: 'red',
-        },
-        {
-          id: 'a15a5399-ab85-4a66-ad4b-e85a957ab95e',
-          name: 'From University Centers Tech',
-          color: 'green',
-        },
-        {
-          id: '655870db-a8f1-4e2f-9377-b73ee7fcd989',
-          name: 'From ACM',
-          color: 'pink',
-        },
-        {
-          id: 'bc2d36e2-7bca-4361-9079-2fcf563780e4',
-          name: 'N/A',
-          color: 'default',
-        },
-      ],
-    },
-  },
   'Drive Link': {
     id: "j'C%5C",
     name: 'Drive Link',
@@ -1400,9 +1366,9 @@ export const notionCalSchema = {
       ],
     },
   },
-  'FB ACMURL': {
+  'Marketing ACMURL': {
     id: 'znBJ',
-    name: 'FB ACMURL',
+    name: 'Marketing ACMURL',
     type: 'url',
     url: {},
   },

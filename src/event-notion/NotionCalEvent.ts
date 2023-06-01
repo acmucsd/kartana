@@ -92,28 +92,6 @@ const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO
 };
 
 /**
- * Checks whether a recording is required for the passed in host form response.
- *
- * This function is the business logic for checking for recordings requirements
- * for any host form response.
- *
- * A recording is required ONLY if requested by the person filling the Host Form.
- *
- * TODO We MIGHT wanna convert `'Yes' | 'No'` to a standard `boolean`; in some ways
- * this complicates certain business logic checking parts of the code and makes using
- * the NotionCalEvent code unintuitive.
- *
- * @param response The HostFormResponse for a given NotionCalEvent.
- * @returns The Notion Option for Recording requirement.
- */
-const needsRecording = (response: HostFormResponse): 'Yes' | 'No' => {
-  return response['Will you want a recording of your event uploaded to the ACM YouTube channel?'] ===
-    'Yes, I will record it myself and send the Events team a link'
-    ? 'Yes'
-    : 'No';
-};
-
-/**
  * Takes the organizations involved in an event from the passed in host form response.
  *
  * Google Sheets stores Google Forms multiple-choice selections as comma-separated strings,
@@ -298,9 +276,6 @@ export default class NotionCalEvent {
   // Event.
   private bookingTime: DateTime | null;
 
-  // Any additional requests with regards to the Recording requirements of an Event.
-  private recordingRequests: string;
-
   // The invoice for food funding.
   private foodInvoice: File | null;
 
@@ -315,9 +290,6 @@ export default class NotionCalEvent {
 
   // The Facebook Co-Host assigned to this Event.
   private fbCoHost: string;
-
-  // Whether this Event requires a recording.
-  private recording: 'Yes' | 'No';
 
   // The status for the booking required for this Event, if any.
   private bookingStatus:
@@ -407,7 +379,7 @@ export default class NotionCalEvent {
   | 'No I do not want anything uploaded to YouTube';
 
   // The ACMURL for the Facebook Events page for this Event, if any.
-  private fbACMURL: URL | null;
+  private marketingACMURL: URL | null;
 
   // Notes with regards to the date and times this Event will be hosted at.
   private dateTimeNotes: string;
@@ -454,12 +426,9 @@ export default class NotionCalEvent {
     this.bookingTime = null;
     // Bruh.
     // eslint-disable-next-line max-len
-    this.recordingRequests =
-      formResponse['If yes to the previous question, do you have any special recording requests?'];
     this.eventCoordinator = null;
     this.checkinCode = formResponse['Check-in Code'];
     this.fbCoHost = '';
-    this.recording = needsRecording(formResponse);
     this.bookingStatus = needsBooking(formResponse);
     this.organizations = filterOrgsResponse(formResponse);
     // If no TAP form and not off-campus, TODO, else N/A.
@@ -492,7 +461,6 @@ export default class NotionCalEvent {
     }
     this.youtubeLink = null;
     this.prRequests = formResponse['Any additional comments or requests?'];
-    this.avEquipment = this.recording === 'Yes' ? 'From Venue' : 'N/A';
     this.techRequests = formResponse['If you need tech or equipment, please specify here'];
     this.driveLink = null;
     this.foodPickupTime = getFoodPickupTime(formResponse);
@@ -514,19 +482,21 @@ export default class NotionCalEvent {
     //
     // TODO Ask host form to validate URL input fields as URL's.
     try {
-      if (formResponse['What FB ACMURL do you want for the Facebook event page?'].startsWith('acmurl.com')) {
-        this.fbACMURL = new URL('https://' + formResponse['What FB ACMURL do you want for the Facebook event page?']);
+      if (formResponse['What Marketing ACMURL do you want for the portal event page?'].startsWith('acmurl.com')) {
+        this.marketingACMURL = new URL(
+          'https://' + formResponse['What FB ACMURL do you want for the Facebook event page?'],
+        );
       } else {
-        this.fbACMURL =
-          formResponse['What FB ACMURL do you want for the Facebook event page?'] !== ''
-            ? new URL(formResponse['What FB ACMURL do you want for the Facebook event page?'])
+        this.marketingACMURL =
+          formResponse['What Marketing ACMURL do you want for the portal event page?'] !== ''
+            ? new URL(formResponse['What Marketing ACMURL do you want for the portal event page?'])
             : null;
       }
     } catch (e) {
       Logger.warn(`Event ${this.name} has erroneous FB ACMURL input! Setting as null.`, {
-        input: formResponse['What FB ACMURL do you want for the Facebook event page?'],
+        input: formResponse['What Marketing ACMURL do you want for the portal event page?'],
       });
-      this.fbACMURL = null;
+      this.marketingACMURL = null;
     }
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
@@ -593,14 +563,6 @@ export default class NotionCalEvent {
         },
         // Booking Time omitted.
 
-        ...(this.recordingRequests
-          ? {
-            'Recording Requests': {
-              rich_text: toNotionRichText(this.recordingRequests),
-            },
-          }
-          : {}),
-
         // "Event Coordinator" omitted.
         //
         // EC's will assign themselves an event to deal with, per
@@ -618,9 +580,6 @@ export default class NotionCalEvent {
           }
           : {}),
 
-        Recording: {
-          select: { name: this.recording },
-        },
         'Booking Status': {
           select: { name: this.bookingStatus },
         },
@@ -782,13 +741,10 @@ export default class NotionCalEvent {
           }
           : {}),
 
-        'Upload to Youtube?': {
-          select: { name: this.uploadToYoutube },
-        },
-        ...(this.fbACMURL
+        ...(this.marketingACMURL
           ? {
-            'FB ACMURL': {
-              url: this.fbACMURL.host + this.fbACMURL.pathname,
+            'Marketing ACMURL': {
+              url: this.marketingACMURL.host + this.marketingACMURL.pathname,
             },
           }
           : {}),
