@@ -1,7 +1,7 @@
 # Notion Event Pipeline
 
 This pipeline will automatically sync host form responses to the Notion Calendar
-once every hour. Manual sync can be triggered by `HTTP POST` at `bot.acmucsd.com/notion/events/sync`.
+once every 30 minutes. Manual sync can be triggered by running `/sync` on Discord.
 
 A few assumptions are made about the pipeline:
 - There is a sheet named "Notion Event Pipeline" in the Host Form Google Sheet with:
