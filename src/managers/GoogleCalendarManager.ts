@@ -88,9 +88,34 @@ export default class {
             // We only send embeds for events that are just starting in our time window.
             if (searchInterval.contains(startTime)) {
               const mentions = this.meetingPingsSchema.getMentions(calendarID, event);
+              const htmlTagReplacements = {
+                '<br>': '\n',
+                '<br/>': '\n',
+                '<br />': '\n',
+                '<p>': '\n',
+                '</p>': '\n',
+              };
+              const entityCodesReplacements = {
+                '&amp;': '&',
+                '&lt;': '<',
+                '&gt;': '>',
+                '&nbsp;': ' ',
+                '&quot;': '"',
+                '&apos;': "'",
+              };
+
+              // Replaces all values from entityCodesReplacements in the string with their corresponding values.
+              // Then removes all other HTML tags.
+              // <[^]*> matches any HTML tag (anything with <>), and &[^]*; matches any HTML entity (anything with &;).
+              const description = event.description
+                ?.replace(/<[^<]*>/g, (match: string) => htmlTagReplacements[match] || match)
+                ?.replace(/<[^<]*>/g, '')
+                ?.replace(/&[^&]*;/g, (match: string) => entityCodesReplacements[match] || match);
+              const eventTitle = event.summary || 'Untitled Event';
+
               let messageEmbed = new MessageEmbed()
-                .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
-                .setDescription(event.description || '')
+                .setTitle('🗓️ ' + eventTitle)
+                .setDescription(description || '')
                 .addField(
                   '⏰ Time',
                   `<t:${Math.trunc(startTime.toSeconds())}:F> to <t:${Math.trunc(endTime.toSeconds())}:F>`,
@@ -115,7 +140,7 @@ export default class {
                 this.meetingPingsSchema.getChannelID(calendarID),
               ) as TextChannel;
               channel.send({
-                content: `Meeting starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
+                content: `**${eventTitle}** starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
                 embeds: [messageEmbed],
               });
             }
