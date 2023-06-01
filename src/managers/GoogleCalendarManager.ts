@@ -111,9 +111,10 @@ export default class {
                 ?.replace(/<[^<]*>/g, (match: string) => htmlTagReplacements[match] || match)
                 ?.replace(/<[^<]*>/g, '')
                 ?.replace(/&[^&]*;/g, (match: string) => entityCodesReplacements[match] || match);
+              const eventTitle = event.summary || 'Untitled Event';
 
               let messageEmbed = new MessageEmbed()
-                .setTitle('🗓️ ' + (event.summary || 'Untitled Event'))
+                .setTitle('🗓️ ' + eventTitle)
                 .setDescription(description || '')
                 .addField(
                   '⏰ Time',
@@ -139,7 +140,7 @@ export default class {
                 this.meetingPingsSchema.getChannelID(calendarID),
               ) as TextChannel;
               channel.send({
-                content: `**${event.summary}** starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
+                content: `**${eventTitle}** starting <t:${Math.trunc(startTime.toSeconds())}:R>! ${mentions}`,
                 embeds: [messageEmbed],
               });
             }
