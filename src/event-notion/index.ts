@@ -234,9 +234,13 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
       });
       newEventRows.splice(index, 1);
       // Report error in Discord as well.
+      let errorMsg = error.message;
+      if (error instanceof RangeError) {
+        errorMsg = "The date couldn't be parsed correctly. Make sure the start time is later than the end time!";
+      }
       const errorEmbed = new MessageEmbed()
         .setTitle('⚠️ Error importing event!')
-        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
+        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${errorMsg}\``)
         .setColor('DARK_RED');
       channel.send({
         content: `*Paging <@&${config.settings.maintainerID}>!*`,
@@ -270,17 +274,13 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
       } catch (error) {
         // If we can't create the event, notify everone. Skip over the
         // "tick the checkbox" part, since we didn't actually import the event.
-        let errorMsg = error.message;
-        if (error instanceof TypeError && error.message.includes("Cannot read properties of null (reading 'toISO')")) {
-          errorMsg = "The date couldn't be parsed correctly. Make sure the start time is later than the end time!";
-        }
         Logger.error(`Error creating event "${event.getName()}: ${error}"`, {
           error,
           eventName: event.getName(),
         });
         const errorEmbed = new MessageEmbed()
           .setTitle('⚠️ Error creating event on Notion!')
-          .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${errorMsg}\``)
+          .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
           .setColor('RED');
         await channel.send({
           content: `*Paging <@&${config.settings.maintainerID}>!*`,
