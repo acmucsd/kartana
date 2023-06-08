@@ -236,7 +236,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
       // Report error in Discord as well.
       const errorEmbed = new MessageEmbed()
         .setTitle('⚠️ Error importing event!')
-        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error}\``)
+        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error.message}\``)
         .setColor('DARK_RED');
       channel.send({
         content: `*Paging <@&${config.settings.maintainerID}>!*`,

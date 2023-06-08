@@ -118,12 +118,18 @@ const filterOrgsResponse = (response: HostFormResponse): StudentOrg[] => {
  * @returns The Interval in which a NotionCalEvent takes place.
  */
 const getEventInterval = (response: HostFormResponse): Interval => {
-  return Interval.fromDateTimes(
+  let interval = Interval.fromDateTimes(
     // Convert from the provided host form responses to the DateTime objects.
     // The format string below SEEMS to work for most events, but I MAY be wrong.
     DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'M/d/yyyy h:mm:ss a'),
     DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/d/yyyy h:mm:ss a'),
   );
+
+  if (!interval.isValid) {
+    throw new TypeError("The date couldn't be parsed correctly. Make sure the start time is later than the end time!");
+  }
+
+  return interval;
 };
 
 /**
