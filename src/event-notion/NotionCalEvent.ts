@@ -125,11 +125,11 @@ const getEventInterval = (response: HostFormResponse): Interval => {
     DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/d/yyyy h:mm:ss a'),
   );
 
-  if (interval.toDuration().minutes >= 0) {
-    return interval;
+  if (!interval.isValid) {
+    throw new TypeError("The date couldn't be parsed correctly. Make sure the start time is later than the end time!");
   }
 
-  throw new RangeError;
+  return interval;
 };
 
 /**

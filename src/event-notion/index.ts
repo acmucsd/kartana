@@ -234,13 +234,9 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
       });
       newEventRows.splice(index, 1);
       // Report error in Discord as well.
-      let errorMsg = error.message;
-      if (error instanceof RangeError) {
-        errorMsg = "The date couldn't be parsed correctly. Make sure the start time is later than the end time!";
-      }
       const errorEmbed = new MessageEmbed()
         .setTitle('⚠️ Error importing event!')
-        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${errorMsg}\``)
+        .setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error.message}\``)
         .setColor('DARK_RED');
       channel.send({
         content: `*Paging <@&${config.settings.maintainerID}>!*`,
