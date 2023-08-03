@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, EmbedFieldData, MessageEmbed } from 'discord.js';
 import Command from '../Command';
 import { BotClient } from '../types';
 import axios from 'axios';
@@ -105,11 +105,11 @@ export default class LettuceMeetVisualizer extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
       .setName('lettucemeetvisualizer')
-      .addStringOption((option) => 
-        option.setName('boardcode').setDescription('Lettuce Meet board code').setRequired(false))
-      .addStringOption((option) => option.setName('name').setDescription('Name of the user').setRequired(false))
-      .addStringOption((option) => option.setName('email').setDescription('Email of the user').setRequired(false))
-      .addNumberOption((option) => 
+      .addStringOption((option) =>
+        option.setName('boardcode').setDescription('Lettuce Meet board code').setRequired(true))
+      .addStringOption((option) =>
+        option.setName('filterby').setDescription('Emails or names of the users to filter by').setRequired(false))
+      .addNumberOption((option) =>
         option.setName('timeblock').setDescription('Time block in minutes').setRequired(false))
       .setDescription('Visualizes lettuce meet board.');
 
@@ -126,38 +126,69 @@ export default class LettuceMeetVisualizer extends Command {
 
   public async run(interaction: CommandInteraction): Promise<void> {
     await super.defer(interaction);
-    
-    const boardCode = interaction.options.getString('boardcode') || 'VpJg7';
-    // const name = interaction.options.getString('name');
-    // const email = interaction.options.getString('email');
+
+    // VpJg7 is the default board code.
+    const boardCode = interaction.options.getString('boardcode');
+    const filterBy = interaction.options.getString('filterby');
     const timeBlock = interaction.options.getNumber('timeblock') || 60;
 
-    // const name = 'Aniket';
-    // const email = '';
+    if (!boardCode) {
+      await interaction.editReply('Please provide a board code.');
+      return;
+    }
 
-    // TODO: Make the message look nicer.
-    const bestTimes = await this.getBestTimesForBlock(boardCode, timeBlock);
-    const allPeople = [...new Set(bestTimes.map(([, availabilityData]) => availabilityData.peopleAvailable).flat())];
-    let message = `Best times for ${timeBlock} minutes:\n`;
+    const regex = new RegExp(',+', 'g');
+    const parsedFilterBy = filterBy?.split(regex).map(key => key.trim());
 
+    const boardData = await this.getBoardData(boardCode);
+    let pollResponses = boardData.data.event.pollResponses;
+    if (parsedFilterBy) {
+      pollResponses = pollResponses.filter(response =>
+        parsedFilterBy.includes(response.user.name) || parsedFilterBy.includes(response.user.email));
+    }
+
+    let allPeople = pollResponses.map(response => response.user.name);
+
+    const bestTimes = await this.getBestTimesForBlock(boardData, timeBlock, parsedFilterBy);
+
+    const embedFields: EmbedFieldData[] = [];
     bestTimes.slice(0, 5).forEach(([startTime, availabilityData]) => {
       const date = new Date(startTime);
-      const time = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+      const time = date.toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
       const unavailablePeople = allPeople.filter(person => !availabilityData.peopleAvailable.includes(person));
-      message += `${time} - ${availabilityData.numAvailable} people available. ` +
-        `Unavailable people: ${unavailablePeople.join(', ')}\n`;
+
+      let message = `${availabilityData.numAvailable}/${allPeople.length} people available.`;
+      if (unavailablePeople.length > 0) {
+        message += ` Unavailable: ${unavailablePeople.join(', ')}`;
+      }
+
+      embedFields.push({
+        name: `⏰ ${time}`,
+        value: message,
+      });
     });
 
-    await interaction.editReply(message);
+    const embed =
+      new MessageEmbed()
+        .setTitle(`Best times for ${timeBlock} minutes`)
+        .setColor('#47d175')
+        .addFields(embedFields);
+
+    await interaction.editReply({ embeds: [embed] });
   }
 
   /**
-   * @param boardCode code of the lettuce meet board
+   * @param boardData board data
    * @param timeBlock time block in minutes
+   * @param filterBy emails or names of the users to filter by
    * @returns best times for the given time block
    */
-  private async getBestTimesForBlock(boardCode: string, timeBlock: number): Promise<[number, AvailabilityData][]> {
-    const availabilityMap = await this.getAvailabilityMap(boardCode);
+  private async getBestTimesForBlock(
+    boardData: BoardData,
+    timeBlock: number,
+    filterBy?: string[],
+  ): Promise<[number, AvailabilityData][]> {
+    const availabilityMap = await this.getAvailabilityMap(boardData, filterBy);
     const availabilityArray = Array.from(availabilityMap.entries());
 
     const bestTimes: [number, AvailabilityData][] = availabilityArray.map(([startTime, availabilityData]) => {
@@ -179,22 +210,29 @@ export default class LettuceMeetVisualizer extends Command {
 
   /**
    * Gets the availability map for a given board.
-   * @param boardCode code of the lettuce meet board
+   * @param boardData board data
+   * @param filterBy emails or names of the users to filter by
    * @returns availability map for the given board
    */
-  private async getAvailabilityMap(boardCode: string): Promise<Map<number, AvailabilityData>> {
-    const boardData = await this.getBoardData(boardCode);
+  private async getAvailabilityMap(boardData: BoardData, filterBy?: string[]): Promise<Map<number, AvailabilityData>> {
     const pollResponses = boardData.data.event.pollResponses;
+    const filteredPollResponses = pollResponses.filter((pollResponse) => {
+      if (!filterBy) {
+        return true;
+      }
+
+      return filterBy.includes(pollResponse.user.email) || filterBy.includes(pollResponse.user.name);
+    });
 
     // Key is the start time for the interval, value is the number of people available.
     const availabilityMap = new Map<number, AvailabilityData>();
-    pollResponses.forEach((pollResponse) => {
+    filteredPollResponses.forEach((pollResponse) => {
       pollResponse.availabilities.forEach((availability) => {
         // Parses start and end date into a Date object
         // Substring to remove the 'Z' at the end of the string.
         const start = new Date(availability.start.substring(0, availability.start.length - 1));
         const end = new Date(availability.end.substring(0, availability.end.length - 1));
-        
+
         // Loops through each LETTUCE_MEET_INTERVAL minute interval and increments the number of people available.
         for (let i = start.getTime(); i < end.getTime(); i += LETTUCE_MEET_INTERVAL * 60 * 1000) {
           const numAvailable = (availabilityMap.get(i)?.numAvailable || 0) + 1;
@@ -215,8 +253,11 @@ export default class LettuceMeetVisualizer extends Command {
    * @param userOptions the user's name or email
    * @returns user's availability or null if the user is not found
    */
-  private async getUserAvailability(boardCode: string, 
-    { name, email }: { name?: string | null, email?: string | null }): Promise<UserAvailability[] | null> {
+  private async getUserAvailability(boardCode: string,
+    { name, email }: {
+      name?: string | null,
+      email?: string | null
+    }): Promise<UserAvailability[] | null> {
     console.log('Getting user availability...');
     const boardData = await this.getBoardData(boardCode);
 
