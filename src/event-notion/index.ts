@@ -696,9 +696,15 @@ export const pingForTAPandCSIDeadlines = async (
  *
  * Every event in any CSE building room that is not CSE B225 ("The Fishbowl") requires keys.
  */
+const keyPingDays = 4;
+const keyTextLocs = "Qualcomm, DIB, and CSE rooms";
+const keyCardLocs = ['Design and Innovation Building 202/208'];
+const keyCodeLocs = ['CSE 1202', 'CSE 2154', 'CSE 4140', 'Qualcomm Room'];
+const allLocs = keyCardLocs.concat(keyCodeLocs);
+
 export const pingForKeys = async (notion: Client, databaseId: string, config: EventNotionPipelineConfig) => {
-  const tomorrow = DateTime.now().setZone('America/Los_Angeles').plus({ days: 1 });
-  Logger.debug(`Querying Notion API for events on date ${tomorrow.toISODate()} in CSE rooms...`);
+  const keyPingDate = DateTime.now().setZone('America/Los_Angeles').plus({ days: keyPingDays });
+  Logger.debug(`Querying Notion API for events on date ${keyPingDate.toISODate()} in ${keyTextLocs}...`);
   const eventsResponse = await notion.databases.query({
     database_id: databaseId,
     filter: {
@@ -706,11 +712,12 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
         {
           property: 'Date',
           date: {
-            equals: tomorrow.toISODate(),
+            equals: keyPingDate.toISODate(),
           },
         },
         {
-          or: ['CSE 1202', 'CSE 2154', 'CSE 4140'].map((location) => {
+          or: allLocs
+          .map((location) => {
             return {
               property: 'Location',
               select: {
@@ -724,7 +731,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
   });
 
   const allEvents = eventsResponse.results as PageObjectResponse[];
-
+  Logger.debug(`Querying Notion API for events on date ${keyPingDate.toISODate()} in ${keyTextLocs}...`);
   const activeEvents = allEvents.filter((event) => {
     if (event.properties.Type.type !== 'select') {
       throw new TypeError(`Event Type field for event not a SELECT! (Event URL: ${event.url}`);
@@ -753,12 +760,14 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
   // and then list the names for each, along with the title, like the other pings
   // we send.
   Object.entries(eventsByLocation).forEach(([location, events]) => {
-    keyPingDescription += `_${location} needs keys for these events:_\n`;
+    let needed = keyCardLocs.includes(location) ? "card" : "code";
+    keyPingDescription += `_${location} needs a key ${needed} for these events:_\n`;
     events.forEach((event) => {
       if (event.properties.Name.type !== 'title') {
         throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
       }
-      keyPingDescription += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+      keyPingDescription += `- **${event.properties['Hosted by']["people"][0]["name"]}** \
+hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
         event.url
       })\n`;
     });
@@ -767,17 +776,17 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
 
   // Now that we have all of them grouped up, we can build the embed.
   const keyPingEmbed = new MessageEmbed()
-    .setTitle("Don't forget to pick up keys for rooms tomorrow!")
+    .setTitle(`Don't forget to arrange key cards/codes for the following events on \
+    ${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
     .setColor('GREEN')
     .setDescription(keyPingDescription)
-    .setFooter('Note that the offices to pick up keys from close up at 4 PM!');
 
   await config.channel.send({
     content: `<@&${config.settings.logisticsTeamID}>`,
     embeds: [keyPingEmbed],
   });
 
-  Logger.info('Pinged for keys!');
+  Logger.info('Pinged for key card/codes!');
 };
 
 /**
@@ -785,7 +794,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
  *
  * This includes:
  * - TAP and CSI Event Intake Form deadlines
- * - Key reminders for Qualcomm and CSE rooms
+ * - Key reminders for Qualcomm, DIB, and CSE rooms
  * - AS Funding deadline reminders
  *
  * @param config The config for the pipeline.
