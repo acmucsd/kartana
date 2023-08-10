@@ -716,8 +716,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
           },
         },
         {
-          or: allLocs
-          .map((location) => {
+          or: allLocs.map((location) => {
             return {
               property: 'Location',
               select: {
@@ -731,6 +730,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
   });
 
   const allEvents = eventsResponse.results as PageObjectResponse[];
+
   Logger.debug(`Querying Notion API for events on date ${keyPingDate.toISODate()} in ${keyTextLocs}...`);
   const activeEvents = allEvents.filter((event) => {
     if (event.properties.Type.type !== 'select') {
