@@ -777,7 +777,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
   // Now that we have all of them grouped up, we can build the embed.
   const keyPingEmbed = new MessageEmbed()
     .setTitle(`Don't forget to arrange key cards/codes for the following events on \
-    ${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
+${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
     .setColor('GREEN')
     .setDescription(keyPingDescription)
 
