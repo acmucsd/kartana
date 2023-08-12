@@ -694,9 +694,9 @@ export const pingForTAPandCSIDeadlines = async (
 /**
  * Pings the Logistics Team to remind them to get keys for particular rooms that require them.
  *
- * Every event in any CSE building room that is not CSE B225 ("The Fishbowl") requires keys.
+ * All rooms in DIB, CSE (apart from CSE B225/"The Fishbowl"), or the Qualcomm Room require key codes/cards
  */
-const keyPingDays = 4;
+const keyPingDays = 4; // Decided 4 to give event coordinators extra notice in advance of weekends
 const keyTextLocs = "Qualcomm, DIB, and CSE rooms";
 const keyCardLocs = ['Design and Innovation Building 202/208'];
 const keyCodeLocs = ['CSE 1202', 'CSE 2154', 'CSE 4140', 'Qualcomm Room'];
