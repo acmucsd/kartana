@@ -3,42 +3,30 @@ import { CommandInteraction, EmbedFieldData, MessageEmbed } from 'discord.js';
 import Command from '../Command';
 import { BotClient } from '../types';
 import axios from 'axios';
+import Logger from '../utils/Logger';
+import { DateTime } from 'luxon';
 
 // URL for Lettuce Meet GraphQL API, and the query to get the event data.
 const URL = 'https://api.lettucemeet.com/graphql';
 const query = `query EventQuery($id: ID!) {
   event(id: $id) {
-      ...Event_event...EditEvent_event id
+    ...Event_event
   }
-}
-fragment EditEvent_event on Event {
-  id title description type pollStartTime pollEndTime 
-  maxScheduledDurationMins pollDates isScheduled start end timeZone updatedAt
 }
 fragment Event_event on Event {
-  id title description type pollStartTime pollEndTime maxScheduledDurationMins 
-  timeZone pollDates start end isScheduled createdAt updatedAt user {
-      id
-  }
-  googleEvents {
-      title start end
-  }
+  title
   pollResponses {
-      id user {
-          __typename...on AnonymousUser {
-              name email
-          }...on User {
-              id name email
-          }...on Node {
-              __isNode: __typename id
-          }
+    user {
+      ...on AnonymousUser {
+          name email
       }
-      availabilities {
-          start end
+      ...on User {
+          name email
       }
-      event {
-          id
-      }
+    }
+    availabilities {
+      start end
+    }
   }
 }`;
 const LETTUCE_MEET_INTERVAL = 30;
@@ -49,36 +37,13 @@ const LETTUCE_MEET_INTERVAL = 30;
 interface BoardData {
   data: {
     event: {
-      id: string;
       title: string;
-      description: string;
-      type: number;
-      pollStartTime: string;
-      pollEndTime: string;
-      maxScheduledDurationMins: number;
-      timeZone: string;
-      pollDates: string[];
-      isScheduled: boolean;
-      start: string;
-      end: string;
-      createdAt: string;
-      updatedAt: string;
-      user: {
-        id: string;
-      };
-      googleEvents: any[];
       pollResponses: {
-        id: string;
         user: {
-          __typename: string;
           name: string;
           email: string;
-          id: string;
         };
         availabilities: UserAvailability[];
-        event: {
-          id: string;
-        };
       }[];
     };
   };
@@ -92,6 +57,9 @@ interface UserAvailability {
   end: string;
 }
 
+/**
+ * Availability data for a time block
+ */
 interface AvailabilityData {
   numAvailable: number;
   peopleAvailable: string[];
@@ -104,57 +72,63 @@ interface AvailabilityData {
 export default class LettuceMeetVisualizer extends Command {
   constructor(client: BotClient) {
     const definition = new SlashCommandBuilder()
-      .setName('lettucemeetvisualizer')
+      .setName('lettucemeet')
       .addStringOption((option) =>
-        option.setName('boardcode').setDescription('Lettuce Meet board code').setRequired(true))
+        option.setName('code').setDescription('Lettuce Meet board code (code at the end of url)')
+          .setRequired(true))
       .addStringOption((option) =>
-        option.setName('filterby').setDescription('Emails or names of the users to filter by').setRequired(false))
+        option.setName('users').setDescription('Emails or names of the users to filter by').setRequired(false))
       .addNumberOption((option) =>
-        option.setName('timeblock').setDescription('Time block in minutes').setRequired(false))
+        option.setName('duration').setDescription('Duration of meeting in minutes (default of 60 minutes)')
+          .setRequired(false))
       .setDescription('Visualizes lettuce meet board.');
 
     super(client, {
-      name: 'lettucemeetvisualizer',
+      name: 'lettucemeet',
       boardRequired: true,
       enabled: true,
       description: 'Visualizes lettuce meet board.',
       category: 'Utility',
-      usage: client.settings.prefix.concat('lettucemeetvisualizer'),
+      usage: client.settings.prefix.concat('lettucemeet'),
       requiredPermissions: ['SEND_MESSAGES'],
     }, definition);
   }
 
   public async run(interaction: CommandInteraction): Promise<void> {
-    await super.defer(interaction);
+    await super.defer(interaction, false);
 
     // VpJg7 is the default board code.
-    const boardCode = interaction.options.getString('boardcode');
-    const filterBy = interaction.options.getString('filterby');
-    const timeBlock = interaction.options.getNumber('timeblock') || 60;
+    const boardCode = interaction.options.getString('code');
+    const filterBy = interaction.options.getString('users');
+    const timeBlock = interaction.options.getNumber('duration') || 60;
 
     if (!boardCode) {
       await interaction.editReply('Please provide a board code.');
       return;
     }
 
-    const regex = new RegExp(',+', 'g');
-    const parsedFilterBy = filterBy?.split(regex).map(key => key.trim());
+    const filterByArray = filterBy?.split(',').map(key => key.trim());
 
     const boardData = await this.getBoardData(boardCode);
-    let pollResponses = boardData.data.event.pollResponses;
-    if (parsedFilterBy) {
-      pollResponses = pollResponses.filter(response =>
-        parsedFilterBy.includes(response.user.name) || parsedFilterBy.includes(response.user.email));
+    if (!boardData?.data?.event) {
+      await interaction.editReply('Invalid board code.');
+      return;
     }
 
-    let allPeople = pollResponses.map(response => response.user.name);
+    let pollResponses = boardData.data.event.pollResponses;
+    if (filterByArray) {
+      pollResponses = pollResponses.filter(response =>
+        filterByArray.includes(response.user.name) || filterByArray.includes(response.user.email));
+    }
 
-    const bestTimes = await this.getBestTimesForBlock(boardData, timeBlock, parsedFilterBy);
+    const allPeople = pollResponses.map(response => response.user.name);
+    const bestTimes = await this.getBestTimesForBlock(boardData, timeBlock, filterByArray);
 
     const embedFields: EmbedFieldData[] = [];
-    bestTimes.slice(0, 5).forEach(([startTime, availabilityData]) => {
-      const date = new Date(startTime);
-      const time = date.toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+    // Selects the top 5 best times
+    bestTimes.slice(0, 5).forEach(({ blockStartTime, availabilityData }) => {
+      const date = DateTime.fromMillis(blockStartTime);
+      const time = date.toLocaleString(DateTime.DATETIME_MED);
       const unavailablePeople = allPeople.filter(person => !availabilityData.peopleAvailable.includes(person));
 
       let message = `${availabilityData.numAvailable}/${allPeople.length} people available.`;
@@ -170,7 +144,9 @@ export default class LettuceMeetVisualizer extends Command {
 
     const embed =
       new MessageEmbed()
-        .setTitle(`Best times for ${timeBlock} minutes`)
+        .setTitle(`${boardData.data.event.title}`)
+        .setURL(`https://lettucemeet.com/l/${boardCode}`)
+        .setDescription(`Best times for **${timeBlock} minutes**`)
         .setColor('#47d175')
         .addFields(embedFields);
 
@@ -187,25 +163,31 @@ export default class LettuceMeetVisualizer extends Command {
     boardData: BoardData,
     timeBlock: number,
     filterBy?: string[],
-  ): Promise<[number, AvailabilityData][]> {
+  ): Promise<{ blockStartTime: number, availabilityData: AvailabilityData }[]> {
     const availabilityMap = await this.getAvailabilityMap(boardData, filterBy);
     const availabilityArray = Array.from(availabilityMap.entries());
 
-    const bestTimes: [number, AvailabilityData][] = availabilityArray.map(([startTime, availabilityData]) => {
+    const bestTimes: { blockStartTime: number, availabilityData: AvailabilityData }[] = availabilityArray
+      .map(([startTime, availabilityData]) => {
       // Gets the minimum number of people available for each time block.
-      let minimumAvailable = availabilityData.numAvailable;
-      const end = startTime + timeBlock * 60 * 1000;
-      for (let i = startTime; i < end; i += LETTUCE_MEET_INTERVAL * 60 * 1000) {
-        const currentNumber = availabilityMap.get(i)?.numAvailable || 0;
-        minimumAvailable = Math.min(minimumAvailable, currentNumber);
-      }
+        let minimumAvailable = availabilityData.numAvailable;
 
-      // Returns the start time and the minimum number of people available.
-      return [startTime, { numAvailable: minimumAvailable, peopleAvailable: availabilityData.peopleAvailable }];
-    });
+        // timeBlock and LETTUCE_MEET_INTERVAL are in minutes - convert to milliseconds.
+        const end = startTime + timeBlock * 60 * 1000;
+        for (let i = startTime; i < end; i += LETTUCE_MEET_INTERVAL * 60 * 1000) {
+          const currentNumber = availabilityMap.get(i)?.numAvailable || 0;
+          minimumAvailable = Math.min(minimumAvailable, currentNumber);
+        }
 
-    bestTimes.sort((a, b) => b[1].numAvailable - a[1].numAvailable);
-    return bestTimes.map(([startTime, availablityData]) => [startTime, availablityData]);
+        // Returns the start time and the minimum number of people available.
+        return {
+          blockStartTime: startTime,
+          availabilityData: { numAvailable: minimumAvailable, peopleAvailable: availabilityData.peopleAvailable },
+        };
+      });
+
+    bestTimes.sort((a, b) => b.availabilityData.numAvailable - a.availabilityData.numAvailable);
+    return bestTimes;
   }
 
   /**
@@ -230,11 +212,11 @@ export default class LettuceMeetVisualizer extends Command {
       pollResponse.availabilities.forEach((availability) => {
         // Parses start and end date into a Date object
         // Substring to remove the 'Z' at the end of the string.
-        const start = new Date(availability.start.substring(0, availability.start.length - 1));
-        const end = new Date(availability.end.substring(0, availability.end.length - 1));
+        const start = DateTime.fromISO(availability.start.substring(0, availability.start.length - 1));
+        const end = DateTime.fromISO(availability.end.substring(0, availability.end.length - 1));
 
         // Loops through each LETTUCE_MEET_INTERVAL minute interval and increments the number of people available.
-        for (let i = start.getTime(); i < end.getTime(); i += LETTUCE_MEET_INTERVAL * 60 * 1000) {
+        for (let i = start.toMillis(); i < end.toMillis(); i += LETTUCE_MEET_INTERVAL * 60 * 1000) {
           const numAvailable = (availabilityMap.get(i)?.numAvailable || 0) + 1;
           const peopleAvailable = availabilityMap.get(i)?.peopleAvailable || [];
 
@@ -258,7 +240,7 @@ export default class LettuceMeetVisualizer extends Command {
       name?: string | null,
       email?: string | null
     }): Promise<UserAvailability[] | null> {
-    console.log('Getting user availability...');
+    Logger.log({ level: 'info', message: '/lettucemeet: Getting user availability...' });
     const boardData = await this.getBoardData(boardCode);
 
     const pollResponses = boardData.data.event.pollResponses;
@@ -279,7 +261,7 @@ export default class LettuceMeetVisualizer extends Command {
    * @returns data returned by the Lettuce Meet GraphQL API
    */
   private async getBoardData(boardCode: string): Promise<BoardData> {
-    console.log('Getting board data...');
+    Logger.log({ level: 'info', message: '/lettucemeet: Getting board data...' });
     const response = await axios.post(URL, {
       query,
       variables: {
