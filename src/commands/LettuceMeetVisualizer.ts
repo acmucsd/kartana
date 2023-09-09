@@ -9,26 +9,26 @@ import { DateTime } from 'luxon';
 // URL for Lettuce Meet GraphQL API, and the query to get the event data.
 const URL = 'https://api.lettucemeet.com/graphql';
 const query = `query EventQuery($id: ID!) {
-  event(id: $id) {
-    ...Event_event
-  }
-}
-fragment Event_event on Event {
-  title
-  pollResponses {
-    user {
-      ...on AnonymousUser {
-          name email
-      }
-      ...on User {
-          name email
-      }
-    }
-    availabilities {
-      start end
+    event(id: $id) {
+      ...Event_event
     }
   }
-}`;
+  fragment Event_event on Event {
+    title
+    pollResponses {
+      user {
+        ...on AnonymousUser {
+            name email
+        }
+        ...on User {
+            name email
+        }
+      }
+      availabilities {
+        start end
+      }
+    }
+  }`;
 const LETTUCE_MEET_INTERVAL = 30;
 
 /**
@@ -76,10 +76,11 @@ export default class LettuceMeetVisualizer extends Command {
       .addStringOption((option) =>
         option.setName('code').setDescription('Lettuce Meet board code (code at the end of url)')
           .setRequired(true))
-      .addStringOption((option) =>
-        option.setName('users').setDescription('Emails or names of the users to filter by').setRequired(false))
       .addNumberOption((option) =>
-        option.setName('duration').setDescription('Duration of meeting in minutes (default of 60 minutes)')
+        option.setName('duration').setDescription('Desired meeting duration (in minutes) [default is 60 minutes]')
+          .setRequired(false))
+      .addStringOption((option) =>
+        option.setName('users').setDescription('Emails or names of the users to include in the results')
           .setRequired(false))
       .setDescription('Visualizes lettuce meet board.');
 
@@ -97,7 +98,6 @@ export default class LettuceMeetVisualizer extends Command {
   public async run(interaction: CommandInteraction): Promise<void> {
     await super.defer(interaction, false);
 
-    // VpJg7 is the default board code.
     const boardCode = interaction.options.getString('code');
     const filterBy = interaction.options.getString('users');
     const timeBlock = interaction.options.getNumber('duration') || 60;
@@ -154,8 +154,9 @@ export default class LettuceMeetVisualizer extends Command {
   }
 
   /**
-   * @param boardData board data
-   * @param timeBlock time block in minutes
+   * @param boardData the data received from the Lettuce Meet API, containing the board information. Can be retrieved by
+   * calling the getBoardData function.
+   * @param timeBlock the length of the meeting, in minutes
    * @param filterBy emails or names of the users to filter by
    * @returns best times for the given time block
    */
@@ -191,8 +192,11 @@ export default class LettuceMeetVisualizer extends Command {
   }
 
   /**
-   * Gets the availability map for a given board.
-   * @param boardData board data
+   * Gets a map containing the number of people available for each time block (and a list of the people). Can be used
+   * to get the best times for a given time block.
+   *
+   * @param boardData the data received from the Lettuce Meet API, containing the board information. Can be retrieved by
+   * calling the getBoardData function.
    * @param filterBy emails or names of the users to filter by
    * @returns availability map for the given board
    */
@@ -240,7 +244,7 @@ export default class LettuceMeetVisualizer extends Command {
       name?: string | null,
       email?: string | null
     }): Promise<UserAvailability[] | null> {
-    Logger.log({ level: 'info', message: '/lettucemeet: Getting user availability...' });
+    Logger.info('/lettucemeet: Getting user availability...');
     const boardData = await this.getBoardData(boardCode);
 
     const pollResponses = boardData.data.event.pollResponses;
@@ -261,7 +265,7 @@ export default class LettuceMeetVisualizer extends Command {
    * @returns data returned by the Lettuce Meet GraphQL API
    */
   private async getBoardData(boardCode: string): Promise<BoardData> {
-    Logger.log({ level: 'info', message: '/lettucemeet: Getting board data...' });
+    Logger.info('/lettucemeet: Getting board data...');
     const response = await axios.post(URL, {
       query,
       variables: {
