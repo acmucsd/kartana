@@ -107,7 +107,7 @@ export default class LettuceMeetVisualizer extends Command {
       return;
     }
 
-    const filterByArray = filterBy?.split(',').map(key => key.trim());
+    const filterByArray = filterBy?.split(',').map(key => key.trim().toLowerCase());
 
     const boardData = await this.getBoardData(boardCode);
     if (!boardData?.data?.event) {
@@ -118,7 +118,8 @@ export default class LettuceMeetVisualizer extends Command {
     let pollResponses = boardData.data.event.pollResponses;
     if (filterByArray) {
       pollResponses = pollResponses.filter(response =>
-        filterByArray.includes(response.user.name) || filterByArray.includes(response.user.email));
+        filterByArray.includes(response.user.name.toLowerCase()) ||
+        filterByArray.includes(response.user.email.toLowerCase()));
     }
 
     const allPeople = pollResponses.map(response => response.user.name);
@@ -171,19 +172,18 @@ export default class LettuceMeetVisualizer extends Command {
     const bestTimes: { blockStartTime: number, availabilityData: AvailabilityData }[] = availabilityArray
       .map(([startTime, availabilityData]) => {
       // Gets the minimum number of people available for each time block.
-        let minimumAvailable = availabilityData.numAvailable;
+        let peopleAvailable = availabilityData.peopleAvailable;
 
         // timeBlock and LETTUCE_MEET_INTERVAL are in minutes - convert to milliseconds.
         const end = startTime + timeBlock * 60 * 1000;
         for (let i = startTime; i < end; i += LETTUCE_MEET_INTERVAL * 60 * 1000) {
-          const currentNumber = availabilityMap.get(i)?.numAvailable || 0;
-          minimumAvailable = Math.min(minimumAvailable, currentNumber);
+          peopleAvailable = peopleAvailable.filter(person => availabilityMap.get(i)?.peopleAvailable?.includes(person));
         }
 
         // Returns the start time and the minimum number of people available.
         return {
           blockStartTime: startTime,
-          availabilityData: { numAvailable: minimumAvailable, peopleAvailable: availabilityData.peopleAvailable },
+          availabilityData: { numAvailable: peopleAvailable.length, peopleAvailable },
         };
       });
 
@@ -207,7 +207,8 @@ export default class LettuceMeetVisualizer extends Command {
         return true;
       }
 
-      return filterBy.includes(pollResponse.user.email) || filterBy.includes(pollResponse.user.name);
+      return filterBy.includes(pollResponse.user.email.toLowerCase()) ||
+        filterBy.includes(pollResponse.user.name.toLowerCase());
     });
 
     // Key is the start time for the interval, value is the number of people available.
