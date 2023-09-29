@@ -490,7 +490,7 @@ export default class NotionCalEvent {
     try {
       if (formResponse['What Marketing ACMURL do you want for the portal event page?'].startsWith('acmurl.com')) {
         this.marketingACMURL = new URL(
-          'https://' + formResponse['What FB ACMURL do you want for the Facebook event page?'],
+          'https://' + formResponse['What Marketing ACMURL do you want for the portal event page?'],
         );
       } else {
         this.marketingACMURL =

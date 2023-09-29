@@ -82,6 +82,9 @@ export default class LettuceMeetVisualizer extends Command {
       .addStringOption((option) =>
         option.setName('users').setDescription('Emails or names of the users to include in the results')
           .setRequired(false))
+      .addNumberOption((option) =>
+        option.setName('n').setDescription('Number of results to show (default 5).')
+          .setRequired(false))
       .setDescription('Visualizes lettuce meet board.');
 
     super(client, {
@@ -101,6 +104,7 @@ export default class LettuceMeetVisualizer extends Command {
     const boardCode = interaction.options.getString('code');
     const filterBy = interaction.options.getString('users');
     const timeBlock = interaction.options.getNumber('duration') || 60;
+    const n = interaction.options.getNumber('n') || 5;
 
     if (!boardCode) {
       await interaction.editReply('Please provide a board code.');
@@ -126,8 +130,8 @@ export default class LettuceMeetVisualizer extends Command {
     const bestTimes = await this.getBestTimesForBlock(boardData, timeBlock, filterByArray);
 
     const embedFields: EmbedFieldData[] = [];
-    // Selects the top 5 best times
-    bestTimes.slice(0, 5).forEach(({ blockStartTime, availabilityData }) => {
+    // Selects the top n best times
+    bestTimes.slice(0, n).forEach(({ blockStartTime, availabilityData }) => {
       const date = DateTime.fromMillis(blockStartTime);
       const time = date.toLocaleString(DateTime.DATETIME_MED);
       const unavailablePeople = allPeople.filter(person => !availabilityData.peopleAvailable.includes(person));

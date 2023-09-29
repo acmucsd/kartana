@@ -91,7 +91,6 @@ export default class NotionEventPage {
       children: notionHostedEventDescription,
     };
 
-    Logger.debug(createPagePayload);
     // Upload the event to Notion's API. If this errors out, we'll need to
     // send a message to Discord paging me about the issue.
     //
