@@ -72,7 +72,8 @@ export default abstract class Command {
 
     const isBoard = Array.isArray(memberRoles)
       ? (memberRoles.includes('Board') || memberRoles.includes('Members at Large'))
-      : (memberRoles.cache.some((r) => r.name === 'Board') || memberRoles.cache.some((r) => r.name === 'Members at Large'));
+      : ((memberRoles.cache.some((r) => r.name === 'Board')) ||
+         (memberRoles.cache.some((r) => r.name === 'Members at Large')));
 
     if (this.conf.boardRequired && !isBoard) {
       interaction.reply(
