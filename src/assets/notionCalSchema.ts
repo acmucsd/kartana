@@ -28,14 +28,14 @@ export const notionCalSchema = {
           color: 'yellow',
         },
         {
-          id: 'ac96949e-a060-49bc-a14f-4913a5803e40',
-          name: 'AS Funding Approved',
-          color: 'blue',
-        },
-        {
           id: 'c6d41dc8-6628-49c0-ab6a-9828793520f2',
           name: 'Funding Completed',
           color: 'green',
+        },
+        {
+          id: 'ac96949e-a060-49bc-a14f-4913a5803e40',
+          name: 'AS Funding Approved',
+          color: 'blue',
         },
         {
           id: '28d2388f-718c-4d48-b66d-4be685db8ecf',
