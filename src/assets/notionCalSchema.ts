@@ -531,6 +531,11 @@ export const notionCalSchema = {
           name: 'PC Forum',
           color: 'brown',
         },
+        {
+          id: "9747b10d-7bd2-4aa9-9695-4a4d0f01fda3",
+          name: "SME ASML Room",
+          color: "default"
+        },
       ],
     },
   },
