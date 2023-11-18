@@ -3,7 +3,7 @@
  *
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Thu, Apr 6 2023 19:54:13 PST.
+ * Fri, Nov 17 2023 01:46:38 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {

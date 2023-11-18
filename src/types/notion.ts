@@ -35,7 +35,8 @@ export type EventLocation =
   | 'CSE B225 (Fishbowl)'
   | 'PC Forum'
   | 'PC Bear Room'
-  | 'Design and Innovation Building 202/208';
+  | 'Design and Innovation Building 202/208'
+  | 'SME ASML Room';
 
 /**
  * Converter from the Host Form's locations to the Notion Calendar
@@ -69,6 +70,7 @@ export const notionLocationTag = {
   'Sixth College Lodge': 'Sixth College Lodge',
   'Lecture Hall': 'Lecture Hall',
   'Library Walk': 'Library Walk',
+  'SME ASML Room': 'SME ASML Room',
   Other: 'Other (See Details)',
 };
 
