@@ -474,6 +474,51 @@ export const notionHostedEventDescription: BlockObjectRequest[] = [
       rich_text: [
         {
           type: 'text',
+          text: { content: 'Event Pictures', link: null },
+          annotations: {
+            bold: false,
+            italic: false,
+            strikethrough: false,
+            underline: false,
+            code: false,
+            color: 'default',
+          },
+        },
+      ],
+    },
+  },
+  {
+    type: 'paragraph',
+    paragraph: {
+      color: 'default',
+      rich_text: [
+        {
+          type: 'text',
+          text: {
+            content:
+              'Add pictures of your event showing the attendance for AS purposes!',
+            link: null,
+          },
+          annotations: {
+            bold: false,
+            italic: true,
+            strikethrough: false,
+            underline: false,
+            code: false,
+            color: 'default',
+          },
+        },
+      ],
+    },
+  },
+  {
+    type: 'heading_1',
+    heading_1: {
+      is_toggleable: false,
+      color: 'default',
+      rich_text: [
+        {
+          type: 'text',
           text: { content: 'How did it go?', link: null },
           annotations: {
             bold: false,
