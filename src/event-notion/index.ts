@@ -694,12 +694,12 @@ export const pingForTAPandCSIDeadlines = async (
 /**
  * Pings the Logistics Team to remind them to get keys for particular rooms that require them.
  *
- * All rooms in DIB, CSE (apart from CSE B225/"The Fishbowl"), or the Qualcomm Room require key codes/cards
+ * All rooms in DIB, CSE (apart from CSE B225/"The Fishbowl"), the ASML Room in SME, or the Qualcomm Room require key codes/cards
  */
 const keyPingDays = 4; // Decided 4 to give event coordinators extra notice in advance of weekends
-const keyTextLocs = "Qualcomm, DIB, and CSE rooms";
+const keyTextLocs = "Qualcomm, DIB, CSE, SME rooms";
 const keyCardLocs = ['Design and Innovation Building 202/208'];
-const keyCodeLocs = ['CSE 1202', 'CSE 2154', 'CSE 4140', 'Qualcomm Room'];
+const keyCodeLocs = ['CSE 1202', 'CSE 2154', 'CSE 4140', 'Qualcomm Room', 'SME ASML Room'];
 const allLocs = keyCardLocs.concat(keyCodeLocs);
 
 export const pingForKeys = async (notion: Client, databaseId: string, config: EventNotionPipelineConfig) => {
@@ -794,7 +794,7 @@ ${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
  *
  * This includes:
  * - TAP and CSI Event Intake Form deadlines
- * - Key reminders for Qualcomm, DIB, and CSE rooms
+ * - Key reminders for Qualcomm, DIB, CSE, ASML (SME) rooms
  * - AS Funding deadline reminders
  *
  * @param config The config for the pipeline.
