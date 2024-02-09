@@ -344,7 +344,7 @@ export const pingForTAPandCSIDeadlines = async (
         56: {
           'pingRoles': ['logisticsTeamID'],
           'date': dateTimeNow.plus({ days: 56}),
-          'message': '\n⚠️ ___Booking confirmation for AS Funding is due in 1 week!___ ⚠️\n',
+          'message': '\n⚠️ __**Booking confirmation for AS Funding is due in 1 week!**__ ⚠️\n',
           'prop': 'Booking',
           'propStatus': ['Booking TODO', 'Booking In Progress'],
         }
@@ -357,14 +357,14 @@ export const pingForTAPandCSIDeadlines = async (
         21: {
           'pingRoles': ['fundingTeamID', 'marketingTeamID'],
           'date': dateTimeNow.plus({ days: 21 }),
-          'message': '\n ___Invoice for TAP is due in a week!___ \n',
+          'message': '\n __**Invoice for TAP is due in a week!**___ \n',
           'prop': 'TAP',
           'propStatus': ['TAP TODO'],
         },
         14: {
           'pingRoles': ['logisticsTeamID'],
           'date': dateTimeNow.plus({ days: 14}),
-          'message': '\n⚠️ ___Invoice for TAP is due today!___ ⚠️\n',
+          'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress'],
         }
@@ -377,14 +377,14 @@ export const pingForTAPandCSIDeadlines = async (
         21: {
           'pingRoles': ['logisticsTeamID', 'marketingTeamID'],
           'date': dateTimeNow.plus({ days: 21 }),
-          'message': '\n ___Double-check venue, time, food, title and description for the event!___\n',
+          'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
         },
         14: {
           'pingRoles': ['logisticsTeamID'],
           'date': dateTimeNow.plus({ days: 14}),
-          'message': '\n⚠️ ___Final check for all event details!___ ⚠️\n',
+          'message': '\n⚠️ __**Final check for all event details!**__ ⚠️\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
         }
@@ -522,7 +522,7 @@ export const pingForTAPandCSIDeadlines = async (
 
       // Adds on to the embed description of there is a nonzero amount of events
       if(curDatePings.length > 0){
-        curEmbedDescrip += `\n**${amountDays}-days**`;
+        curEmbedDescrip += `\n*${(Number(amountDays)/7).toString()} weeks — ${curPing['date'].toLocaleString(DateTime.DATE_FULL)}*`;
         curEmbedDescrip += curPing['message'];
         for(var j=0; j < curPing['pingRoles'].length; j++){
           var curRole = `<@&${config.settings[curPing['pingRoles'][j]]}>`;
