@@ -315,7 +315,8 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
  * - Looks up all the events in the Notion calendar database
  * - Filters for any events that are specifically 3 weeks and 1, 2 or 3 days away from today,
  *   as well as 2 weeks and 1, 2 or 3 days away from today. (in other words,
- *   anything that has TAP forms or CSI Intake forms due the next day.)
+ *   anything that has TAP forms or CSI Intake forms due the next day.) Additionally, an 8-week
+ *   advance for booking confirmation.
  * - Checks whether the events still need to have a TAP or CSI Event Intake form submitted.
  * - Adds all the events to two separate embed with a title and URL and pings the Logistics team about it.
  */
@@ -324,91 +325,131 @@ export const pingForTAPandCSIDeadlines = async (
   databaseId: string,
   config: EventNotionPipelineConfig,
 ) => {
-  // The day for which we ping for any non-submitted events.
-  // This is just basically to look for events that are 23 days away from now.
-  //
   // Ideally, do ALL network queries in one and filter later.
-  const firstDayToPingForTODO = DateTime.now().plus({ days: 23 });
-  const secondDayToPingForTODO = DateTime.now().plus({ days: 22 });
-  const thirdDayToPingForTODO = DateTime.now().plus({ days: 21 });
-  const firstDayToPingForInProgress = DateTime.now().plus({ days: 16 });
-  const secondDayToPingForInProgress = DateTime.now().plus({ days: 15 });
-  const thirdDayToPingForInProgress = DateTime.now().plus({ days: 14 });
+  var dateTimeNow = DateTime.now();
+
+  // Master list of all reminders in the following format:
+  // title — Top of embed, bolded
+  // colour — colour of embed, since GREEN was used for key pings/succesful imports, and RED is semantically errors
+  // dates — further itemized by number of days in advance a reminder ping should be sent:
+  //    pingroles — names of roles to be pinged, found in settings
+  //    date — exact date in the future you would wish to receive pings for today
+  //    prop — category, corresponds to a series of statuses on the Notion existing as "<prop> Status"
+  //    propStatus — the status of the above prop category
+  const daysToPing = [
+    {
+      'title': 'AS Funding Deadline',
+      'colour': 'BLUE',
+      'dates': {
+        56: {
+          'pingRoles': ['logisticsTeamID'],
+          'date': dateTimeNow.plus({ days: 56}),
+          'message': '\n⚠️ ___Booking confirmation for AS Funding is due in 1 week!___ ⚠️\n',
+          'prop': 'Booking',
+          'propStatus': ['Booking TODO', 'Booking In Progress'],
+        }
+      }
+    },
+    {
+      'title': 'TAP Invoice Deadline',
+      'colour': 'ORANGE',
+      'dates': {
+        21: {
+          'pingRoles': ['fundingTeamID', 'marketingTeamID'],
+          'date': dateTimeNow.plus({ days: 21 }),
+          'message': '\n ___Invoice for TAP is due in a week!___ \n',
+          'prop': 'TAP',
+          'propStatus': ['TAP TODO'],
+        },
+        14: {
+          'pingRoles': ['logisticsTeamID'],
+          'date': dateTimeNow.plus({ days: 14}),
+          'message': '\n⚠️ ___Invoice for TAP is due today!___ ⚠️\n',
+          'prop': 'TAP',
+          'propStatus': ['TAP In Progress'],
+        }
+      }
+    },
+    {
+      'title': 'Event Details Confirmation',
+      'colour': 'YELLOW',
+      'dates': {
+        21: {
+          'pingRoles': ['logisticsTeamID', 'marketingTeamID'],
+          'date': dateTimeNow.plus({ days: 21 }),
+          'message': '\n ___Double-check venue, time, food, title and description for the event!___\n',
+          'prop': 'PR',
+          'propStatus': ['PR TODO', 'PR In Progress'],
+        },
+        14: {
+          'pingRoles': ['logisticsTeamID'],
+          'date': dateTimeNow.plus({ days: 14}),
+          'message': '\n⚠️ ___Final check for all event details!___ ⚠️\n',
+          'prop': 'PR',
+          'propStatus': ['PR TODO', 'PR In Progress'],
+        }
+      }
+    },
+  ];
+
+  // Used to compile all queries by iterating over above array  
+  var daysTrack = new Array<any>();
+  var dayQuery = new Array<any>();
+  var statusQuery = new Array<any>();
+  var props = new Array<string>();
+  var propStatuses = new Array<string>();
+
+  // Creates filter for all days equal to one of the above deadlines
+  // Slightly jankily adds 1 day to the original deadline, just to be sure to get 24 hours buffer if there's a weird start time
+  for(var i=0; i < daysToPing.length; i++){
+    for(var amountDays in daysToPing[i]['dates']){
+      dayQuery.push({
+        property: 'Date', 
+        date: {
+          equals: daysToPing[i]['dates'][amountDays]['date'].plus({days:1}).toISODate()
+        }}
+      );
+    }
+  }
+
+  // Creates filter for all statuses equal to one of the above deadlines
+  // Additionally, compile string for status selectors for isEventPingable to use
+  for(var i=0; i < daysToPing.length; i++){
+    for(var day in daysToPing[i]['dates']){
+      if(daysTrack.indexOf(day) == -1){
+        var cur = daysToPing[i]['dates'][day];
+        for(var j=0; j < cur['propStatus'].length; j++){
+          statusQuery.push({ 
+            property: `${cur['prop']} Status`,
+            select: { 
+              equals: cur['propStatus'][j],
+            }
+          });
+          daysTrack.push(day);
+        }
+      }
+      if(props.indexOf(cur['prop']) == -1) props.push(cur['prop']);
+      if(propStatuses.indexOf(cur['propStatus']) == -1) propStatuses.push(cur['propStatus']);
+    }
+  }
 
   // First, we want to pick up all of the events from the calendar.
   // We'll query with two separate requests to make it faster to bunch up all the
-  // events that match the TAP Status parameters and we'll filter by date into
+  // events that match the status parameters and we'll filter by date into
   // different arrays later.
   //
   // For events we're interested to ping for anyway, we'll just get
-  // every event that has one of the correct status forms and has a deadline coming up,
-  // whether it be the 21-day deadline or the 14-day deadline.
-  Logger.debug('Querying Notion API for events with TAP and Event Intake deadlines coming up...');
+  // every event that has one of the correct status forms and has a deadline coming up
+  Logger.debug('Querying Notion API for events with deadlines coming up...');
   const eventsResponse = await notion.databases.query({
     database_id: databaseId,
     filter: {
       and: [
         {
-          or: [
-            {
-              property: 'Date',
-              date: {
-                equals: firstDayToPingForTODO.toISODate(),
-              },
-            },
-            {
-              property: 'Date',
-              date: {
-                equals: secondDayToPingForTODO.toISODate(),
-              },
-            },
-            {
-              property: 'Date',
-              date: {
-                equals: thirdDayToPingForTODO.toISODate(),
-              },
-            },
-            {
-              property: 'Date',
-              date: {
-                equals: firstDayToPingForInProgress.toISODate(),
-              },
-            },
-            {
-              property: 'Date',
-              date: {
-                equals: secondDayToPingForInProgress.toISODate(),
-              },
-            },
-            {
-              property: 'Date',
-              date: {
-                equals: thirdDayToPingForInProgress.toISODate(),
-              },
-            },
-          ],
+          or: dayQuery,
         },
         {
-          or: [
-            {
-              property: 'TAP Status',
-              select: {
-                equals: 'TAP TODO',
-              },
-            },
-            {
-              property: 'TAP Status',
-              select: {
-                equals: 'TAP In Progress',
-              },
-            },
-            {
-              property: 'Intake Form Status',
-              select: {
-                equals: 'Intake Form TODO',
-              },
-            },
-          ],
+          or: statusQuery,
         },
       ],
     },
@@ -430,264 +471,86 @@ export const pingForTAPandCSIDeadlines = async (
    *
    * @param event The event to look at.
    * @param deadlineDate The deadline date to check for.
-   * @param statusForTAP The TAP status to look at.
-   * @param orgPing The type of field to check whether it needs to be pinged or not.
+   * @param orgPing The field to check whether it needs to be pinged or not; exists as a property 
+   *                on a Notion calendar event suffixed as "<orgPing> Status"
+   * @param status The corresponding status to match
    * @returns Whether the event should be pinged or not.
    */
   const isEventPingable = (
     event: (typeof allEvents)[0],
-    deadlineDate: DateTime,
-    orgPing: 'CSI' | 'TAP',
-    status: 'TAP TODO' | 'TAP In Progress' | 'Intake Form TODO',
+    deadlineDate: string,
+    orgPing: string, 
+    status: string,
   ) => {
-    if (event.properties.Date.type !== 'date') {
-      return false;
-    }
-    if (event.properties['TAP Status'].type !== 'select') {
-      return false;
-    }
-    if (event.properties['Intake Form Status'].type !== 'select') {
-      return false;
-    }
-    if (event.properties.Name.type !== 'title') {
-      return false;
-    }
+    if (event.properties.Date.type !== 'date') return false;
+    if (event.properties.Name.type !== 'title') return false;
+    if (event.properties[`${orgPing} Status`].type !== 'select') return false;
+
+    const date = (event.properties.Date.date?.start.toString())?.split('T')[0];
 
     // If the field is left blank on Notion, event.properties[...].select
     // will be null, so we'll automatically fill it to 'N/A' if so.
-    const tapSelect = event.properties['TAP Status'].select;
-    const tapStatus = tapSelect ? tapSelect.name : 'TAP N/A';
-
-    const csiSelect = event.properties['Intake Form Status'].select;
-    const csiStatus = csiSelect ? csiSelect.name : 'Intake Form N/A';
-
-    const date = event.properties.Date.date?.start;
-
-    if (orgPing === 'TAP') {
-      return date === deadlineDate.toISODate() && tapStatus === status;
-    } else {
-      return date === deadlineDate.toISODate() && csiStatus === status;
-    }
+    var tmp: any = event.properties[`${orgPing} Status`];
+    var propSelect = tmp.select;
+    var selectStatus = propSelect ? propSelect.name : `${orgPing} N/A`;
+    return date === deadlineDate && selectStatus === status;
   };
 
-  // There are two separate embeds we are building. One for the TAP deadlines and one for the CSI deadlines.
-  // First, we'll take our original array and filter for all the events with TAP 21-day deadlines, and we'll separate
-  // the events with the alerts before each deadline.
-  Logger.debug('Splitting events that need pinging into separate arrays...');
-  const tapDeadlineEvents = {
-    firstDeadline: {
-      oneDay: allEvents.filter((event) => {
-        return isEventPingable(event, thirdDayToPingForTODO, 'TAP', 'TAP TODO');
-      }),
-      twoDays: allEvents.filter((event) => {
-        return isEventPingable(event, secondDayToPingForTODO, 'TAP', 'TAP TODO');
-      }),
-      threeDays: allEvents.filter((event) => {
-        return isEventPingable(event, firstDayToPingForTODO, 'TAP', 'TAP TODO');
-      }),
-    },
-    secondDeadline: {
-      oneDay: allEvents.filter((event) => {
-        return isEventPingable(event, thirdDayToPingForInProgress, 'TAP', 'TAP In Progress');
-      }),
-      twoDays: allEvents.filter((event) => {
-        return isEventPingable(event, secondDayToPingForInProgress, 'TAP', 'TAP In Progress');
-      }),
-      threeDays: allEvents.filter((event) => {
-        return isEventPingable(event, firstDayToPingForInProgress, 'TAP', 'TAP In Progress');
-      }),
-    },
-  };
+  // We loop over every possible ping section, creating an embed for each and repeating the process
+  Logger.debug('Splitting events that need pinging into separate arrays... ' + daysToPing.length + " to go");
+  for(var i=0; i < daysToPing.length; i++){
+    var cur = daysToPing[i];
+    let curEmbed = new MessageEmbed().setTitle(cur['title']).setColor(cur['colour']);
+    let curEmbedPings = new Array<string>();
+    let curEmbedDescrip = "---\n";
 
-  // We will do the same for the CSI Event Intake form deadline pings.
-  const eventIntakeEvents = {
-    oneDay: allEvents.filter((event) => {
-      return isEventPingable(event, thirdDayToPingForTODO, 'CSI', 'Intake Form TODO');
-    }),
-    twoDays: allEvents.filter((event) => {
-      return isEventPingable(event, secondDayToPingForTODO, 'CSI', 'Intake Form TODO');
-    }),
-    threeDays: allEvents.filter((event) => {
-      return isEventPingable(event, firstDayToPingForTODO, 'CSI', 'Intake Form TODO');
-    }),
-  };
+    // Goes over every individual deadline per section (14 days, 21 days, etc), filtering from our array
+    // of all possible days that might match the criteria
+    Logger.info(`Beginning ${cur['title']} embed build...`);
+    for(var amountDays in daysToPing[i]['dates']){
+      let curPing = cur['dates'][amountDays];
+      let propDate = curPing['date'].toISODate(); 
 
-  let tapDeadlineEmbed: MessageEmbed | null = null;
-  let eventIntakeDeadlineEmbed: MessageEmbed | null = null;
+      // Gets specific list of events that meet this ping's criteria of (date, correct org [TAP, PR, etc] status)
+      let curDatePings = allEvents.filter((event) => {
+        let ret = false;
+        for(var j=0; j < curPing['propStatus'].length; j++){
+          ret = ret || Boolean(isEventPingable(event, propDate, curPing['prop'], curPing['propStatus'][j]));
+        }
+        return ret;
+      });
 
-  // Now to build the embeds. By design, we'll not create a section (or an embed) unless
-  // we have events to put in it, so as to have somewhat clean embeds.
-  //
-  // We'll still build them by embed, so we can keep all code somewhat structured.
-  // Begin with TAP deadline pings. For each embed, first check if we even have deadlines
-  // coming up, and if we don't skip building the embed.
-  Logger.info('Beginning TAP deadline embed build...');
-  if (
-    !(
-      Object.values(tapDeadlineEvents.firstDeadline).every((array) => array.length === 0) &&
-      Object.values(tapDeadlineEvents.secondDeadline).every((array) => array.length === 0)
-    )
-  ) {
-    tapDeadlineEmbed = new MessageEmbed().setTitle('TAP forms are due!').setColor('YELLOW');
-
-    // Build separate strings for each section.
-    let firstDeadlineSection = '_21-day Deadline_\n';
-    let secondDeadlineSection = '_14-day Deadline_\n';
-
-    // This isn't gonna be fun, but the cleanest and quickest to go about this is to individually
-    // go through each sub-header of deadlines and add them to the original strings in order.
-    //
-    // ARGUABLY this could be marshaled from the JSON above, but this is likely more readable for
-    // others in the future.
-    if (tapDeadlineEvents.firstDeadline.oneDay.length !== 0) {
-      firstDeadlineSection += '\n⚠️ **TAP Forms due today!** ⚠️\n';
-      tapDeadlineEvents.firstDeadline.oneDay.forEach((event) => {
+      // Adds on to the embed description of there is a nonzero amount of events
+      if(curDatePings.length > 0){
+        curEmbedDescrip += `\n**${amountDays}-days**`;
+        curEmbedDescrip += curPing['message'];
+        for(var j=0; j < curPing['pingRoles'].length; j++){
+          var curRole = `<@&${config.settings[curPing['pingRoles'][j]]}>`;
+          if(curEmbedPings.indexOf(curRole) == -1) curEmbedPings.push(curRole);
+        }
+      }
+      curDatePings.forEach((event) => {
         if (event.properties.Name.type !== 'title') {
           throw new Error('Event does not have Name field of type "title"');
         }
-        // Make a hyperlink with the title as the text and the Notion page URL as the link.
-        // The reduce goes through Notion API's representation of the title and just concatenates
-        // all the plain text versions of any segment in the Title object.
-        //
-        // More often than not, this will just be 1 single string, but we're accounting for all
-        // possible cases here.
-        // Look into whether this needs spaces between the title string components or not.
-        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
+        curEmbedDescrip +=  `- ${event.properties['Hosted by']["people"][0].name} \
+hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
           event.url
         })\n`;
       });
     }
 
-    if (tapDeadlineEvents.firstDeadline.twoDays.length !== 0) {
-      firstDeadlineSection += '\nTAP forms due 1 day from now\n';
-      tapDeadlineEvents.firstDeadline.twoDays.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
+    // Only will send embeds for sections that have relevant events
+    if(curEmbedDescrip !== "---\n\n"){
+      curEmbed.setDescription(curEmbedDescrip);
+
+      Logger.info(`Sections built! Sending ${cur['title']} embed...`);
+      // Send the embed!
+      await config.channel.send({
+        content: curEmbedPings.join(' '),
+        embeds: [curEmbed],
       });
     }
-
-    if (tapDeadlineEvents.firstDeadline.threeDays.length !== 0) {
-      firstDeadlineSection += '\nTAP forms due 2 days from now\n';
-      tapDeadlineEvents.firstDeadline.threeDays.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    // Now for the 14-day deadline. Same thing, different section.
-    if (tapDeadlineEvents.secondDeadline.oneDay.length !== 0) {
-      secondDeadlineSection += '\n⚠️ **TAP forms due today!** ⚠️\n';
-      tapDeadlineEvents.secondDeadline.oneDay.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        secondDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    if (tapDeadlineEvents.secondDeadline.twoDays.length !== 0) {
-      secondDeadlineSection += '\nTAP forms due 1 day from now\n';
-      tapDeadlineEvents.secondDeadline.twoDays.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        secondDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    if (tapDeadlineEvents.secondDeadline.threeDays.length !== 0) {
-      secondDeadlineSection += '\nTAP forms due 2 days from now\n';
-      tapDeadlineEvents.secondDeadline.threeDays.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        secondDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    // Set the final text of the embed. We want to check so as to not add random text
-    // for empty sections and reduce the amount of clutter. We also add a newline after
-    // the first deadline section in case of the new section as well.
-    tapDeadlineEmbed.setDescription(
-      (firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '') +
-        (secondDeadlineSection !== '_14-day Deadline_\n' ? secondDeadlineSection : ''),
-    );
-
-    Logger.info('Sections built! Sending TAP deadline embed...');
-    // Send the embed!
-    await config.channel.send({
-      content: `<@&${config.settings.logisticsTeamID}>`,
-      embeds: [tapDeadlineEmbed],
-    });
-  }
-
-  // Now for the Event Intake Forms. More or less the same code, but thankfully we only
-  // need to add the 21-day deadline part, so no need for a lot more string building.
-  if (!Object.values(eventIntakeEvents).every((array) => array.length === 0)) {
-    Logger.info('Beginning CSI Intake deadline embed build...');
-    eventIntakeDeadlineEmbed = new MessageEmbed().setTitle('CSI Intake forms are due!').setColor('YELLOW');
-
-    let firstDeadlineSection = '_21-day Deadline_\n';
-    if (eventIntakeEvents.oneDay.length !== 0) {
-      firstDeadlineSection += '\n⚠️ **CSI Intake Forms due today!** ⚠️\n';
-      eventIntakeEvents.oneDay.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    if (eventIntakeEvents.twoDays.length !== 0) {
-      firstDeadlineSection += '\nCSI Intake forms due 1 day from now\n';
-      eventIntakeEvents.twoDays.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    if (eventIntakeEvents.threeDays.length !== 0) {
-      firstDeadlineSection += '\nCSI Intake forms due 2 days from now\n';
-      eventIntakeEvents.threeDays.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        firstDeadlineSection += `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
-
-    eventIntakeDeadlineEmbed.setDescription(
-      firstDeadlineSection !== '_21-day Deadline_\n' ? firstDeadlineSection + '\n' : '',
-    );
-
-    Logger.info('Sections built! Sending CSI Intake deadline embed...');
-    // Send the embed!
-    await config.channel.send({
-      content: `<@&${config.settings.logisticsTeamID}>`,
-      embeds: [eventIntakeDeadlineEmbed],
-    });
   }
 };
 
@@ -766,7 +629,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
       if (event.properties.Name.type !== 'title') {
         throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
       }
-      keyPingDescription += `- **${event.properties['Hosted by']["people"][0]["name"]}** \
+      keyPingDescription += `- **${event.properties['Hosted by']["people"][0].name}** \
 hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
         event.url
       })\n`;
@@ -776,8 +639,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
 
   // Now that we have all of them grouped up, we can build the embed.
   const keyPingEmbed = new MessageEmbed()
-    .setTitle(`Don't forget to arrange key cards/codes for the following events on \
-${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
+    .setTitle(`Key cards/codes on ${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
     .setColor('GREEN')
     .setDescription(keyPingDescription)
 
