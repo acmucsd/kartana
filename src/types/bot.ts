@@ -148,6 +148,8 @@ export interface BotSettings {
    */
   maintainerID: string;
   logisticsTeamID: string;
+  fundingTeamID: string;
+  marketingTeamID: string;
   /**
    * Discord channel ID where Google Calendar bot error messages will be sent.
    */

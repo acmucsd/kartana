@@ -41,6 +41,8 @@ export default {
   discordEventPipelineChannelID: '',
   maintainerID: '',
   logisticsTeamID: '',
+  fundingTeamID: '',
+  marketingTeamID: '',
   botErrorChannelID: '',
   scheduledMessageGoogleCalendarID: '',
   acmurl: {

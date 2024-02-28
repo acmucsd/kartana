@@ -118,6 +118,12 @@ export default class Client extends DiscordClient implements BotClient {
     if (!process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID) {
       throw new BotInitializationError('Discord Logistics Team Mention ID');
     }
+    if (!process.env.DISCORD_FUNDING_TEAM_MENTION_ID) {
+      throw new BotInitializationError('Discord Funding Team Mention ID');
+    }
+    if (!process.env.DISCORD_MARKETING_TEAM_MENTION_ID) {
+      throw new BotInitializationError('Discord Marketing Team Mention ID');
+    }
     if (!process.env.DISCORD_BOT_ERROR_CHANNEL_ID) {
       throw new BotInitializationError('Discord Bot Error Channel ID');
     }
@@ -146,6 +152,8 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.discordEventPipelineChannelID = process.env.DISCORD_EVENT_PIPELINE_CHANNEL_ID;
     this.settings.maintainerID = process.env.DISCORD_MAINTAINER_MENTION_ID;
     this.settings.logisticsTeamID = process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID;
+    this.settings.fundingTeamID = process.env.DISCORD_FUNDING_TEAM_MENTION_ID;
+    this.settings.marketingTeamID = process.env.DISCORD_MARKETING_TEAM_MENTION_ID;
     this.settings.botErrorChannelID = process.env.DISCORD_BOT_ERROR_CHANNEL_ID;
     this.settings.scheduledMessageGoogleCalendarID = process.env.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID;
     this.settings.acmurl.username = process.env.ACMURL_USERNAME;
