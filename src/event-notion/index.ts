@@ -355,14 +355,21 @@ export const pingForTAPandCSIDeadlines = async (
       'colour': 'ORANGE',
       'dates': {
         21: {
-          'pingRoles': ['fundingTeamID', 'marketingTeamID'],
+          'pingRoles': ['fundingTeamID'],
           'date': dateTimeNow.plus({ days: 21 }),
           'message': '\n __**Invoice for TAP is due in a week!**___ \n',
           'prop': 'TAP',
           'propStatus': ['TAP TODO'],
         },
+        16: {
+          'pingRoles': ['fundingTeamID'],
+          'date': dateTimeNow.plus({ days: 16}),
+          'message': '\n __**Invoice for TAP is due in 3 days!**__ \n',
+          'prop': 'TAP',
+          'propStatus': ['TAP In Progress', 'TAP TODO'],
+        },
         14: {
-          'pingRoles': ['logisticsTeamID'],
+          'pingRoles': ['fundingTeamID', 'logisticsTeamID'],
           'date': dateTimeNow.plus({ days: 14}),
           'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
           'prop': 'TAP',
