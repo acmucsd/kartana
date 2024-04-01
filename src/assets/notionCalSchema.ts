@@ -894,9 +894,9 @@ export const notionCalSchema = {
       ],
     },
   },
-  'FB Cover Photo': {
+  'Marketing Graphic': {
     'id': '%5EQ7C',
-    'name': 'FB Cover Photo',
+    'name': 'Marketing Graphic',
     'type': 'files',
     'files': {},
   },
