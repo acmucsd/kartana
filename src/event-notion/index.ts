@@ -7,7 +7,7 @@ import { groupBy, isEqual } from 'lodash';
 import NotionCalEvent from './NotionCalEvent';
 import { BotSettings, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
-import { MessageEmbed, TextChannel } from 'discord.js';
+import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 
 /**
@@ -326,7 +326,7 @@ export const pingForTAPandCSIDeadlines = async (
   config: EventNotionPipelineConfig,
 ) => {
   // Ideally, do ALL network queries in one and filter later.
-  var dateTimeNow = DateTime.now();
+  const dateTimeNow = DateTime.now();
 
   // Master list of all reminders in the following format:
   // title — Top of embed, bolded
@@ -340,105 +340,104 @@ export const pingForTAPandCSIDeadlines = async (
     {
       'title': 'AS Funding Deadline',
       'colour': 'BLUE',
-      'dates': {
-        56: {
+      'dates': [
+        {
+          'days': 56,
           'pingRoles': ['logisticsTeamID'],
-          'date': dateTimeNow.plus({ days: 56}),
           'message': '\n⚠️ __**Booking confirmation for AS Funding is due in 1 week!**__ ⚠️\n',
           'prop': 'Booking',
           'propStatus': ['Booking TODO', 'Booking In Progress'],
         }
-      }
+      ]
     },
     {
       'title': 'TAP Invoice Deadline',
       'colour': 'ORANGE',
-      'dates': {
-        21: {
+      'dates': [
+        {
+          'days': 21,
           'pingRoles': ['fundingTeamID'],
-          'date': dateTimeNow.plus({ days: 21 }),
           'message': '\n __**Invoice for TAP is due in a week!**___ \n',
           'prop': 'TAP',
           'propStatus': ['TAP TODO'],
         },
-        16: {
+        {
+          'days': 16,
           'pingRoles': ['fundingTeamID'],
-          'date': dateTimeNow.plus({ days: 16}),
           'message': '\n __**Invoice for TAP is due in 3 days!**__ \n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress', 'TAP TODO'],
         },
-        14: {
+        {
+          'days': 14,
           'pingRoles': ['fundingTeamID', 'logisticsTeamID'],
-          'date': dateTimeNow.plus({ days: 14}),
           'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress'],
         }
-      }
+      ]
     },
     {
       'title': 'Event Details Confirmation',
       'colour': 'YELLOW',
-      'dates': {
-        21: {
+      'dates': [
+        {
+          'days': 21,
           'pingRoles': ['logisticsTeamID', 'marketingTeamID'],
-          'date': dateTimeNow.plus({ days: 21 }),
           'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
         },
-        14: {
+        {
+          'days': 14,
           'pingRoles': ['logisticsTeamID'],
-          'date': dateTimeNow.plus({ days: 14}),
           'message': '\n⚠️ __**Final check for all event details!**__ ⚠️\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
         }
-      }
+      ]
     },
   ];
 
   // Used to compile all queries by iterating over above array  
-  var daysTrack = new Array<any>();
-  var dayQuery = new Array<any>();
-  var statusQuery = new Array<any>();
-  var props = new Array<string>();
-  var propStatuses = new Array<string>();
+  let daysTrack = new Array<any>();
+  let dayQuery = new Array<any>();
+  let statusQuery = new Array<any>();
+  let props = new Array<string>();
+  let propStatuses = new Array<string>();
 
   // Creates filter for all days equal to one of the above deadlines
   // Slightly jankily adds 1 day to the original deadline, just to be sure to get 24 hours buffer if there's a weird start time
-  for(var i=0; i < daysToPing.length; i++){
-    for(var amountDays in daysToPing[i]['dates']){
+  daysToPing.forEach(pingType => {
+    Object.values(pingType['dates']).forEach(day => {
       dayQuery.push({
         property: 'Date', 
         date: {
-          equals: daysToPing[i]['dates'][amountDays]['date'].plus({days:1}).toISODate()
-        }}
-      );
-    }
-  }
+          equals: dateTimeNow.plus({ days: day['days']+1 }).toISODate()
+        }
+      });
+    });
+  });
 
   // Creates filter for all statuses equal to one of the above deadlines
   // Additionally, compile string for status selectors for isEventPingable to use
-  for(var i=0; i < daysToPing.length; i++){
-    for(var day in daysToPing[i]['dates']){
-      if(daysTrack.indexOf(day) == -1){
-        var cur = daysToPing[i]['dates'][day];
-        for(var j=0; j < cur['propStatus'].length; j++){
+  daysToPing.forEach(pingType => {
+    Object.values(pingType['dates']).forEach(curDay => {
+      if(daysTrack.indexOf(curDay) == -1){
+        curDay['propStatus'].forEach(curStatus => {
           statusQuery.push({ 
-            property: `${cur['prop']} Status`,
+            property: `${curDay['prop']} Status`,
             select: { 
-              equals: cur['propStatus'][j],
+              equals: curStatus,
             }
           });
-          daysTrack.push(day);
-        }
+          daysTrack.push(curDay);
+          if(propStatuses.indexOf(curStatus) == -1) propStatuses.push(curStatus);
+        })
       }
-      if(props.indexOf(cur['prop']) == -1) props.push(cur['prop']);
-      if(propStatuses.indexOf(cur['propStatus']) == -1) propStatuses.push(cur['propStatus']);
-    }
-  }
+      if(props.indexOf(curDay['prop']) == -1) props.push(curDay['prop']);
+    });
+  })
 
   // First, we want to pick up all of the events from the calendar.
   // We'll query with two separate requests to make it faster to bunch up all the
@@ -497,60 +496,62 @@ export const pingForTAPandCSIDeadlines = async (
 
     // If the field is left blank on Notion, event.properties[...].select
     // will be null, so we'll automatically fill it to 'N/A' if so.
-    var tmp: any = event.properties[`${orgPing} Status`];
-    var propSelect = tmp.select;
-    var selectStatus = propSelect ? propSelect.name : `${orgPing} N/A`;
+    let tmp: any = event.properties[`${orgPing} Status`];
+    let propSelect = tmp.select;
+    let selectStatus = propSelect ? propSelect.name : `${orgPing} N/A`;
     return date === deadlineDate && selectStatus === status;
   };
 
   // We loop over every possible ping section, creating an embed for each and repeating the process
   Logger.debug('Splitting events that need pinging into separate arrays... ' + daysToPing.length + " to go");
-  for(var i=0; i < daysToPing.length; i++){
-    var cur = daysToPing[i];
-    let curEmbed = new MessageEmbed().setTitle(cur['title']).setColor(cur['colour']);
+  for(let i=0; i < daysToPing.length; i++){
+    let cur = daysToPing[i];
+    let curEmbed = new MessageEmbed().setTitle(cur['title']).setColor(cur['colour'] as ColorResolvable);
     let curEmbedPings = new Array<string>();
     let curEmbedDescrip = "---\n";
 
     // Goes over every individual deadline per section (14 days, 21 days, etc), filtering from our array
     // of all possible days that might match the criteria
     Logger.info(`Beginning ${cur['title']} embed build...`);
-    for(var amountDays in daysToPing[i]['dates']){
-      let curPing = cur['dates'][amountDays];
-      let propDate = curPing['date'].toISODate(); 
+
+    Object.values(cur['dates']).forEach(curPing => {
+      let propDate = dateTimeNow.plus({ days: curPing['days'] }); 
 
       // Gets specific list of events that meet this ping's criteria of (date, correct org [TAP, PR, etc] status)
       let curDatePings = allEvents.filter((event) => {
         let ret = false;
-        for(var j=0; j < curPing['propStatus'].length; j++){
-          ret = ret || Boolean(isEventPingable(event, propDate, curPing['prop'], curPing['propStatus'][j]));
-        }
+        curPing['propStatus'].forEach(tmp => {
+          ret = ret || Boolean(isEventPingable(event, propDate.toISODate(), curPing['prop'], tmp));
+        })
         return ret;
       });
 
       // Adds on to the embed description of there is a nonzero amount of events
       if(curDatePings.length > 0){
-        curEmbedDescrip += `\n*${(Number(amountDays)/7).toString()} weeks — ${curPing['date'].toLocaleString(DateTime.DATE_FULL)}*`;
+        let weeks = Number(curPing['days']);
+        curEmbedDescrip += `\n\`${propDate.toLocaleString(DateTime.DATE_FULL)} // ${Math.trunc(weeks/7).toString()} weeks${weeks%7 != 0? ", " + (weeks%7).toString() + " days" : " "}\``;
         curEmbedDescrip += curPing['message'];
-        for(var j=0; j < curPing['pingRoles'].length; j++){
-          var curRole = `<@&${config.settings[curPing['pingRoles'][j]]}>`;
-          if(curEmbedPings.indexOf(curRole) == -1) curEmbedPings.push(curRole);
+        curPing['pingRoles'].forEach( ping => {
+          let curRole = `<@&${config.settings[ping]}>`;
+          if(curEmbedPings.indexOf(curRole) == -1){ curEmbedPings.push(curRole); }
+        })
+        for(let ping in curPing['pingRoles']){
+          
         }
+
+        curDatePings.forEach((event) => {
+          if (event.properties.Name.type !== 'title') {
+            throw new Error('Event does not have Name field of type "title"');
+          }
+          curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${event.url}) \
+hosted by *${event.properties['Hosted by']["people"][0].name}*\n`;
+        });
       }
-      curDatePings.forEach((event) => {
-        if (event.properties.Name.type !== 'title') {
-          throw new Error('Event does not have Name field of type "title"');
-        }
-        curEmbedDescrip +=  `- ${event.properties['Hosted by']["people"][0].name} \
-hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-          event.url
-        })\n`;
-      });
-    }
+    });
 
     // Only will send embeds for sections that have relevant events
-    if(curEmbedDescrip !== "---\n\n"){
+    if(curEmbedDescrip != "---\n"){
       curEmbed.setDescription(curEmbedDescrip);
-
       Logger.info(`Sections built! Sending ${cur['title']} embed...`);
       // Send the embed!
       await config.channel.send({
