@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client';
 import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
-import { GetDatabaseResponse, PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
+import { GetDatabaseResponse, PageObjectResponse, PropertyFilter } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { groupBy, isEqual } from 'lodash';
 import NotionCalEvent from './NotionCalEvent';
@@ -336,6 +336,20 @@ export const pingForTAPandCSIDeadlines = async (
   //    date — exact date in the future you would wish to receive pings for today
   //    prop — category, corresponds to a series of statuses on the Notion existing as "<prop> Status"
   //    propStatus — the status of the above prop category
+  
+  interface PingDate{
+    days: number;
+    pingRoles: string[];
+    message: string;
+    prop: string;
+    propStatus: string[];
+  }
+  // interface PingPropType{
+  //   title: string;
+  //   colour: string;
+  //   dates: PingDate[];
+  // }
+
   const daysToPing = [
     {
       'title': 'AS Funding Deadline',
@@ -400,9 +414,9 @@ export const pingForTAPandCSIDeadlines = async (
   ];
 
   // Used to compile all queries by iterating over above array  
-  let daysTrack = new Array<any>();
-  let dayQuery = new Array<any>();
-  let statusQuery = new Array<any>();
+  let daysTrack = new Array<PingDate>();
+  let dayQuery = new Array<PropertyFilter>();
+  let statusQuery = new Array<PropertyFilter>();
   let props = new Array<string>();
   let propStatuses = new Array<string>();
 
