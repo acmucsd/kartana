@@ -352,7 +352,7 @@ export const pingForTAPandCSIDeadlines = async (
 
   const daysToPing = [
     {
-      'title': 'AS Funding Deadline',
+      'title': '🏦 AS Funding Deadline',
       'colour': 'BLUE',
       'dates': [
         {
@@ -365,7 +365,7 @@ export const pingForTAPandCSIDeadlines = async (
       ]
     },
     {
-      'title': 'TAP Invoice Deadline',
+      'title': '🧾 TAP Invoice Deadline',
       'colour': 'ORANGE',
       'dates': [
         {
@@ -392,7 +392,7 @@ export const pingForTAPandCSIDeadlines = async (
       ]
     },
     {
-      'title': 'Event Details Confirmation',
+      'title': '🗒️ Event Details Confirmation',
       'colour': 'YELLOW',
       'dates': [
         {
@@ -522,7 +522,7 @@ export const pingForTAPandCSIDeadlines = async (
     let cur = daysToPing[i];
     let curEmbed = new MessageEmbed().setTitle(cur['title']).setColor(cur['colour'] as ColorResolvable);
     let curEmbedPings = new Array<string>();
-    let curEmbedDescrip = "---\n";
+    let curEmbedDescrip = "_ _";
 
     // Goes over every individual deadline per section (14 days, 21 days, etc), filtering from our array
     // of all possible days that might match the criteria
@@ -558,13 +558,13 @@ export const pingForTAPandCSIDeadlines = async (
             throw new Error('Event does not have Name field of type "title"');
           }
           curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${event.url}) \
-hosted by *${event.properties['Hosted by']["people"][0].name}*\n`;
+hosted by **${event.properties['Hosted by']["people"][0].name}**\n`;
         });
       }
     });
 
     // Only will send embeds for sections that have relevant events
-    if(curEmbedDescrip != "---\n"){
+    if(curEmbedDescrip != "_ _"){
       curEmbed.setDescription(curEmbedDescrip);
       Logger.info(`Sections built! Sending ${cur['title']} embed...`);
       // Send the embed!
