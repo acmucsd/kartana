@@ -346,42 +346,12 @@ export const pingForTAPandCSIDeadlines = async (
   }
 
   // From @notionhq/client/build/src/api-endpoints, since these are never exported 
-  type EmptyObject = Record<string, never>;
-  type ExistencePropertyFilter = {
-    is_empty: true;
-  } | {
-    is_not_empty: true;
-  };
   type SelectPropertyFilter = {
     equals: string;
-  } | {
-    does_not_equal: string;
-  } | ExistencePropertyFilter;
+  }
   type DatePropertyFilter = {
     equals: string;
-  } | {
-    before: string;
-  } | {
-    after: string;
-  } | {
-    on_or_before: string;
-  } | {
-    on_or_after: string;
-  } | {
-    this_week: EmptyObject;
-  } | {
-    past_week: EmptyObject;
-  } | {
-    past_month: EmptyObject;
-  } | {
-    past_year: EmptyObject;
-  } | {
-    next_week: EmptyObject;
-  } | {
-    next_month: EmptyObject;
-  } | {
-    next_year: EmptyObject;
-  } | ExistencePropertyFilter;
+  }
 
   type PropertyFilter = {
     date: DatePropertyFilter;
@@ -603,7 +573,7 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
           }
           curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) =>
             acc + curr.plain_text, '')}](${event.url}) hosted by **\
-            ${event.properties['Hosted by']['people'][0].name}**\n`;
+${event.properties['Hosted by']['people'][0].name}**\n`;
         });
       }
     });
