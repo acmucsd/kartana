@@ -596,16 +596,14 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
           let curRole = `<@&${config.settings[ping]}>`;
           if (curEmbedPings.indexOf(curRole) == -1){ curEmbedPings.push(curRole); }
         });
-        for (let ping in curPing.pingRoles){
-          
-        }
 
         curDatePings.forEach((event) => {
           if (event.properties.Name.type !== 'title') {
             throw new Error('Event does not have Name field of type "title"');
           }
-          curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${event.url}) \
-hosted by **${event.properties['Hosted by']['people'][0].name}**\n`;
+          curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) =>
+            acc + curr.plain_text, '')}](${event.url}) hosted by **\
+            ${event.properties['Hosted by']['people'][0].name}**\n`;
         });
       }
     });
@@ -626,7 +624,8 @@ hosted by **${event.properties['Hosted by']['people'][0].name}**\n`;
 /**
  * Pings the Logistics Team to remind them to get keys for particular rooms that require them.
  *
- * All rooms in DIB, CSE (apart from CSE B225/"The Fishbowl"), the ASML Room in SME, or the Qualcomm Room require key codes/cards
+ * All rooms in DIB, CSE (apart from CSE B225/"The Fishbowl"), the ASML Room in SME, or the
+ * Qualcomm Room require key codes/cards
  */
 const keyPingDays = 4; // Decided 4 to give event coordinators extra notice in advance of weekends
 const keyTextLocs = 'Qualcomm, DIB, CSE, SME rooms';
