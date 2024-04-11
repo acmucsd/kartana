@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client';
 import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
-import { GetDatabaseResponse, PageObjectResponse, PropertyFilter } from '@notionhq/client/build/src/api-endpoints';
+import { GetDatabaseResponse, PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { groupBy, isEqual } from 'lodash';
 import NotionCalEvent from './NotionCalEvent';
@@ -345,6 +345,54 @@ export const pingForTAPandCSIDeadlines = async (
     propStatus: string[];
   }
 
+  // From @notionhq/client/build/src/api-endpoints, since these are never exported 
+  type EmptyObject = Record<string, never>;
+  type ExistencePropertyFilter = {
+    is_empty: true;
+  } | {
+    is_not_empty: true;
+  };
+  type SelectPropertyFilter = {
+    equals: string;
+  } | {
+    does_not_equal: string;
+  } | ExistencePropertyFilter;
+  type DatePropertyFilter = {
+    equals: string;
+  } | {
+    before: string;
+  } | {
+    after: string;
+  } | {
+    on_or_before: string;
+  } | {
+    on_or_after: string;
+  } | {
+    this_week: EmptyObject;
+  } | {
+    past_week: EmptyObject;
+  } | {
+    past_month: EmptyObject;
+  } | {
+    past_year: EmptyObject;
+  } | {
+    next_week: EmptyObject;
+  } | {
+    next_month: EmptyObject;
+  } | {
+    next_year: EmptyObject;
+  } | ExistencePropertyFilter;
+
+  type PropertyFilter = {
+    date: DatePropertyFilter;
+    property: string;
+    type?: 'date';
+  } | {
+    select: SelectPropertyFilter;
+    property: string;
+    type?: 'select';
+  };
+
   const daysToPing = [
     {
       'title': '🏦 AS Funding Deadline',
@@ -356,8 +404,8 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n⚠️ __**Booking confirmation for AS Funding is due in 1 week!**__ ⚠️\n',
           'prop': 'Booking',
           'propStatus': ['Booking TODO', 'Booking In Progress'],
-        }
-      ]
+        },
+      ],
     },
     {
       'title': '🧾 TAP Invoice Deadline',
@@ -384,7 +432,7 @@ export const pingForTAPandCSIDeadlines = async (
           'prop': 'TAP',
           'propStatus': ['TAP TODO'],
         },
-      ]
+      ],
     },
     {
       'title': '🗒️ Event Details Confirmation',
@@ -403,8 +451,8 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
-        }
-      ]
+        },
+      ],
     },
   ];
 
@@ -416,15 +464,17 @@ export const pingForTAPandCSIDeadlines = async (
   let propStatuses = new Array<string>();
 
   // Creates filter for all days equal to one of the above deadlines
-  // Slightly jankily adds 1 day to the original deadline, just to be sure to get 24 hours buffer if there's a weird start time
+  // Slightly jankily adds 1 day to the original deadline, just to be sure to get 24 hours buffer 
+  // if there's a weird start time
   daysToPing.forEach(pingType => {
-    pingType['dates'].sort((a,b) => (a.days > b.days) ? 1 : ((b.days > a.days) ? -1 : 0)) // Sorts days from soonest to latest
-    Object.values(pingType['dates']).forEach(day => { 
+    // Sorts days from soonest to latest
+    pingType.dates.sort((a, b) => (a.days > b.days) ? 1 : ((b.days > a.days) ? -1 : 0));
+    Object.values(pingType.dates).forEach(day => { 
       dayQuery.push({
         property: 'Date', 
         date: {
-          equals: dateTimeNow.plus({ days: day['days']+1 }).toISODate()
-        }
+          equals: dateTimeNow.plus({ days: day.days + 1 }).toISODate(),
+        },
       });
     });
   });
@@ -432,22 +482,22 @@ export const pingForTAPandCSIDeadlines = async (
   // Creates filter for all statuses equal to one of the above deadlines
   // Additionally, compile string for status selectors for isEventPingable to use
   daysToPing.forEach(pingType => {
-    Object.values(pingType['dates']).forEach(curDay => {
-      if(daysTrack.indexOf(curDay) == -1){
-        curDay['propStatus'].forEach(curStatus => {
+    Object.values(pingType.dates).forEach(curDay => {
+      if (daysTrack.indexOf(curDay) == -1){
+        curDay.propStatus.forEach(curStatus => {
           statusQuery.push({ 
-            property: `${curDay['prop']} Status`,
+            property: `${curDay.prop} Status`,
             select: { 
               equals: curStatus,
-            }
+            },
           });
           daysTrack.push(curDay);
-          if(propStatuses.indexOf(curStatus) == -1) propStatuses.push(curStatus);
-        })
+          if (propStatuses.indexOf(curStatus) == -1) propStatuses.push(curStatus);
+        });
       }
-      if(props.indexOf(curDay['prop']) == -1) props.push(curDay['prop']);
+      if (props.indexOf(curDay.prop) == -1) props.push(curDay.prop);
     });
-  })
+  });
 
   // First, we want to pick up all of the events from the calendar.
   // We'll query with two separate requests to make it faster to bunch up all the
@@ -513,39 +563,40 @@ export const pingForTAPandCSIDeadlines = async (
   };
 
   // We loop over every possible ping section, creating an embed for each and repeating the process
-  Logger.debug('Splitting events that need pinging into separate arrays... ' + daysToPing.length + " to go");
-  for(let i=0; i < daysToPing.length; i++){
+  Logger.debug('Splitting events that need pinging into separate arrays... ' + daysToPing.length + ' to go');
+  for (let i = 0; i < daysToPing.length; i++){
     let cur = daysToPing[i];
-    let curEmbed = new MessageEmbed().setTitle(cur['title']).setColor(cur['colour'] as ColorResolvable);
+    let curEmbed = new MessageEmbed().setTitle(cur.title).setColor(cur.colour as ColorResolvable);
     let curEmbedPings = new Array<string>();
-    let curEmbedDescrip = "_ _";
+    let curEmbedDescrip = '_ _';
 
     // Goes over every individual deadline per section (14 days, 21 days, etc), filtering from our array
     // of all possible days that might match the criteria
-    Logger.info(`Beginning ${cur['title']} embed build...`);
+    Logger.info(`Beginning ${cur.title} embed build...`);
 
-    Object.values(cur['dates']).forEach(curPing => {
-      let propDate = dateTimeNow.plus({ days: curPing['days'] }); 
+    Object.values(cur.dates).forEach(curPing => {
+      let propDate = dateTimeNow.plus({ days: curPing.days }); 
 
       // Gets specific list of events that meet this ping's criteria of (date, correct org [TAP, PR, etc] status)
       let curDatePings = allEvents.filter((event) => {
         let ret = false;
-        curPing['propStatus'].forEach(tmp => {
-          ret = ret || Boolean(isEventPingable(event, propDate.toISODate(), curPing['prop'], tmp));
-        })
+        curPing.propStatus.forEach(tmp => {
+          ret = ret || Boolean(isEventPingable(event, propDate.toISODate(), curPing.prop, tmp));
+        });
         return ret;
       });
 
       // Adds on to the embed description of there is a nonzero amount of events
-      if(curDatePings.length > 0){
-        let weeks = Number(curPing['days']);
-        curEmbedDescrip += `\n\`${propDate.toLocaleString(DateTime.DATE_FULL)} // ${Math.trunc(weeks/7).toString()} weeks${weeks%7 != 0? ", " + (weeks%7).toString() + " days" : " "}\``;
-        curEmbedDescrip += curPing['message'];
-        curPing['pingRoles'].forEach( ping => {
+      if (curDatePings.length > 0){
+        let weeks = Number(curPing.days);
+        curEmbedDescrip += `\n\`${propDate.toLocaleString(DateTime.DATE_FULL)} // \
+${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).toString() + ' days' : ' '}\``;
+        curEmbedDescrip += curPing.message;
+        curPing.pingRoles.forEach( ping => {
           let curRole = `<@&${config.settings[ping]}>`;
-          if(curEmbedPings.indexOf(curRole) == -1){ curEmbedPings.push(curRole); }
-        })
-        for(let ping in curPing['pingRoles']){
+          if (curEmbedPings.indexOf(curRole) == -1){ curEmbedPings.push(curRole); }
+        });
+        for (let ping in curPing.pingRoles){
           
         }
 
@@ -554,15 +605,15 @@ export const pingForTAPandCSIDeadlines = async (
             throw new Error('Event does not have Name field of type "title"');
           }
           curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${event.url}) \
-hosted by **${event.properties['Hosted by']["people"][0].name}**\n`;
+hosted by **${event.properties['Hosted by']['people'][0].name}**\n`;
         });
       }
     });
 
     // Only will send embeds for sections that have relevant events
-    if(curEmbedDescrip != "_ _"){
+    if (curEmbedDescrip != '_ _'){
       curEmbed.setDescription(curEmbedDescrip);
-      Logger.info(`Sections built! Sending ${cur['title']} embed...`);
+      Logger.info(`Sections built! Sending ${cur.title} embed...`);
       // Send the embed!
       await config.channel.send({
         content: curEmbedPings.join(' '),
@@ -578,7 +629,7 @@ hosted by **${event.properties['Hosted by']["people"][0].name}**\n`;
  * All rooms in DIB, CSE (apart from CSE B225/"The Fishbowl"), the ASML Room in SME, or the Qualcomm Room require key codes/cards
  */
 const keyPingDays = 4; // Decided 4 to give event coordinators extra notice in advance of weekends
-const keyTextLocs = "Qualcomm, DIB, CSE, SME rooms";
+const keyTextLocs = 'Qualcomm, DIB, CSE, SME rooms';
 const keyCardLocs = ['Design and Innovation Building 202/208'];
 const keyCodeLocs = ['CSE 1202', 'CSE 2154', 'CSE 4140', 'Qualcomm Room', 'SME ASML Room'];
 const allLocs = keyCardLocs.concat(keyCodeLocs);
@@ -641,16 +692,16 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
   // and then list the names for each, along with the title, like the other pings
   // we send.
   Object.entries(eventsByLocation).forEach(([location, events]) => {
-    let needed = keyCardLocs.includes(location) ? "card" : "code";
+    let needed = keyCardLocs.includes(location) ? 'card' : 'code';
     keyPingDescription += `_${location} needs a key ${needed} for these events:_\n`;
     events.forEach((event) => {
       if (event.properties.Name.type !== 'title') {
         throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
       }
-      keyPingDescription += `- **${event.properties['Hosted by']["people"][0].name}** \
+      keyPingDescription += `- **${event.properties['Hosted by']['people'][0].name}** \
 hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
-        event.url
-      })\n`;
+  event.url
+})\n`;
     });
     keyPingDescription += '\n';
   });
@@ -659,7 +710,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
   const keyPingEmbed = new MessageEmbed()
     .setTitle(`Key cards/codes on ${keyPingDate.toLocaleString(DateTime.DATE_FULL)}`)
     .setColor('GREEN')
-    .setDescription(keyPingDescription)
+    .setDescription(keyPingDescription);
 
   await config.channel.send({
     content: `<@&${config.settings.logisticsTeamID}>`,
