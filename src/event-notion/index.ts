@@ -344,11 +344,6 @@ export const pingForTAPandCSIDeadlines = async (
     prop: string;
     propStatus: string[];
   }
-  // interface PingPropType{
-  //   title: string;
-  //   colour: string;
-  //   dates: PingDate[];
-  // }
 
   const daysToPing = [
     {
@@ -369,11 +364,11 @@ export const pingForTAPandCSIDeadlines = async (
       'colour': 'ORANGE',
       'dates': [
         {
-          'days': 21,
-          'pingRoles': ['fundingTeamID'],
-          'message': '\n __**Invoice for TAP is due in a week!**___ \n',
+          'days': 14,
+          'pingRoles': ['fundingTeamID', 'logisticsTeamID'],
+          'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
           'prop': 'TAP',
-          'propStatus': ['TAP TODO'],
+          'propStatus': ['TAP In Progress'],
         },
         {
           'days': 16,
@@ -383,12 +378,12 @@ export const pingForTAPandCSIDeadlines = async (
           'propStatus': ['TAP In Progress', 'TAP TODO'],
         },
         {
-          'days': 14,
-          'pingRoles': ['fundingTeamID', 'logisticsTeamID'],
-          'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
+          'days': 21,
+          'pingRoles': ['fundingTeamID'],
+          'message': '\n __**Invoice for TAP is due in a week!**___ \n',
           'prop': 'TAP',
-          'propStatus': ['TAP In Progress'],
-        }
+          'propStatus': ['TAP TODO'],
+        },
       ]
     },
     {
@@ -396,16 +391,16 @@ export const pingForTAPandCSIDeadlines = async (
       'colour': 'YELLOW',
       'dates': [
         {
-          'days': 21,
-          'pingRoles': ['logisticsTeamID', 'marketingTeamID'],
-          'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
+          'days': 14,
+          'pingRoles': ['logisticsTeamID'],
+          'message': '\n⚠️ __**Final check for all event details!**__ ⚠️\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
         },
         {
-          'days': 14,
-          'pingRoles': ['logisticsTeamID'],
-          'message': '\n⚠️ __**Final check for all event details!**__ ⚠️\n',
+          'days': 21,
+          'pingRoles': ['logisticsTeamID', 'marketingTeamID'],
+          'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
         }
@@ -423,7 +418,8 @@ export const pingForTAPandCSIDeadlines = async (
   // Creates filter for all days equal to one of the above deadlines
   // Slightly jankily adds 1 day to the original deadline, just to be sure to get 24 hours buffer if there's a weird start time
   daysToPing.forEach(pingType => {
-    Object.values(pingType['dates']).forEach(day => {
+    pingType['dates'].sort((a,b) => (a.days > b.days) ? 1 : ((b.days > a.days) ? -1 : 0)) // Sorts days from soonest to latest
+    Object.values(pingType['dates']).forEach(day => { 
       dayQuery.push({
         property: 'Date', 
         date: {
