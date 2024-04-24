@@ -9,6 +9,7 @@ import { BotSettings, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionS
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
+import { MeetingPingsSchema } from '../meeting-pings';
 
 /**
  * Logs into Notion.
@@ -332,10 +333,11 @@ export const pingForTAPandCSIDeadlines = async (
   // title — Top of embed, bolded
   // colour — colour of embed, since GREEN was used for key pings/succesful imports, and RED is semantically errors
   // dates — further itemized by number of days in advance a reminder ping should be sent:
-  //    pingroles — names of roles to be pinged, found in settings
+  //    pingRoles — names of roles to be pinged, found in settings
   //    date — exact date in the future you would wish to receive pings for today
   //    prop — category, corresponds to a series of statuses on the Notion existing as "<prop> Status"
   //    propStatus — the status of the above prop category
+  //    pingHosts — default false, true if you'd like to ping individual event hosts in addition to pingroles
   
   interface PingDate{
     days: number;
@@ -343,6 +345,7 @@ export const pingForTAPandCSIDeadlines = async (
     message: string;
     prop: string;
     propStatus: string[];
+    pingHosts?: boolean,
   }
 
   // From @notionhq/client/build/src/api-endpoints, since these are never exported 
@@ -414,6 +417,7 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n⚠️ __**Final check for all event details!**__ ⚠️\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
+          'pingHosts': true,
         },
         {
           'days': 21,
@@ -421,6 +425,7 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
           'prop': 'PR',
           'propStatus': ['PR TODO', 'PR In Progress'],
+          'pingHosts': true,
         },
       ],
     },
@@ -538,6 +543,7 @@ export const pingForTAPandCSIDeadlines = async (
     let cur = daysToPing[i];
     let curEmbed = new MessageEmbed().setTitle(cur.title).setColor(cur.colour as ColorResolvable);
     let curEmbedPings = new Array<string>();
+    let curEmbedPeoplePing = new Array<string>();
     let curEmbedDescrip = '_ _';
 
     // Goes over every individual deadline per section (14 days, 21 days, etc), filtering from our array
@@ -546,6 +552,7 @@ export const pingForTAPandCSIDeadlines = async (
 
     Object.values(cur.dates).forEach(curPing => {
       let propDate = dateTimeNow.plus({ days: curPing.days }); 
+      let mps = new MeetingPingsSchema()
 
       // Gets specific list of events that meet this ping's criteria of (date, correct org [TAP, PR, etc] status)
       let curDatePings = allEvents.filter((event) => {
@@ -571,9 +578,18 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
           if (event.properties.Name.type !== 'title') {
             throw new Error('Event does not have Name field of type "title"');
           }
+
+          // Collects all the Discord users of event hosts for the embed to ping
+          let embedEventHosts = new Array<string>();
+          event.properties['Hosted by']['people'].forEach(eventHost => {
+            let userPing = mps.getGuest(eventHost.person.email);
+            if(userPing != null && 'pingHosts' in curPing  && curPing.pingHosts)
+              curEmbedPeoplePing.push(`<@${userPing}>`)
+            embedEventHosts.push(`**${eventHost.name}**`)
+          });
+
           curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) =>
-            acc + curr.plain_text, '')}](${event.url}) hosted by **\
-${event.properties['Hosted by']['people'][0].name}**\n`;
+            acc + curr.plain_text, '')}](${event.url}) hosted by ${embedEventHosts.join(', ')}\n`;
         });
       }
     });
@@ -582,9 +598,10 @@ ${event.properties['Hosted by']['people'][0].name}**\n`;
     if (curEmbedDescrip != '_ _'){
       curEmbed.setDescription(curEmbedDescrip);
       Logger.info(`Sections built! Sending ${cur.title} embed...`);
+      let curEmbedPeople =  (curEmbedPeoplePing.length > 0) ? ('\n👥 ' + curEmbedPeoplePing.join(' ')) : '';
       // Send the embed!
       await config.channel.send({
-        content: curEmbedPings.join(' '),
+        content:  curEmbedPings.join(' ') + (curEmbedPeople),
         embeds: [curEmbed],
       });
     }
@@ -659,14 +676,23 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
 
   // For each location, setup a header for the set of events that are in that location
   // and then list the names for each, along with the title, like the other pings
-  // we send.
+  // we send. Additionally, collect all the Discord users for event hosts to ping
+  let curEmbedPeoplePing = new Array<string>();
+
   Object.entries(eventsByLocation).forEach(([location, events]) => {
+    let mps = new MeetingPingsSchema()
     let needed = keyCardLocs.includes(location) ? 'card' : 'code';
     keyPingDescription += `_${location} needs a key ${needed} for these events:_\n`;
     events.forEach((event) => {
       if (event.properties.Name.type !== 'title') {
         throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
       }
+
+      event.properties['Hosted by']['people'].forEach(eventHost => {
+        let userPing = mps.getGuest(eventHost.person.email);
+        if(userPing != null) curEmbedPeoplePing.push(`<@${userPing}>`)
+      });
+      
       keyPingDescription += `- **${event.properties['Hosted by']['people'][0].name}** \
 hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
   event.url
@@ -682,7 +708,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
     .setDescription(keyPingDescription);
 
   await config.channel.send({
-    content: `<@&${config.settings.logisticsTeamID}>`,
+    content: `<@&${config.settings.logisticsTeamID}>\n👥 ` + curEmbedPeoplePing.join(" "),
     embeds: [keyPingEmbed],
   });
 
