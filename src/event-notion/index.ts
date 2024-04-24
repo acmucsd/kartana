@@ -333,10 +333,11 @@ export const pingForTAPandCSIDeadlines = async (
   // title — Top of embed, bolded
   // colour — colour of embed, since GREEN was used for key pings/succesful imports, and RED is semantically errors
   // dates — further itemized by number of days in advance a reminder ping should be sent:
-  //    pingroles — names of roles to be pinged, found in settings
+  //    pingRoles — names of roles to be pinged, found in settings
   //    date — exact date in the future you would wish to receive pings for today
   //    prop — category, corresponds to a series of statuses on the Notion existing as "<prop> Status"
   //    propStatus — the status of the above prop category
+  //    pingHosts — default false, true if you'd like to ping individual event hosts in addition to pingroles
   
   interface PingDate{
     days: number;
@@ -344,7 +345,7 @@ export const pingForTAPandCSIDeadlines = async (
     message: string;
     prop: string;
     propStatus: string[];
-    pingHosts: boolean,
+    pingHosts?: boolean,
   }
 
   // From @notionhq/client/build/src/api-endpoints, since these are never exported 
@@ -376,7 +377,6 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n⚠️ __**Booking confirmation for AS Funding is due in 1 week!**__ ⚠️\n',
           'prop': 'Booking',
           'propStatus': ['Booking TODO', 'Booking In Progress'],
-          'pingHosts': false,
         },
       ],
     },
@@ -390,7 +390,6 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress'],
-          'pingHosts': false,
         },
         {
           'days': 16,
@@ -398,7 +397,6 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n __**Invoice for TAP is due in 3 days!**__ \n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress', 'TAP TODO'],
-          'pingHosts': false,
         },
         {
           'days': 21,
@@ -406,7 +404,6 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n __**Invoice for TAP is due in a week!**___ \n',
           'prop': 'TAP',
           'propStatus': ['TAP TODO'],
-          'pingHosts': false,
         },
       ],
     },
@@ -586,7 +583,8 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
           let embedEventHosts = new Array<string>();
           event.properties['Hosted by']['people'].forEach(eventHost => {
             let userPing = mps.getGuest(eventHost.person.email);
-            if(userPing != null && curPing.pingHosts) curEmbedPeoplePing.push(`<@${userPing}>`)
+            if(userPing != null && 'pingHosts' in curPing  && curPing.pingHosts)
+              curEmbedPeoplePing.push(`<@${userPing}>`)
             embedEventHosts.push(`**${eventHost.name}**`)
           });
 
