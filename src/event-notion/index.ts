@@ -7,7 +7,7 @@ import { groupBy, isEqual } from 'lodash';
 import NotionCalEvent from './NotionCalEvent';
 import { BotSettings, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
-import { ColorResolvable, MessageEmbed, TextChannel, User } from 'discord.js';
+import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 import { MeetingPingsSchema } from '../meeting-pings';
 
@@ -600,7 +600,7 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
     if (curEmbedDescrip != '_ _'){
       curEmbed.setDescription(curEmbedDescrip);
       Logger.info(`Sections built! Sending ${cur.title} embed...`);
-      let curEmbedPeople =  (curEmbedPeoplePing.length > 0) ? ('\n👥 ' + curEmbedPeoplePing.join(', ')) : '';
+      let curEmbedPeople =  (curEmbedPeoplePing.length > 0) ? ('\n👥 ' + curEmbedPeoplePing.join(' ')) : '';
       // Send the embed!
       await config.channel.send({
         content:  curEmbedPings.join(' ') + (curEmbedPeople),
@@ -710,7 +710,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
     .setDescription(keyPingDescription);
 
   await config.channel.send({
-    content: `<@&${config.settings.logisticsTeamID}>\n👥 ` + curEmbedPeoplePing.join(", "),
+    content: `<@&${config.settings.logisticsTeamID}>\n👥 ` + curEmbedPeoplePing.join(" "),
     embeds: [keyPingEmbed],
   });
 
