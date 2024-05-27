@@ -71,6 +71,8 @@ export const notionLocationTag = {
   'Lecture Hall': 'Lecture Hall',
   'Library Walk': 'Library Walk',
   'SME ASML Room': 'SME ASML Room',
+  'Jacobs Room 2315': 'Jacobs Room 2315',
+  'Off Campus': 'Off Campus',
   Other: 'Other (See Details)',
 };
 
