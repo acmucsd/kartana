@@ -1534,6 +1534,14 @@ export const notionCalSchema = {
     'type': 'rich_text',
     'rich_text': {},
   },
+  'FIN-ID': {
+    'id': 'vtGL',
+    'name': 'FIN-ID',
+    'type': 'number',
+    'number': {
+      'format': 'number',
+    },
+  },
   'Food Pickup Details': {
     'id': 'w%5CvE',
     'name': 'Food Pickup Details',
