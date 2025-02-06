@@ -5,9 +5,10 @@
  * Host Form Response Google Sheet as of Sun, 22 May 2022 20:16:21 PST.
  */
 export const googleSheetSchema = [
+  'Timestamp',
+  'Email Address',
   'Event name',
   'Event director(s)',
-  'Email Address',
   'What kind of event is this?',
   'Preferred date',
   'Preferred start time',
@@ -22,7 +23,7 @@ export const googleSheetSchema = [
   'Which team/community will this event be associated with?',
   'Which token number will you be using?',
   'Where is your event taking place?',
-  'First choice for venue',
+  'Ideal Venue Choice',
   'Second choice for venue',
   'Third choice for venue',
   'Other venue details?',
@@ -36,8 +37,7 @@ export const googleSheetSchema = [
   'Non-food system requests: Vendor website or menu',
   'Is there a sponsor that will pay for this event?',
   'Any additional funding details?',
-  'Will your event require marketing?',
+  'Will your event require ADDITIONAL marketing?',
   'What Marketing ACMURL do you want for the portal event page?',
   'Any additional comments or requests?',
-  'Timestamp',
 ];

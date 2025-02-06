@@ -411,10 +411,7 @@ export default class NotionCalEvent {
     this.type = isEventType(formResponse['What kind of event is this?'])
       ? formResponse['What kind of event is this?']
       : 'Other (See Comments)';
-    this.prStatus =
-      formResponse['Will your event require marketing?'] === 'No, do not market my event at all. (Meetings, etc.)'
-        ? 'PR Not Requested'
-        : 'PR TODO';
+    this.prStatus = 'PR TODO';
     this.intakeFormStatus = needsIntakeForm(formResponse);
     this.TAPStatus = needsTAPForm(formResponse);
     this.fundingSponsor = formResponse['Is there a sponsor that will pay for this event?'] === 'Yes' ? 'Yes' : 'No';
@@ -422,7 +419,7 @@ export default class NotionCalEvent {
     // This question is also equally long.
     // eslint-disable-next-line max-len
     this.additionalFinanceInfo = formResponse['Any additional funding details?'];
-    this.location = notionLocationTag[formResponse['First choice for venue']] || 'Other (See Details)';
+    this.location = notionLocationTag[formResponse['Ideal Venue Choice']] || 'Other (See Details)';
     this.locationBackup1 = notionLocationTag[formResponse['Second choice for venue']] || 'Other (See Details)';
     this.locationBackup2 = notionLocationTag[formResponse['Third choice for venue']] || 'Other (See Details)';
     if (formResponse['Where is your event taking place?'] === 'My event is on Zoom') {

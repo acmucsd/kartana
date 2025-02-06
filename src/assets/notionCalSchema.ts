@@ -475,7 +475,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'cbc67309-d8bf-4abb-a959-ece3d41dfd91',
-          'name': 'Room 2315',
+          'name': 'Jacobs Room 2315',
           'color': 'default',
           'description': null,
         },
@@ -1533,6 +1533,14 @@ export const notionCalSchema = {
     'name': 'Requested Items',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'FIN-ID': {
+    'id': 'vtGL',
+    'name': 'FIN-ID',
+    'type': 'number',
+    'number': {
+      'format': 'number',
+    },
   },
   'Food Pickup Details': {
     'id': 'w%5CvE',

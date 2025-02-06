@@ -333,10 +333,11 @@ export const pingForTAPandCSIDeadlines = async (
   // title — Top of embed, bolded
   // colour — colour of embed, since GREEN was used for key pings/succesful imports, and RED is semantically errors
   // dates — further itemized by number of days in advance a reminder ping should be sent:
-  //    pingroles — names of roles to be pinged, found in settings
+  //    pingRoles — names of roles to be pinged, found in settings
   //    date — exact date in the future you would wish to receive pings for today
   //    prop — category, corresponds to a series of statuses on the Notion existing as "<prop> Status"
   //    propStatus — the status of the above prop category
+  //    pingHosts — default false, true if you'd like to ping individual event hosts in addition to pingroles
   
   interface PingDate{
     days: number;
@@ -344,16 +345,17 @@ export const pingForTAPandCSIDeadlines = async (
     message: string;
     prop: string;
     propStatus: string[];
-    pingHosts: boolean,
+    pingHosts?: boolean,
   }
 
   // From @notionhq/client/build/src/api-endpoints, since these are never exported 
   type SelectPropertyFilter = {
     equals: string;
-  }
+  };
+
   type DatePropertyFilter = {
     equals: string;
-  }
+  };
 
   type PropertyFilter = {
     date: DatePropertyFilter;
@@ -555,7 +557,7 @@ export const pingForTAPandCSIDeadlines = async (
 
     Object.values(cur.dates).forEach(curPing => {
       let propDate = dateTimeNow.plus({ days: curPing.days }); 
-      let mps = new MeetingPingsSchema()
+      let mps = new MeetingPingsSchema();
 
       // Gets specific list of events that meet this ping's criteria of (date, correct org [TAP, PR, etc] status)
       let curDatePings = allEvents.filter((event) => {
@@ -586,8 +588,9 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
           let embedEventHosts = new Array<string>();
           event.properties['Hosted by']['people'].forEach(eventHost => {
             let userPing = mps.getGuest(eventHost.person.email);
-            if(userPing != null && curPing.pingHosts) curEmbedPeoplePing.push(`<@${userPing}>`)
-            embedEventHosts.push(`**${eventHost.name}**`)
+            if (userPing != null && 'pingHosts' in curPing  && curPing.pingHosts)
+              curEmbedPeoplePing.push(`<@${userPing}>`);
+            embedEventHosts.push(`**${eventHost.name}**`);
           });
 
           curEmbedDescrip +=  `- [${event.properties.Name.title.reduce((acc, curr) =>
@@ -600,7 +603,7 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
     if (curEmbedDescrip != '_ _'){
       curEmbed.setDescription(curEmbedDescrip);
       Logger.info(`Sections built! Sending ${cur.title} embed...`);
-      let curEmbedPeople =  (curEmbedPeoplePing.length > 0) ? ('\n👥 ' + curEmbedPeoplePing.join(', ')) : '';
+      let curEmbedPeople =  (curEmbedPeoplePing.length > 0) ? ('\n👥 ' + curEmbedPeoplePing.join(' ')) : '';
       // Send the embed!
       await config.channel.send({
         content:  curEmbedPings.join(' ') + (curEmbedPeople),
@@ -682,7 +685,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
   let curEmbedPeoplePing = new Array<string>();
 
   Object.entries(eventsByLocation).forEach(([location, events]) => {
-    let mps = new MeetingPingsSchema()
+    let mps = new MeetingPingsSchema();
     let needed = keyCardLocs.includes(location) ? 'card' : 'code';
     keyPingDescription += `_${location} needs a key ${needed} for these events:_\n`;
     events.forEach((event) => {
@@ -692,7 +695,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
 
       event.properties['Hosted by']['people'].forEach(eventHost => {
         let userPing = mps.getGuest(eventHost.person.email);
-        if(userPing != null) curEmbedPeoplePing.push(`<@${userPing}>`)
+        if (userPing != null) curEmbedPeoplePing.push(`<@${userPing}>`);
       });
       
       keyPingDescription += `- **${event.properties['Hosted by']['people'][0].name}** \
@@ -710,7 +713,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
     .setDescription(keyPingDescription);
 
   await config.channel.send({
-    content: `<@&${config.settings.logisticsTeamID}>\n👥 ` + curEmbedPeoplePing.join(", "),
+    content: `<@&${config.settings.logisticsTeamID}>\n👥 ` + curEmbedPeoplePing.join(' '),
     embeds: [keyPingEmbed],
   });
 
