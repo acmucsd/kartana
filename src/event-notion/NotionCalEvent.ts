@@ -10,7 +10,8 @@ import {
   NotionUser,
   StudentOrg,
   isStudentOrg,
-  notionYoutubeAnswer,
+  TokenEventGroup,
+  notionYoutubeAnswer
 } from '../types';
 import Logger from '../utils/Logger';
 import NotionEventPage from './NotionEventPage';
@@ -393,6 +394,14 @@ export default class NotionCalEvent {
   // The Historian On-Site to take pictures for this event, if any.
   private historianOnsite: NotionUser | null;
 
+  // Which pass the event is being submitted under
+  private tokenPass: string;
+
+  // Which team the associated token is coming from
+  private tokenEventGroup: TokenEventGroup | null;
+
+  private tokenUseNum: number;
+
   constructor(formResponse: HostFormResponse) {
     this.response = formResponse;
     this.name = formResponse['Event name'];
@@ -506,6 +515,10 @@ export default class NotionCalEvent {
     }
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
+    
+    this.tokenPass = formResponse['Which pass will this event submitted under?']
+    this.tokenEventGroup = formResponse['Which team/community will this event be associated with?']
+    this.tokenUseNum = formResponse['Which token number will you be using?']
   }
 
   /**
