@@ -228,9 +228,11 @@ export type TokenEventGroup =
   | 'Events'
   | 'Membership'
   | 'Projects'
+  | 'Outreach'
+  | 'Hackathon'
   | 'AI'
   | 'Cyber'
-  | 'Hack'
+  | 'Hack';
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -243,6 +245,8 @@ export const isTokenEventGroup = (group: string): group is TokenEventGroup => {
     group === 'Events' ||
     group === 'Membership' ||
     group === 'Projects' ||
+    group === 'Outreach' ||
+    group === 'Hackathon' ||
     group === 'AI' ||
     group === 'Cyber' ||
     group === 'Hack'

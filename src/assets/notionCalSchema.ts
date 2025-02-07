@@ -632,11 +632,25 @@ export const notionCalSchema = {
     'type': 'date',
     'date': {},
   },
+  'Token Event Group': {
+    'id': 'Hndl',
+    'name': 'Token Event Group',
+    'type': 'rich_text',
+    'rich_text': {},
+  },
   'Recording Requests': {
     'id': 'LYO%3D',
     'name': 'Recording Requests',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'Token Use Number': {
+    'id': 'RZQQ',
+    'name': 'Token Use Number',
+    'type': 'number',
+    'number': {
+      'format': 'number',
+    },
   },
   'Invoice (Food)': {
     'id': 'ReRE',
@@ -740,6 +754,12 @@ export const notionCalSchema = {
         },
       ],
     },
+  },
+  'Token Pass': {
+    'id': 'Ywcm',
+    'name': 'Token Pass',
+    'type': 'rich_text',
+    'rich_text': {},
   },
   'Organizations': {
     'id': '%5B9%5Ba',
@@ -1191,6 +1211,12 @@ export const notionCalSchema = {
     'name': 'Drive Link',
     'type': 'url',
     'url': {},
+  },
+  'Logistics By': {
+    'id': 'jL%5C%3C',
+    'name': 'Logistics By',
+    'type': 'rich_text',
+    'rich_text': {},
   },
   'Projector?': {
     'id': 'jvjh',

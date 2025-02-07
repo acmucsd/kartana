@@ -11,7 +11,7 @@ import {
   StudentOrg,
   isStudentOrg,
   TokenEventGroup,
-  notionYoutubeAnswer
+  notionYoutubeAnswer,
 } from '../types';
 import Logger from '../utils/Logger';
 import NotionEventPage from './NotionEventPage';
@@ -394,12 +394,16 @@ export default class NotionCalEvent {
   // The Historian On-Site to take pictures for this event, if any.
   private historianOnsite: NotionUser | null;
 
+  // Whether ACM or another third-party org is handling logistics
+  private logisticsBy: 'ACM' | 'Other';
+
   // Which pass the event is being submitted under
   private tokenPass: string;
 
   // Which team the associated token is coming from
   private tokenEventGroup: TokenEventGroup | null;
 
+  // Which token number they're using
   private tokenUseNum: number;
 
   constructor(formResponse: HostFormResponse) {
@@ -513,9 +517,10 @@ export default class NotionCalEvent {
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
     
-    this.tokenPass = formResponse['Which pass will this event submitted under?']
-    this.tokenEventGroup = formResponse['Which team/community will this event be associated with?']
-    this.tokenUseNum = formResponse['Which token number will you be using?']
+    this.logisticsBy = formResponse['If this is a collab event, who will be handling the logistics?'];
+    this.tokenPass = formResponse['Which pass will this event submitted under?'];
+    this.tokenEventGroup = formResponse['Which team/community will this event be associated with?'];
+    this.tokenUseNum = formResponse['Which token number will you be using?'];
   }
 
   /**
@@ -775,6 +780,35 @@ export default class NotionCalEvent {
         // "Historian Onsite" omitted.
         //
         // We don't know this yet.
+        ...(this.logisticsBy
+          ? {
+            'Logistics By': {
+              rich_text: toNotionRichText(this.logisticsBy),
+            },
+          }
+          : {}),
+        ...(this.tokenPass
+          ? {
+            'Token Pass': {
+              rich_text: toNotionRichText(this.tokenPass),
+            },
+          }
+          : {}),
+        ...(this.tokenEventGroup
+          ? {
+            'Token Event Group': {
+              rich_text: toNotionRichText(this.tokenEventGroup),
+            },
+          }
+          : {}),
+        ...(this.tokenUseNum
+          ? {
+            'Token Use Number': {
+              number: this.tokenUseNum,
+            },
+          }
+          : {}),
+
       },
     };
 
