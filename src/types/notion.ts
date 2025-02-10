@@ -232,7 +232,8 @@ export type TokenEventGroup =
   | 'Hackathon'
   | 'AI'
   | 'Cyber'
-  | 'Hack';
+  | 'Hack'
+  | 'Other';
 
 /**
  * User-defined Type Guard for StudentOrg.
