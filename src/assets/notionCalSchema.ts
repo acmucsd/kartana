@@ -1292,7 +1292,7 @@ export const notionCalSchema = {
         },
         {
           'id': 'eabaf547-5da6-49dc-bcf6-f7694382d6af',
-          'name': 'Other',
+          'name': 'Other Organization',
           'color': 'gray',
           'description': null,
         },
