@@ -7,7 +7,7 @@ import { groupBy, isEqual } from 'lodash';
 import NotionCalEvent from './NotionCalEvent';
 import { BotSettings, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
-import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
+import { ColorResolvable, MessageEmbed, TextChannel, User } from 'discord.js';
 import { DateTime } from 'luxon';
 import { MeetingPingsSchema } from '../meeting-pings';
 
@@ -378,6 +378,7 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n⚠️ __**Booking confirmation for AS Funding is due in 1 week!**__ ⚠️\n',
           'prop': 'Booking',
           'propStatus': ['Booking TODO', 'Booking In Progress'],
+          'pingHosts': false,
         },
       ],
     },
@@ -391,6 +392,7 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n⚠️ __**Invoice for TAP is due today!**__ ⚠️\n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress'],
+          'pingHosts': false,
         },
         {
           'days': 16,
@@ -398,6 +400,7 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n __**Invoice for TAP is due in 3 days!**__ \n',
           'prop': 'TAP',
           'propStatus': ['TAP In Progress', 'TAP TODO'],
+          'pingHosts': false,
         },
         {
           'days': 21,
@@ -405,6 +408,7 @@ export const pingForTAPandCSIDeadlines = async (
           'message': '\n __**Invoice for TAP is due in a week!**___ \n',
           'prop': 'TAP',
           'propStatus': ['TAP TODO'],
+          'pingHosts': false,
         },
       ],
     },

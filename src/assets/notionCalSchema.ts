@@ -3,7 +3,7 @@
  *
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Mon, May 27 2023 01:46:38 PST.
+ * Monday, Feb 10 2025 03:21:03 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -632,11 +632,76 @@ export const notionCalSchema = {
     'type': 'date',
     'date': {},
   },
+  'Token Event Group': {
+    'id': 'Hndl',
+    'name': 'Token Event Group',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': 'e97fe906-552c-478e-9f68-8fb6248d87f5',
+          'name': 'Events',
+          'color': 'brown',
+          'description': null,
+        },
+        {
+          'id': 'eebb27f2-d956-41e6-ae11-82de6cbfa67a',
+          'name': 'Membership',
+          'color': 'yellow',
+          'description': null,
+        },
+        {
+          'id': '9ca8bd73-5aaf-4552-8360-e66e37dd78e4',
+          'name': 'Projects',
+          'color': 'pink',
+          'description': null,
+        },
+        {
+          'id': '5c60c574-95a9-4a04-bc57-3329f48b9c24',
+          'name': 'Outreach',
+          'color': 'green',
+          'description': null,
+        },
+        {
+          'id': '1a223c87-2cb7-4060-8ad9-9b4d2b9e7ff2',
+          'name': 'Hackathon',
+          'color': 'purple',
+          'description': null,
+        },
+        {
+          'id': 'd6fdfecc-6b2c-42c2-aba1-40dfddbb7c71',
+          'name': 'AI',
+          'color': 'red',
+          'description': null,
+        },
+        {
+          'id': '2d8fd944-c644-4c33-b689-b3950af898bd',
+          'name': 'Cyber',
+          'color': 'blue',
+          'description': null,
+        },
+        {
+          'id': '97b49e92-1f73-46fd-8ab1-8050fb80a677',
+          'name': 'Hack',
+          'color': 'orange',
+          'description': null,
+        },
+      ],
+    },
+  },
   'Recording Requests': {
     'id': 'LYO%3D',
     'name': 'Recording Requests',
     'type': 'rich_text',
     'rich_text': {},
+  },
+  'Token Use Number': {
+    'id': 'RZQQ',
+    'name': 'Token Use Number',
+    'type': 'number',
+    'number': {
+      'format': 'number',
+    },
   },
   'Invoice (Food)': {
     'id': 'ReRE',
@@ -736,6 +801,27 @@ export const notionCalSchema = {
           'id': '6a1a9bca-6d47-4d79-b1f3-c7651353505d',
           'name': 'Booking CANCELLED',
           'color': 'red',
+          'description': null,
+        },
+      ],
+    },
+  },
+  'Token Pass': {
+    'id': 'Ywcm',
+    'name': 'Token Pass',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': '369db98e-cd1f-4c76-b32c-59a4dd391d1e',
+          'name': 'First Pass',
+          'color': 'yellow',
+          'description': null,
+        },
+        {
+          'id': '15013665-0c05-4667-913f-6cde1ce2fd73',
+          'name': 'Second Pass',
+          'color': 'orange',
           'description': null,
         },
       ],
@@ -1191,6 +1277,27 @@ export const notionCalSchema = {
     'name': 'Drive Link',
     'type': 'url',
     'url': {},
+  },
+  'Logistics By': {
+    'id': 'jL%5C%3C',
+    'name': 'Logistics By',
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': '269fa938-8cf6-4371-80ef-0f1fde696cc3',
+          'name': 'ACM',
+          'color': 'blue',
+          'description': null,
+        },
+        {
+          'id': 'eabaf547-5da6-49dc-bcf6-f7694382d6af',
+          'name': 'Other',
+          'color': 'gray',
+          'description': null,
+        },
+      ],
+    },
   },
   'Projector?': {
     'id': 'jvjh',

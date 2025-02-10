@@ -10,6 +10,8 @@ import {
   NotionUser,
   StudentOrg,
   isStudentOrg,
+  TokenEventGroup,
+  isTokenEventGroup,
   notionYoutubeAnswer,
 } from '../types';
 import Logger from '../utils/Logger';
@@ -393,6 +395,19 @@ export default class NotionCalEvent {
   // The Historian On-Site to take pictures for this event, if any.
   private historianOnsite: NotionUser | null;
 
+  // Whether ACM or another third-party org is handling logistics
+  private logisticsBy: 'ACM' | 'Other';
+
+  // Which pass the event is being submitted under
+  private tokenPass: 'First pass' | 'Second pass';
+
+  // Which team the associated token is coming from
+  private tokenEventGroup: TokenEventGroup;
+
+
+  // Which token number they're using
+  private tokenUseNum: number | -1;
+
   constructor(formResponse: HostFormResponse) {
     this.response = formResponse;
     this.name = formResponse['Event name'];
@@ -503,6 +518,17 @@ export default class NotionCalEvent {
     }
     this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
     this.historianOnsite = null;
+    
+    this.logisticsBy = formResponse['If this is a collab event, who will be handling the logistics?'];
+    this.tokenPass = formResponse['Which pass will this event submitted under?'];
+    this.tokenEventGroup = isTokenEventGroup(formResponse['Which team/community will this event be associated with?'])
+      ? formResponse['Which team/community will this event be associated with?']
+      : 'Other';
+    if (this.tokenEventGroup === 'Other'){
+      throw new TypeError("The team you listed your token under doesn't seem to exist, make sure it is one \
+of the accepted orgs!");
+    }
+    this.tokenUseNum = parseInt(formResponse['Which token number will you be using?']) || -1;
   }
 
   /**
@@ -546,6 +572,9 @@ export default class NotionCalEvent {
         },
         'TAP Status': {
           select: { name: this.TAPStatus },
+        },
+        'Logistics By': {
+          select: { name: this.logisticsBy },
         },
         // "Funding Manager" omitted.
         //
@@ -762,6 +791,20 @@ export default class NotionCalEvent {
         // "Historian Onsite" omitted.
         //
         // We don't know this yet.
+        'Token Pass': {
+          select: { name: this.tokenPass },
+        },
+        'Token Event Group': {
+          select: { name: this.tokenEventGroup },
+        },
+        ...(this.tokenUseNum
+          ? {
+            'Token Use Number': {
+              number: this.tokenUseNum,
+            },
+          }
+          : {}),
+
       },
     };
 

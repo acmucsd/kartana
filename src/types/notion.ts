@@ -219,3 +219,37 @@ export const isStudentOrg = (org: string): org is StudentOrg => {
     org === 'SWE'
   );
 };
+
+
+/**
+ * Any student organizations ACM collaborates with or has Events hosted with.
+ */
+export type TokenEventGroup =
+  | 'Events'
+  | 'Membership'
+  | 'Projects'
+  | 'Outreach'
+  | 'Hackathon'
+  | 'AI'
+  | 'Cyber'
+  | 'Hack'
+  | 'Other';
+
+/**
+ * User-defined Type Guard for StudentOrg.
+ *
+ * @param org A random string.
+ * @returns Whether the parameter complies with the StudentOrg type.
+ */
+export const isTokenEventGroup = (group: string): group is TokenEventGroup => {
+  return (
+    group === 'Events' ||
+    group === 'Membership' ||
+    group === 'Projects' ||
+    group === 'Outreach' ||
+    group === 'Hackathon' ||
+    group === 'AI' ||
+    group === 'Cyber' ||
+    group === 'Hack'
+  );
+};
