@@ -396,7 +396,7 @@ export default class NotionCalEvent {
   private historianOnsite: NotionUser | null;
 
   // Whether ACM or another third-party org is handling logistics
-  private logisticsBy: 'ACM' | 'Other';
+  private logisticsBy: 'ACM' | 'Other Organization';
 
   // Which pass the event is being submitted under
   private tokenPass: 'First pass' | 'Second pass';
