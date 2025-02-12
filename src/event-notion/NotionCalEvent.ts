@@ -520,15 +520,16 @@ export default class NotionCalEvent {
     this.historianOnsite = null;
     
     this.logisticsBy = formResponse['If this is a collab event, who will be handling the logistics?'];
-    this.tokenPass = formResponse['Which pass will this event submitted under?'];
-    this.tokenEventGroup = isTokenEventGroup(formResponse['Which team/community will this event be associated with?'])
-      ? formResponse['Which team/community will this event be associated with?']
+    this.tokenPass = formResponse['Which pass will this event be submitted under?'];
+    console.log(formResponse['Which team/community will be using their token?'], isTokenEventGroup(this.tokenEventGroup))
+    this.tokenEventGroup = isTokenEventGroup(formResponse['Which team/community will be using their token?'])
+      ? formResponse['Which team/community will be using their token?']
       : 'Other';
     if (this.tokenEventGroup === 'Other'){
       throw new TypeError("The team you listed your token under doesn't seem to exist, make sure it is one \
 of the accepted orgs!");
     }
-    this.tokenUseNum = parseInt(formResponse['Which token number will you be using?']) || -1;
+    this.tokenUseNum = parseInt(formResponse['What token number will you be using?']) || -1;
   }
 
   /**
