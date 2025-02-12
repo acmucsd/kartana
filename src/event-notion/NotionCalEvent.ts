@@ -521,7 +521,6 @@ export default class NotionCalEvent {
     
     this.logisticsBy = formResponse['If this is a collab event, who will be handling the logistics?'];
     this.tokenPass = formResponse['Which pass will this event be submitted under?'];
-    console.log(formResponse['Which team/community will be using their token?'], isTokenEventGroup(this.tokenEventGroup))
     this.tokenEventGroup = isTokenEventGroup(formResponse['Which team/community will be using their token?'])
       ? formResponse['Which team/community will be using their token?']
       : 'Other';
