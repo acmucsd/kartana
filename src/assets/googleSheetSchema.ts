@@ -18,7 +18,9 @@ export const googleSheetSchema = [
   'Estimated Attendance?',
   'Check-in Code',
   'Which of the following organizations are involved in this event?',
+  'If this is a collab event, who will be handling the logistics?',
   'Which pass will this event be submitted under?',
+  'Which team/community will be using their token?',
   'What token number will you be using?',
   'Where is your event taking place?',
   'Ideal Venue Choice',
@@ -34,6 +36,4 @@ export const googleSheetSchema = [
   'Is there a sponsor that will pay for this event?',
   'Any additional funding details?',
   'Will your event require ADDITIONAL marketing?',
-  'Which team/community will be using their token?',
-  'If this is a collab event, who will be handling the logistics?',
 ];
