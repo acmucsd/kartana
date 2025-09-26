@@ -3,12 +3,13 @@
  *
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Monday, Feb 10 2025 03:21:03 PST.
+ * Thursday, Sep 25 2025 06:35:00 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
     'id': '%23D%22x',
     'name': 'Funding Status',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -90,6 +91,7 @@ export const notionCalSchema = {
   'Type': {
     'id': '%2B%5E8f',
     'name': 'Type',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -225,6 +227,7 @@ export const notionCalSchema = {
   'PR Status': {
     'id': '9%22tk',
     'name': 'PR Status',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -282,6 +285,7 @@ export const notionCalSchema = {
   'Intake Form Status': {
     'id': '%3BnPn',
     'name': 'Intake Form Status',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -327,12 +331,14 @@ export const notionCalSchema = {
   'Tech Requests': {
     'id': '%3Enm%7D',
     'name': 'Tech Requests',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'TAP Status': {
     'id': '%3Fz6_',
     'name': 'TAP Status',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -384,6 +390,7 @@ export const notionCalSchema = {
   'Funding Amount Approved': {
     'id': '%40gPB',
     'name': 'Funding Amount Approved',
+    'description': null,
     'type': 'number',
     'number': {
       'format': 'dollar',
@@ -392,36 +399,42 @@ export const notionCalSchema = {
   'Approved Intake': {
     'id': '%40hOD',
     'name': 'Approved Intake',
+    'description': null,
     'type': 'files',
     'files': {},
   },
   'Funding Manager': {
     'id': 'APk4',
     'name': 'Funding Manager',
+    'description': null,
     'type': 'people',
     'people': {},
   },
   'Booking Details': {
     'id': 'Ab%3Ae',
     'name': 'Booking Details',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Marketing Description': {
     'id': 'BW%2Cy',
     'name': 'Marketing Description',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Additional Finance Info': {
     'id': 'E%3BiJ',
     'name': 'Additional Finance Info',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Location': {
     'id': 'GV%25O',
     'name': 'Location',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -629,12 +642,14 @@ export const notionCalSchema = {
   'Booking Time': {
     'id': 'H%3F%5DX',
     'name': 'Booking Time',
+    'description': null,
     'type': 'date',
     'date': {},
   },
   'Token Event Group': {
     'id': 'Hndl',
     'name': 'Token Event Group',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -692,12 +707,14 @@ export const notionCalSchema = {
   'Recording Requests': {
     'id': 'LYO%3D',
     'name': 'Recording Requests',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Token Use Number': {
     'id': 'RZQQ',
     'name': 'Token Use Number',
+    'description': null,
     'type': 'number',
     'number': {
       'format': 'number',
@@ -706,15 +723,18 @@ export const notionCalSchema = {
   'Invoice (Food)': {
     'id': 'ReRE',
     'name': 'Invoice (Food)',
+    'description': null,
     'type': 'files',
     'files': {},
   },
   'Hosted Events Sheet': {
     'id': 'SXzi',
     'name': 'Hosted Events Sheet',
+    'description': null,
     'type': 'relation',
     'relation': {
       'database_id': 'd26e4598-91dc-4222-895e-559b15d7cd19',
+      'data_source_id': '8123c750-41b1-4ac5-b4bf-90f2d2471a8f',
       'type': 'dual_property',
       'dual_property': {
         'synced_property_name': 'Calendar Event',
@@ -725,30 +745,35 @@ export const notionCalSchema = {
   'Event Coordinator': {
     'id': 'TC0%24',
     'name': 'Event Coordinator',
+    'description': null,
     'type': 'people',
     'people': {},
   },
   'YouTube Thumbnail': {
     'id': 'UXt%5D',
     'name': 'YouTube Thumbnail',
+    'description': null,
     'type': 'files',
     'files': {},
   },
   'Check-in Code': {
     'id': 'VP1y',
     'name': 'Check-in Code',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'FB CoHost': {
     'id': 'WB%60S',
     'name': 'FB CoHost',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Recording': {
     'id': 'XH%5EO',
     'name': 'Recording',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -770,6 +795,7 @@ export const notionCalSchema = {
   'Booking Status': {
     'id': 'X%5E%5BG',
     'name': 'Booking Status',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -809,6 +835,7 @@ export const notionCalSchema = {
   'Token Pass': {
     'id': 'Ywcm',
     'name': 'Token Pass',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -830,6 +857,7 @@ export const notionCalSchema = {
   'Organizations': {
     'id': '%5B9%5Ba',
     'name': 'Organizations',
+    'description': null,
     'type': 'multi_select',
     'multi_select': {
       'options': [
@@ -983,12 +1011,14 @@ export const notionCalSchema = {
   'Marketing Graphic': {
     'id': '%5EQ7C',
     'name': 'Marketing Graphic',
+    'description': null,
     'type': 'files',
     'files': {},
   },
   'Location Backup 2': {
     'id': '%60%3DK%3A',
     'name': 'Location Backup 2',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1202,6 +1232,7 @@ export const notionCalSchema = {
   'CSI Form Status': {
     'id': 'a%5D%60Q',
     'name': 'CSI Form Status',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1235,6 +1266,7 @@ export const notionCalSchema = {
   'Projected Attendance': {
     'id': 'b%5D%5Dq',
     'name': 'Projected Attendance',
+    'description': null,
     'type': 'number',
     'number': {
       'format': 'number',
@@ -1243,30 +1275,35 @@ export const notionCalSchema = {
   'Food Pickup Time': {
     'id': 'b%5DyD',
     'name': 'Food Pickup Time',
+    'description': null,
     'type': 'date',
     'date': {},
   },
   'Location URL': {
     'id': 'cjEL',
     'name': 'Location URL',
+    'description': null,
     'type': 'url',
     'url': {},
   },
   'YouTube Link': {
     'id': 'cv%5DX',
     'name': 'YouTube Link',
+    'description': null,
     'type': 'url',
     'url': {},
   },
   'PR Requests': {
     'id': 'ec~7',
     'name': 'PR Requests',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'AS Funding Attendance': {
     'id': 'g%3Bvm',
     'name': 'AS Funding Attendance',
+    'description': null,
     'type': 'number',
     'number': {
       'format': 'number',
@@ -1275,12 +1312,14 @@ export const notionCalSchema = {
   'Drive Link': {
     'id': "j'C%5C",
     'name': 'Drive Link',
+    'description': null,
     'type': 'url',
     'url': {},
   },
   'Logistics By': {
     'id': 'jL%5C%3C',
     'name': 'Logistics By',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1302,6 +1341,7 @@ export const notionCalSchema = {
   'Projector?': {
     'id': 'jvjh',
     'name': 'Projector?',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1323,30 +1363,35 @@ export const notionCalSchema = {
   'Other Graphics': {
     'id': 'kFFB',
     'name': 'Other Graphics',
+    'description': null,
     'type': 'files',
     'files': {},
   },
   'Hosted by': {
     'id': 'nUi%3A',
     'name': 'Hosted by',
+    'description': null,
     'type': 'people',
     'people': {},
   },
   'Location Details': {
     'id': 'o%7DWn',
     'name': 'Location Details',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Non-food Requests': {
     'id': 'pPDg',
     'name': 'Non-food Requests',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Funding Source': {
     'id': 'qiw%5E',
     'name': 'Funding Source',
+    'description': null,
     'type': 'multi_select',
     'multi_select': {
       'options': [
@@ -1380,12 +1425,14 @@ export const notionCalSchema = {
   'Event Description': {
     'id': 'r%3Dk)',
     'name': 'Event Description',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Participation Waivers': {
     'id': 'r%60ZI',
     'name': 'Participation Waivers',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1407,12 +1454,14 @@ export const notionCalSchema = {
   'Booking Confirmation': {
     'id': 'rghL',
     'name': 'Booking Confirmation',
+    'description': null,
     'type': 'files',
     'files': {},
   },
   'Location Backup 1': {
     'id': 'rtZm',
     'name': 'Location Backup 1',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1626,24 +1675,28 @@ export const notionCalSchema = {
   'PR Manager': {
     'id': 't%5B%5CH',
     'name': 'PR Manager',
+    'description': null,
     'type': 'people',
     'people': {},
   },
   'Date': {
     'id': 'u!%26I',
     'name': 'Date',
+    'description': null,
     'type': 'date',
     'date': {},
   },
   'Requested Items': {
     'id': 'u7pc',
     'name': 'Requested Items',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'FIN-ID': {
     'id': 'vtGL',
     'name': 'FIN-ID',
+    'description': null,
     'type': 'number',
     'number': {
       'format': 'number',
@@ -1652,12 +1705,14 @@ export const notionCalSchema = {
   'Food Pickup Details': {
     'id': 'w%5CvE',
     'name': 'Food Pickup Details',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Upload to Youtube?': {
     'id': 'yW_J',
     'name': 'Upload to Youtube?',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1691,24 +1746,28 @@ export const notionCalSchema = {
   'Marketing ACMURL': {
     'id': 'znBJ',
     'name': 'Marketing ACMURL',
+    'description': null,
     'type': 'url',
     'url': {},
   },
   'Date/Time Notes': {
     'id': '~JH%3F',
     'name': 'Date/Time Notes',
+    'description': null,
     'type': 'rich_text',
     'rich_text': {},
   },
   'Historian Onsite': {
     'id': '~%5CKw',
     'name': 'Historian Onsite',
+    'description': null,
     'type': 'people',
     'people': {},
   },
   'Sponsor?': {
     'id': '~y%40%5D',
     'name': 'Sponsor?',
+    'description': null,
     'type': 'select',
     'select': {
       'options': [
@@ -1730,6 +1789,7 @@ export const notionCalSchema = {
   'Name': {
     'id': 'title',
     'name': 'Name',
+    'description': null,
     'type': 'title',
     'title': {},
   },
