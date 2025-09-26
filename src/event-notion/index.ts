@@ -7,7 +7,7 @@ import { groupBy, isEqual } from 'lodash';
 import NotionCalEvent from './NotionCalEvent';
 import { BotSettings, GoogleSheetsSchemaMismatchError, HostFormResponse, NotionSchemaMismatchError } from '../types';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } from 'google-spreadsheet';
-import { ColorResolvable, MessageEmbed, TextChannel, User } from 'discord.js';
+import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 import { MeetingPingsSchema } from '../meeting-pings';
 
