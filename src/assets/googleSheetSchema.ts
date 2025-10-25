@@ -9,8 +9,6 @@ export const googleSheetSchema = [
   'Email Address',
   'Event name',
   'Event description',
-  'Plain description',
-  'Are you planning on inviting off campus guests?',
   'Event director(s)',
   'What kind of event is this?',
   'Preferred date',
@@ -38,4 +36,6 @@ export const googleSheetSchema = [
   'Is there a sponsor that will pay for this event?',
   'Any additional funding details?',
   'Will your event require ADDITIONAL marketing?',
+  'Plain description',
+  'Are you planning on inviting off campus guests?',
 ] as const;
