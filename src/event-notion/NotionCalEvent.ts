@@ -19,6 +19,7 @@ import {
   isTokenPass,
   LogisticsBy,
   notionLocationTag,
+  OffCampusGuests,
   ProjectorStatus,
   StudentOrg,
   TapStatus,
@@ -167,7 +168,7 @@ export default class NotionCalEvent implements INotionCalEvent {
 
   readonly plainDescription: string;
 
-  readonly offCampusGuests: 'Yes' | 'No';
+  readonly offCampusGuests: OffCampusGuests;
 
   readonly type: EventType;
 
@@ -456,13 +457,9 @@ export default class NotionCalEvent implements INotionCalEvent {
             },
           }
           : {}),
-        ...(this.offCampusGuests
-          ? {
-            'Off Campus Guests': {
-              rich_text: toNotionRichText(this.offCampusGuests),
-            },
-          }
-          : {}),
+        'Off Campus Guests': {
+          select: { name: this.offCampusGuests },
+        },
         // "Booking Confirmation" omitted.
         //
         // We DEFINITELY don't add this, since we don't automate
