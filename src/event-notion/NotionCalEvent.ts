@@ -96,7 +96,7 @@ const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO
 const filterOrgsResponse = (response: HostFormResponse): StudentOrg[] => {
   return response['Which of the following organizations are involved in this event?']
     .split(', ')
-    .filter((studentOrg) => isStudentOrg(studentOrg));
+    .filter((studentOrg) => isStudentOrg(studentOrg)) as StudentOrg[];
 };
 
 /**

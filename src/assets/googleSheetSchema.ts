@@ -2,7 +2,7 @@
  * The schema of the Host Form response Google Sheet.
  *
  * This is just an ordered copy of the header values of the
- * Host Form Response Google Sheet as of Friday, 07 Feb 2025 19:07:41 PST.
+ * Host Form Response Google Sheet as of Friday, 24 Oct 2025 07:38:00 PST.
  */
 export const googleSheetSchema = [
   'Timestamp',
