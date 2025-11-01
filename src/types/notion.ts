@@ -1,126 +1,69 @@
 import { GetUserResponse } from '@notionhq/client/build/src/api-endpoints';
+import { notionCalSchema } from '../assets';
+import { DateTime, Interval } from 'luxon';
+
+function extractNames<T extends readonly { name: string }[]>(arr: T) {
+  return arr.map(o => o.name) as {
+    readonly [K in keyof T]: T[K] extends { name: infer N } ? N : never;
+  };
+}
+
+export interface NotionCalEvent {
+  readonly name: string;
+  readonly description: string;
+  readonly plainDescription: string;
+  readonly offCampusGuests: OffCampusGuests;
+  readonly type: EventType;
+  readonly date: Interval;
+  readonly dateTimeNotes: string;
+  readonly projectedAttendance: number;
+  readonly checkinCode: string;
+  readonly organizations: StudentOrg[];
+  readonly logisticsBy: LogisticsBy;
+  readonly tokenEventGroup: TokenEventGroup;
+  readonly tokenPass: TokenPass;
+  readonly tokenUseNum: number;
+  readonly location: EventLocation;
+  readonly locationDetails: string;
+  readonly projectorStatus: ProjectorStatus;
+  readonly techRequests: string;
+  readonly locationURL: URL | null;
+  readonly fundingStatus: FundingStatus;
+  readonly requestedItems: string;
+  readonly foodPickupTime: DateTime | null;
+  readonly nonFoodRequests: string;
+  readonly fundingSponsor: FundingSponsor;
+  readonly additionalFinanceInfo: string;
+  readonly TAPStatus: TapStatus;
+  readonly bookingStatus: BookingStatus;
+}
+
+const offCampusGuests = extractNames(notionCalSchema['Off Campus Guests'].select.options);
+const eventTypes = extractNames(notionCalSchema.Type.select.options);
+const studentOrgs = extractNames(notionCalSchema.Organizations.multi_select.options);
+const logisticsBy = extractNames(notionCalSchema['Logistics By'].select.options);
+const tokenEventGroups = extractNames(notionCalSchema['Token Event Group'].select.options);
+const tokenPasses = extractNames(notionCalSchema['Token Pass'].select.options);
+const eventLocations = extractNames(notionCalSchema.Location.select.options);
+const projectorStatuses = extractNames(notionCalSchema['Projector?'].select.options);
+const fundingStatuses = extractNames(notionCalSchema['Funding Status'].select.options);
+const fundingSponsor = extractNames(notionCalSchema['Sponsor?'].select.options);
+const tapStatuses = extractNames(notionCalSchema['TAP Status'].select.options);
+const bookingStatuses = extractNames(notionCalSchema['Booking Status'].select.options);
 
 // A Notion User.
 export type NotionUser = GetUserResponse;
 
-// The location for a NotionEvent.
-//
-// This is limited to the values available in the Notion Calendar.
-export type EventLocation =
-  | 'Zoom (See Details)'
-  | 'Discord (See Details)'
-  | 'Qualcomm Room'
-  | 'Henry Booker Room'
-  | 'Fung Auditorium'
-  | 'CSE 1202'
-  | 'Room 2315'
-  | 'PC Eleanor Roosevelt Room'
-  | 'PC Marshall Room'
-  | 'PC Muir Room'
-  | 'PC Warren Room'
-  | 'PC Revelle Room'
-  | 'PC Red Shoe Room'
-  | 'PC Snake Path Room'
-  | 'PC East Ballroom'
-  | 'PC West Ballroom'
-  | 'Student Services Center Multi-Purpose Room'
-  | 'Warren Mall'
-  | 'Warren Bear'
-  | 'Warren College SAC'
-  | 'Sixth College Lodge'
-  | 'Library Walk'
-  | 'Lecture Hall'
-  | 'Off Campus'
-  | 'Other (See Details)'
-  | 'CSE B225 (Fishbowl)'
-  | 'PC Forum'
-  | 'PC Bear Room'
-  | 'Design and Innovation Building 202/208'
-  | 'SME ASML Room';
+export type OffCampusGuests = typeof offCampusGuests[number];
 
-/**
- * Converter from the Host Form's locations to the Notion Calendar
- * entries for locations.
- *
- * Since they don't map 1:1, this effectively converts them properly.
- */
-export const notionLocationTag = {
-  'PC West Ballroom': 'PC West Ballroom',
-  'PC East Ballroom': 'PC East Ballroom',
-  'PC Eleanor Roosevelt Room': 'PC Eleanor Roosevelt Room',
-  'PC Marshall Room': 'PC Marshall Room',
-  'PC Warren Room': 'PC Warren Room',
-  'PC Revelle Room': 'PC Revelle Room',
-  'PC Muir Room': 'PC Muir Room',
-  'PC Red Shoe Room': 'PC Red Shoe Room',
-  'PC Bear Room': 'PC Bear Room',
-  'PC Forum': 'PC Forum',
-  'Student Services Center Multi-Purpose Room (Paid)': 'Student Services Center Multi-Purpose Room',
-  'Qualcomm Room': 'Qualcomm Room',
-  'Henry Booker Room': 'Henry Booker Room',
-  'CSE 1202': 'CSE 1202',
-  'CSE B225': 'CSE B225 (Fishbowl)',
-  'CSE 4140': 'CSE 4140',
-  'CSE Labs': 'Other (See Details)',
-  'Design and Innovation Building Room 202/208': 'Design and Innovation Building 202/208',
-  'Fung Auditorium (Paid)': 'Fung Auditorium',
-  'Warren Bear': 'Warren Bear',
-  'Warren College SAC': 'Warren College SAC',
-  'Warren Mall': 'Warren Mall',
-  'Sixth College Lodge': 'Sixth College Lodge',
-  'Lecture Hall': 'Lecture Hall',
-  'Library Walk': 'Library Walk',
-  'SME ASML Room': 'SME ASML Room',
-  'Jacobs Room 2315': 'Jacobs Room 2315',
-  'Off Campus': 'Off Campus',
-  Other: 'Other (See Details)',
+export const isOffCampusGuests = (possibleOffCampusGuests: string): possibleOffCampusGuests is OffCampusGuests => {
+  return offCampusGuests.includes(possibleOffCampusGuests as OffCampusGuests);
 };
-
-// The lines here are long, gross, and impossible to reduce down to length right now.
-// Just disable ESLint's rule for max line length on these.
-/* eslint-disable max-len */
-
-/**
- * Converter from the Host Form's answers for the "Upload to YouTube?"
- * question to the Notion calendar's entries for the eponymous column.
- */
-export const notionYoutubeAnswer = {
-  'No, I do not want anything uploaded to YouTube': 'No I do not want anything uploaded to YouTube',
-  'Yes, I will post a link to the recording on the Notion calendar after the event so that the Events team can upload it for me':
-    'Yes but I will record it myself and send the Events team a link',
-  'Yes, I would like the Events team to handle the all aspects of recording for my event (in person events only)':
-    'Yes I would like the Events team to handle the all aspects of recording for my event',
-  'Yes, and I will upload it to the ACM YouTube channel myself':
-    'Yes and I will upload it to the ACM YouTube channel myself',
-  'Yes, I will record it myself and send the Events team a link':
-    'Yes but I will record it myself and send the Events team a link',
-  '': 'No I do not want anything uploaded to YouTube',
-};
-/* eslint-enable max-len */
 
 /**
  * The Type of NotionEvent held.
  */
-export type EventType =
-  | 'Competition'
-  | 'Workshop'
-  | 'Industry Panel'
-  | 'Social'
-  | 'Seminar'
-  | 'GBM'
-  | 'Meeting'
-  | 'Non-Event'
-  | 'Unconfirmed Details'
-  | 'CANCELLED'
-  | 'Other (See Comments)'
-  | 'Sponsored Event'
-  | 'Talk'
-  | 'Side Projects Showcase'
-  | 'Projects Kickoff'
-  | 'Kickoff'
-  | 'Mid Quarter Meeting'
-  | 'Info Session'
-  | 'PENDING EVENT HOST WORKSHOP';
+export type EventType = typeof eventTypes[number];
 
 /**
  * User-defined Type Guard for the EventType.
@@ -129,59 +72,13 @@ export type EventType =
  * @returns Whether the parameter complies with the EventType type.
  */
 export const isEventType = (type: string): type is EventType => {
-  return (
-    type === 'Competition' ||
-    type === 'Workshop' ||
-    type === 'Industry Panel' ||
-    type === 'Social' ||
-    type === 'Seminar' ||
-    type === 'GBM' ||
-    type === 'Meeting' ||
-    type === 'Non-Event' ||
-    type === 'Unconfirmed Details' ||
-    type === 'CANCELLED' ||
-    type === 'Other (See Comments)' ||
-    type === 'Sponsored Event' ||
-    type === 'Talk' ||
-    type === 'Side Projects Showcase' ||
-    type === 'Projects Kickoff' ||
-    type === 'Kickoff' ||
-    type === 'Info Session' ||
-    type === 'PENDING EVENT HOST WORKSHOP' ||
-    type === 'Mid Quarter Meeting'
-  );
+  return eventTypes.includes(type as EventType);
 };
 
 /**
  * Any student organizations ACM collaborates with or has Events hosted with.
  */
-export type StudentOrg =
-  | 'ACM General'
-  | 'ACM AI'
-  | 'ACM Cyber'
-  | 'ACM Design'
-  | 'ACM Hack'
-  | 'ACM Innovate'
-  | 'TSE'
-  | 'TESC'
-  | 'IEEE'
-  | 'WIC'
-  | 'HKN'
-  | 'DS3'
-  | 'EDGE'
-  | 'PIB'
-  | 'ECE UCSD'
-  | 'ECE USC'
-  | 'Tau Beta Pi'
-  | 'QC'
-  | 'SASE'
-  | 'Contrary Capital'
-  | 'Phi Beta Lambda'
-  | 'Quantum Computing at UCSD'
-  | 'Girls Who Code'
-  | 'The Zone'
-  | 'csforeach'
-  | 'SWE';
+export type StudentOrg = typeof studentOrgs[number];
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -190,50 +87,19 @@ export type StudentOrg =
  * @returns Whether the parameter complies with the StudentOrg type.
  */
 export const isStudentOrg = (org: string): org is StudentOrg => {
-  return (
-    org === 'ACM General' ||
-    org === 'ACM AI' ||
-    org === 'ACM Cyber' ||
-    org === 'ACM Design' ||
-    org === 'ACM Hack' ||
-    org === 'ACM Innovate' ||
-    org === 'TSE' ||
-    org === 'TESC' ||
-    org === 'IEEE' ||
-    org === 'WIC' ||
-    org === 'HKN' ||
-    org === 'DS3' ||
-    org === 'EDGE' ||
-    org === 'PIB' ||
-    org === 'ECE UCSD' ||
-    org === 'ECE USC' ||
-    org === 'Tau Beta Pi' ||
-    org === 'QC' ||
-    org === 'SASE' ||
-    org === 'Contrary Capital' ||
-    org === 'Phi Beta Lambda' ||
-    org === 'Quantum Computing at UCSD' ||
-    org === 'Girls Who Code' ||
-    org === 'The Zone' ||
-    org === 'csforeach' ||
-    org === 'SWE'
-  );
+  return studentOrgs.includes(org as StudentOrg);
 };
 
+export type LogisticsBy = typeof logisticsBy[number];
+
+export const isLogisticsBy = (by: string): by is LogisticsBy => {
+  return logisticsBy.includes(by as LogisticsBy);
+};
 
 /**
  * Any student organizations ACM collaborates with or has Events hosted with.
  */
-export type TokenEventGroup =
-  | 'Events'
-  | 'Membership'
-  | 'Projects'
-  | 'Outreach'
-  | 'Hackathon'
-  | 'AI'
-  | 'Cyber'
-  | 'Hack'
-  | 'Other';
+export type TokenEventGroup = typeof tokenEventGroups[number];
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -242,14 +108,85 @@ export type TokenEventGroup =
  * @returns Whether the parameter complies with the StudentOrg type.
  */
 export const isTokenEventGroup = (group: string): group is TokenEventGroup => {
-  return (
-    group === 'Events' ||
-    group === 'Membership' ||
-    group === 'Projects' ||
-    group === 'Outreach' ||
-    group === 'Hackathon' ||
-    group === 'AI' ||
-    group === 'Cyber' ||
-    group === 'Hack'
-  );
+  return tokenEventGroups.includes(group as TokenEventGroup);
+};
+
+export type TokenPass = typeof tokenPasses[number];
+
+export const isTokenPass = (pass: string): pass is TokenPass => {
+  return tokenPasses.includes(pass as TokenPass);
+};
+
+// The location for a NotionEvent.
+//
+// This is limited to the values available in the Notion Calendar.
+export type EventLocation = typeof eventLocations[number];
+
+/**
+ * Converter from the Host Form's locations to the Notion Calendar
+ * entries for locations.
+ *
+ * Since they don't map 1:1, this effectively converts them properly.
+ */
+export const notionLocationTag = {
+  'CSE 1202': 'CSE 1202',
+  'CSE 4140': 'CSE 4140',
+  'CSE B225': 'CSE B225 (Fishbowl)',
+  'CSE Labs': 'Other (See Details)',
+  'Design and Innovation Building Room 202/208': 'Design and Innovation Building 202/208',
+  'Design and Innovation Building Room 306': 'Design and Innovation Building 306',
+  'Design and Innovation Building Room 307': 'Design and Innovation Building 307',
+  'Fung Auditorium (Paid)': 'Fung Auditorium',
+  'Henry Booker Room': 'Henry Booker Room',
+  'Jacobs Room 2315': 'Jacobs Room 2315',
+  'Lecture Hall': 'Lecture Hall',
+  'Library Walk': 'Library Walk',
+  'PC Bear Room': 'PC Bear Room',
+  'PC Eleanor Roosevelt Room': 'PC Eleanor Roosevelt Room',
+  'PC Forum': 'PC Forum',
+  'PC Green Room': 'PC Green Room',
+  'PC Marshall Room': 'PC Marshall Room',
+  'PC Muir Room': 'PC Muir Room',
+  'PC Red Shoe Room': 'PC Red Shoe Room',
+  'PC Revelle Room': 'PC Revelle Room',
+  'PC Warren Room': 'PC Warren Room',
+  'PC East Ballroom': 'PC East Ballroom',
+  'PC West Ballroom': 'PC West Ballroom',
+  'Sixth College Lodge': 'Sixth College Lodge',
+  'Student Services Center Multi-Purpose Room (Paid)': 'Student Services Center Multi-Purpose Room',
+  'SME ASML Room': 'SME ASML Room',
+  'Warren Bear': 'Warren Bear',
+  'Warren Mall': 'Warren Mall',
+  'Off Campus': 'Off Campus',
+  'Other': 'Other (See Details)',
+};
+
+export type ProjectorStatus = typeof projectorStatuses[number];
+
+export const isProjectorStatus = (status: string): status is ProjectorStatus => {
+  return projectorStatuses.includes(status as ProjectorStatus);
+};
+
+export type FundingStatus = typeof fundingStatuses[number];
+
+export const isFundingStatus = (status: string): status is FundingStatus => {
+  return fundingStatuses.includes(status as FundingStatus);
+};
+
+export type FundingSponsor = typeof fundingSponsor[number];
+
+export const isFundingSponsor = (sponsor: string): sponsor is FundingSponsor => {
+  return fundingSponsor.includes(sponsor as FundingSponsor);
+};
+
+export type TapStatus = typeof tapStatuses[number];
+
+export const isTapStatuses = (status: string): status is TapStatus => {
+  return tapStatuses.includes(status as TapStatus);
+};
+
+export type BookingStatus = typeof bookingStatuses[number];
+
+export const isBookingStatus = (status: string): status is BookingStatus => {
+  return bookingStatuses.includes(status as BookingStatus);
 };

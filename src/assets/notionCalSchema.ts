@@ -3,7 +3,7 @@
  *
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Monday, Oct 06 2025 08:43:00 PST.
+ * Friday, 24 Oct 2025 07:38:00 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -288,51 +288,12 @@ export const notionCalSchema = {
       ],
     },
   },
-  'Intake Form Status': {
-    'id': '%3BnPn',
-    'name': 'Intake Form Status',
+  'Plain Description': {
+    'id': '%3EHVC',
+    'name': 'Plain Description',
     'description': null,
-    'type': 'select',
-    'select': {
-      'options': [
-        {
-          'id': '733e89dc-e63c-4340-b773-23288ceeaf00',
-          'name': 'Intake Form N/A',
-          'color': 'default',
-          'description': null,
-        },
-        {
-          'id': 'cacd21cb-0852-4e4a-80e1-5310246337d8',
-          'name': 'Intake Form TODO',
-          'color': 'orange',
-          'description': null,
-        },
-        {
-          'id': 'c5e35290-36b7-4900-b6e6-a609ab0a10f4',
-          'name': 'Intake Form In Progress',
-          'color': 'yellow',
-          'description': null,
-        },
-        {
-          'id': '48a581e5-977d-4a3a-9034-28f1252800e4',
-          'name': 'Intake Form Pending Approval',
-          'color': 'purple',
-          'description': null,
-        },
-        {
-          'id': '1f190ba0-b47a-4e0e-bae4-c65e01c15fdd',
-          'name': 'Intake Form Completed',
-          'color': 'green',
-          'description': null,
-        },
-        {
-          'id': '6a1a9bca-6d47-4d79-b1f3-c7651353505d',
-          'name': 'Intake Form CANCELLED',
-          'color': 'red',
-          'description': null,
-        },
-      ],
-    },
+    'type': 'rich_text',
+    'rich_text': {},
   },
   'Tech Requests': {
     'id': '%3Enm%7D',
@@ -402,13 +363,6 @@ export const notionCalSchema = {
       'format': 'dollar',
     },
   },
-  'Approved Intake': {
-    'id': '%40hOD',
-    'name': 'Approved Intake',
-    'description': null,
-    'type': 'files',
-    'files': {},
-  },
   'Funding Manager': {
     'id': 'APk4',
     'name': 'Funding Manager',
@@ -444,6 +398,24 @@ export const notionCalSchema = {
     'type': 'select',
     'select': {
       'options': [
+        {
+          'id': ']~Ra',
+          'name': 'Design and Innovation Building 307',
+          'color': 'purple',
+          'description': null,
+        },
+        {
+          'id': 'vTS_',
+          'name': 'Design and Innovation Building 306',
+          'color': 'orange',
+          'description': null,
+        },
+        {
+          'id': 'XM{d',
+          'name': 'PC Green Room',
+          'color': 'green',
+          'description': null,
+        },
         {
           'id': '0f43e2c8-48ae-4ca3-9bc3-98428254f899',
           'name': 'Zoom (See Details)',
@@ -1235,40 +1207,6 @@ export const notionCalSchema = {
       ],
     },
   },
-  'CSI Form Status': {
-    'id': 'a%5D%60Q',
-    'name': 'CSI Form Status',
-    'description': null,
-    'type': 'select',
-    'select': {
-      'options': [
-        {
-          'id': '58d07f44-d459-4e58-b314-b560f9dc8a09',
-          'name': 'CSI Form N/A',
-          'color': 'default',
-          'description': null,
-        },
-        {
-          'id': '934c6575-fc3e-47f1-87e3-36ee8bb7359a',
-          'name': 'CSI Form TODO',
-          'color': 'orange',
-          'description': null,
-        },
-        {
-          'id': '34845e13-081a-4217-b11e-e060a7307b31',
-          'name': 'CSI Form In Progress',
-          'color': 'yellow',
-          'description': null,
-        },
-        {
-          'id': '8d0c272a-83e0-40f6-ad49-ff29377bc39d',
-          'name': 'CSI Form Done',
-          'color': 'green',
-          'description': null,
-        },
-      ],
-    },
-  },
   'Projected Attendance': {
     'id': 'b%5D%5Dq',
     'name': 'Projected Attendance',
@@ -1756,6 +1694,28 @@ export const notionCalSchema = {
     'type': 'url',
     'url': {},
   },
+  'Off Campus Guests': {
+    'id': '%7BFIJ',
+    'name': 'Off Campus Guests',
+    'description': null,
+    'type': 'select',
+    'select': {
+      'options': [
+        {
+          'id': '^Xl[',
+          'name': 'Yes',
+          'color': 'default',
+          'description': null,
+        },
+        {
+          'id': 'vlzk',
+          'name': 'No',
+          'color': 'default',
+          'description': null,
+        },
+      ],
+    },
+  },
   'Date/Time Notes': {
     'id': '~JH%3F',
     'name': 'Date/Time Notes',
@@ -1799,4 +1759,4 @@ export const notionCalSchema = {
     'type': 'title',
     'title': {},
   },
-};
+} as const;

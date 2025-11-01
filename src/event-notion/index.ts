@@ -222,9 +222,7 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
   Logger.info('Syncing events to Notion calendar...');
   const notionEventsToImport = newEvents.flatMap((newEvent, index) => {
     try {
-      const event = new NotionCalEvent(newEvent);
-      event.setCalendarId(databaseId);
-      event.setHostedEventDatabaseID(config.settings.notionHostedEventsID);
+      const event = new NotionCalEvent(databaseId, config.settings.notionHostedEventsID, newEvent);
       return event;
     } catch (error) {
       // If there was a TypeError (doubtful, but possible), we'll want to report it
@@ -259,9 +257,9 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
         const successEmbed = new MessageEmbed()
           .setTitle('📥 Imported new event!')
           .setDescription(
-            `**Event name:** ${event.getName()}
+            `**Event name:** ${event.name}
           **URL:** ${url}
-          **Hosted by:** ${event.getHostFormResponse()['Event director(s)']}`,
+          **Hosted by:** ${event.response['Event director(s)']}`,
           )
           .setColor('GREEN');
         await channel.send({
@@ -271,13 +269,13 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
       } catch (error) {
         // If we can't create the event, notify everone. Skip over the
         // "tick the checkbox" part, since we didn't actually import the event.
-        Logger.error(`Error creating event "${event.getName()}: ${error}"`, {
+        Logger.error(`Error creating event "${event.name}: ${error}"`, {
           error,
-          eventName: event.getName(),
+          eventName: event.name,
         });
         const errorEmbed = new MessageEmbed()
           .setTitle('⚠️ Error creating event on Notion!')
-          .setDescription(`**Event name:** ${event.getName()}\n**Error:** \`${error}\``)
+          .setDescription(`**Event name:** ${event.name}\n**Error:** \`${error}\``)
           .setColor('RED');
         await channel.send({
           content: `*Paging <@&${config.settings.maintainerID}>!*`,
@@ -307,21 +305,21 @@ export const syncHostFormToNotionCalendar = async (config: EventNotionPipelineCo
 };
 
 /**
- * Pings the Logistics Team for any upcoming events that need the TAP Forms or CSI Event Intake forms submitted.
+ * Pings the Logistics Team for any upcoming events that need the TAP Forms submitted.
  *
- * According to Logistics Team, TAP Forms or CSI Event Intake forms for any events that need them
+ * According to Logistics Team, TAP Forms for any events that need them
  * need to be submitted 3 weeks before the event starts.
  *
  * This pipeline does the following:
  * - Looks up all the events in the Notion calendar database
  * - Filters for any events that are specifically 3 weeks and 1, 2 or 3 days away from today,
  *   as well as 2 weeks and 1, 2 or 3 days away from today. (in other words,
- *   anything that has TAP forms or CSI Intake forms due the next day.) Additionally, an 8-week
+ *   anything that has TAP forms due the next day.) Additionally, an 8-week
  *   advance for booking confirmation.
- * - Checks whether the events still need to have a TAP or CSI Event Intake form submitted.
+ * - Checks whether the events still need to have a TAP form submitted.
  * - Adds all the events to two separate embed with a title and URL and pings the Logistics team about it.
  */
-export const pingForTAPandCSIDeadlines = async (
+export const pingForTAPDeadlines = async (
   notion: Client,
   databaseId: string,
   config: EventNotionPipelineConfig,
@@ -417,7 +415,7 @@ export const pingForTAPandCSIDeadlines = async (
       'colour': 'YELLOW',
       'dates': [
         {
-          'days': 14,
+          'days': 21,
           'pingRoles': ['logisticsTeamID'],
           'message': '\n⚠️ __**Final check for all event details!**__ ⚠️\n',
           'prop': 'PR',
@@ -425,7 +423,7 @@ export const pingForTAPandCSIDeadlines = async (
           'pingHosts': true,
         },
         {
-          'days': 21,
+          'days': 35,
           'pingRoles': ['logisticsTeamID', 'marketingTeamID'],
           'message': '\n __**Double-check venue, time, food, title and description for the event!**__\n',
           'prop': 'PR',
@@ -586,6 +584,7 @@ ${Math.trunc(weeks / 7).toString()} weeks${weeks % 7 != 0 ? ', ' + (weeks % 7).t
 
           // Collects all the Discord users of event hosts for the embed to ping
           let embedEventHosts = new Array<string>();
+          // eslint-disable-next-line @typescript-eslint/dot-notation
           event.properties['Hosted by']['people'].forEach(eventHost => {
             let userPing = mps.getGuest(eventHost.person.email);
             if (userPing != null && 'pingHosts' in curPing  && curPing.pingHosts)
@@ -693,11 +692,13 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
         throw new TypeError(`Title field for event not a title! (Event URL: ${event.url}`);
       }
 
+      // eslint-disable-next-line @typescript-eslint/dot-notation
       event.properties['Hosted by']['people'].forEach(eventHost => {
         let userPing = mps.getGuest(eventHost.person.email);
         if (userPing != null) curEmbedPeoplePing.push(`<@${userPing}>`);
       });
-      
+
+      // eslint-disable-next-line @typescript-eslint/dot-notation
       keyPingDescription += `- **${event.properties['Hosted by']['people'][0].name}** \
 hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '')}](${
   event.url
@@ -724,7 +725,7 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
  * Pings for any deadlines and reminders that the Teams might need for any sort of event-related task.
  *
  * This includes:
- * - TAP and CSI Event Intake Form deadlines
+ * - TAP Form deadlines
  * - Key reminders for Qualcomm, DIB, CSE, ASML (SME) rooms
  * - AS Funding deadline reminders
  *
@@ -748,7 +749,7 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
 
   Logger.info('Pipeline ready! Running.');
 
-  pingForTAPandCSIDeadlines(notion, databaseId, config);
+  pingForTAPDeadlines(notion, databaseId, config);
   pingForKeys(notion, databaseId, config);
 
   // Done!

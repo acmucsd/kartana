@@ -21,7 +21,7 @@ export default class {
   public notionEventSyncJob!: schedule.Job;
 
   /**
-   * Cronjob to run TAP and CSI Deadline Pings every day at 10 AM.
+   * Cronjob to run TAP Deadline Pings every day at 10 AM.
    */
   public deadlineReminderPingJob: schedule.Job;
 
@@ -90,7 +90,7 @@ export default class {
   }
 
   /**
-   * Checks and pings if there are any upcoming TAP and CSI deadlines.
+   * Checks and pings if there are any upcoming TAP deadlines.
    * @param client The original client, for access to the configuration
    */
   public async runDeadlinesAndReminders(client: BotClient): Promise<void> {
@@ -181,7 +181,7 @@ export default class {
       this.runNotionPipeline(client);
     });
     this.deadlineReminderPingJob = schedule.scheduleJob('0 10 * * *', async () => {
-      Logger.info('Running TAP and CSI deadline pings cron job!');
+      Logger.info('Running TAP deadline pings cron job!');
       this.runDeadlinesAndReminders(client);
     });
   }
