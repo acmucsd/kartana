@@ -5,29 +5,30 @@ import {
   BookingStatus,
   EventLocation,
   EventType,
+  eventTypes,
+  fundingSponsor,
   FundingSponsor,
   FundingStatus,
   HostFormResponse,
   NotionCalEvent as INotionCalEvent,
-  isEventType,
-  isFundingSponsor,
-  isLogisticsBy,
-  isOffCampusGuests,
-  isProjectorStatus,
-  isStudentOrg,
-  isTokenEventGroup,
-  isTokenPass,
+  logisticsBy,
   LogisticsBy,
   notionLocationTag,
   OffCampusGuests,
   ProjectorStatus,
+  projectorStatuses,
   StudentOrg,
+  studentOrgs,
   TapStatus,
   TokenEventGroup,
+  tokenEventGroups,
   TokenPass,
+	tokenPasses,
 } from '../types';
 import Logger from '../utils/Logger';
 import NotionEventPage from './NotionEventPage';
+import { z } from 'zod';
+
 
 /**
  * Convert a piece of Markdown-compliant text to a RichTextItemRequest for
@@ -47,58 +48,6 @@ export const toNotionRichText = (text: string) => {
   return [{ text: { content: text } }];
 };
 
-/**
- * Checks whether a TAP form is required for the passed in host form response,
- *
- * This function is the business logic for checking for TAP form requirements
- * for any host form response. Initially, a TAP form is either in a TODO or
- * N/A state. We only check whether one is required at all.
- *
- * A TAP (Triton Activities Planner) form is required if the event is on campus.
- *
- * @param response The HostFormResponses for a given NotionCalEvent.
- * @returns The Notion Option for TAP form status.
- */
-const needsTAPForm = (response: HostFormResponse): 'TAP N/A' | 'TAP TODO' => {
-  return response['Where is your event taking place?'] === 'My event is on Zoom' ||
-    response['Where is your event taking place?'] === 'My event is on Discord only' ||
-    response['Where is your event taking place?'] === 'My event is off campus'
-    ? 'TAP N/A'
-    : 'TAP TODO';
-};
-
-/**
- * Checks whether a booking is required for the passed in host form response.
- *
- * This function is the business logic for checking for booking requirements
- * for any host form response.
- *
- * A booking is required for any on-campus event using a designated university area of
- * any kind. This includes events in conference rooms, Library Walk tiles, etc.
- *
- * @param response The HostFormResponse for a given NotionCalEvent.
- * @returns The Notion Option for Booking status.
- */
-const needsBooking = (response: HostFormResponse): 'Booking N/A' | 'Booking TODO' => {
-  return response['Where is your event taking place?'] === 'I need a venue on campus' ? 'Booking TODO' : 'Booking N/A';
-};
-
-/**
- * Takes the organizations involved in an event from the passed in host form response.
- *
- * Google Sheets stores Google Forms multiple-choice selections as comma-separated strings,
- * and since we assume the Host Form has a select number of StudentOrgs in it that are kept in
- * sync with our own type declarations, all we need to do is get our separated comma-delimited
- * values from the host form response and convert them to StudentOrg types.
- *
- * @param response The HostFormResponse for a given NotionCalEvent.
- * @returns The array of StudentOrgs involved with a NotionCalEvent.
- */
-const filterOrgsResponse = (response: HostFormResponse): StudentOrg[] => {
-  return response['Which of the following organizations are involved in this event?']
-    .split(', ')
-    .filter((studentOrg) => isStudentOrg(studentOrg)) as StudentOrg[];
-};
 
 /**
  * Get the preferred times for an event to take place.
@@ -109,12 +58,12 @@ const filterOrgsResponse = (response: HostFormResponse): StudentOrg[] => {
  * @param response The HostFormResponse for a given NotionCalEvent.
  * @returns The Interval in which a NotionCalEvent takes place.
  */
-const getEventInterval = (response: HostFormResponse): Interval => {
+const getEventInterval = (date: string, startTime: string, endTime: string): Interval => {
   let interval = Interval.fromDateTimes(
     // Convert from the provided host form responses to the DateTime objects.
     // The format string below SEEMS to work for most events, but I MAY be wrong.
-    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred start time']}`, 'M/d/yyyy h:mm:ss a'),
-    DateTime.fromFormat(`${response['Preferred date']} ${response['Preferred end time']}`, 'M/d/yyyy h:mm:ss a'),
+    DateTime.fromFormat(`${date} ${startTime}`, 'M/d/yyyy h:mm:ss a'),
+    DateTime.fromFormat(`${date} ${endTime}`, 'M/d/yyyy h:mm:ss a'),
   );
 
   if (!interval.isValid) {
@@ -125,17 +74,107 @@ const getEventInterval = (response: HostFormResponse): Interval => {
 };
 
 /**
- * Get the food pickup time for an event.
+ * Gets	and validates the full URL from a user inputted string. 
+ * This function also accounts for cases when the prefix `https://` is omitted.
  *
- * @param response The HostFormResponse for a given NotionCalEvent.
- * @returns The DateTime when food is planned to be picked up, or null if the field is blank on the form.
+ * @param urlString The URL string that the user inputs
+ * @param eventName Name of the event, not relevant to URL but is just used for clearer error handling
+ * @returns The URL object constructed from the user's input URL
  */
-const getFoodPickupTime = (response: HostFormResponse): DateTime | null => {
-  if (response['Food Pickup Time']) {
-    return DateTime.fromFormat(`${response['Preferred date']} ${response['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a');
+function parseLocationURL(urlString: string, eventName: string): URL | null {
+  if (!urlString) return null;
+  
+  try {
+    const fullUrl = urlString.startsWith('acmurl.com') 
+      ? `https://${urlString}` 
+      : urlString;
+    return new URL(fullUrl);
+  } catch (e) {
+    Logger.warn(`Event ${eventName} has erroneous location URL input! Setting as null.`, {
+      input: urlString,
+    });
+    return null;
   }
-  return null;
-};
+}
+
+
+/**
+ * Zod schema validating input (HostFormResponse) and mapping to output (INotionCalEvent) 
+ */
+export const HostFormResponseSchema = z.object({
+  'Event name': z.string().min(1, 'Event name is required'),
+  'Event description': z.string(),
+	'Plain description': z.string(),
+  'What kind of event is this?': z.enum(eventTypes).catch('Other (See Comments)'), 
+  'Preferred date': z.string(),
+  'Preferred start time': z.string(),
+  'Preferred end time': z.string(),
+  'Additional Date/Time Notes': z.string().optional().default(''),
+  'Estimated Attendance?': z.coerce.number().int().positive().catch(-1),
+  'Check-in Code': z.string(),
+  'Which of the following organizations are involved in this event?': z.string().transform((val): StudentOrg[] => val.split(', ').filter(org => org in studentOrgs) as StudentOrg[]),
+  'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy).catch('ACM'), 
+  'Which pass will this event be submitted under?': z.enum(tokenPasses).catch('First Pass'), 
+  'Which team/community will be using their token?': z.enum(tokenEventGroups, {error: "The team you listed your token under doesn't seem to exist"}), 
+  'Where is your event taking place?': z.string(),
+  'Ideal Venue Choice': z.string(),
+  'Other venue details?': z.string().optional().default(''),
+  'Will you need a projector and/or other tech?': z.enum(projectorStatuses).catch('No'),
+  'If you need tech or equipment, please specify here': z.string().optional().default(''),
+  'Event Link (ACMURL)': z.string().optional().default(''),
+  'Will your event require funding?': z.string(),
+  'What food do you need funding for?': z.string().optional().default(''),
+  'Food Pickup Time': z.string().optional(),
+  'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
+  'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor).catch('No'),
+  'Any additional funding details?': z.string().optional().default(''),
+}).transform((data) => ({
+  name: data['Event name'],
+  description: data['Event description'],
+  plainDescription: data['Plain description'],
+  offCampusGuests: data['Are you planning on inviting off campus guests?'],
+  type: data['What kind of event is this?'],
+	date: getEventInterval(data['Preferred date'], data['Preferred start time'], data['Preferred end time']),
+  dateTimeNotes: data['Additional Date/Time Notes'],
+  projectedAttendance: data['Estimated Attendance?'],
+  checkinCode: data['Check-in Code'],
+  organizations: data['Which of the following organizations are involved in this event?'],
+  logisticsBy: data['If this is a collab event, who will be handling the logistics?'],
+  tokenPass: data['Which pass will this event be submitted under?'],
+  tokenEventGroup: data['Which team/community will be using their token?'],
+  tokenUseNum: data['What token number will you be using?'],
+	location: {
+							'My event is on Zoom': 					'Zoom (See Details)', 
+							'My event is on Discord only': 	'Discord (See Details)',
+							'My event is off campus': 			'Off Campus'
+						}[data['Where is your event taking place?']] // zoom/discord/off-campus
+						?? notionLocationTag[data['Ideal Venue Choice']] // actual venue 
+						?? 'Other (See Details)',
+  locationDetails: data['Other venue details?'],
+  projectorStatus: data['Will you need a projector and/or other tech?'],
+  techRequests: data['If you need tech or equipment, please specify here'],
+	locationURL: parseLocationURL(data['Event Link (ACMURL)'], data['Event name']),
+	fundingStatus: data['Will your event require funding?'] === 'Yes' 
+    ? 'Funding TODO' 
+    : 'Funding Not Requested',
+  requestedItems: data['What food do you need funding for?'],
+	foodPickupTime: data['Food Pickup Time'] 
+    ? DateTime.fromFormat(`${data['Preferred date']} ${data['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a')
+    : null,
+  nonFoodRequests: data['Non-food system requests: Vendor website or menu'],
+  fundingSponsor: data['Is there a sponsor that will pay for this event?'],
+  additionalFinanceInfo: data['Any additional funding details?'],
+	TAPStatus: {
+							'My event is on Zoom': 					'TAP N/A',
+							'My event is on Discord only': 	'TAP N/A',
+							'My event is off campus': 			'TAP N/A'
+						}[data['Where is your event taking place?']] // No TAP needed for online/off-campus
+						?? 'TAP TODO',
+  bookingStatus: data['Where is your event taking place?'] === 'I need a venue on campus'
+		? 'Booking TODO' 
+		: 'Booking N/A',
+}) as INotionCalEvent);
+
 
 /**
  * NotionCalEvent is a representation of an event stored in the Notion Calendar.
@@ -163,134 +202,44 @@ export default class NotionCalEvent implements INotionCalEvent {
   readonly hostedEventDatabaseID: string;
 
   readonly name: string;
-
   readonly description: string;
-
   readonly plainDescription: string;
-
   readonly offCampusGuests: OffCampusGuests;
-
   readonly type: EventType;
-
   readonly date: Interval;
-
   readonly dateTimeNotes: string;
-
   readonly projectedAttendance: number;
-
   readonly checkinCode: string;
-
   readonly organizations: StudentOrg[];
-
   readonly logisticsBy: LogisticsBy;
-
   readonly tokenEventGroup: TokenEventGroup;
-
   readonly tokenPass: TokenPass;
-
   readonly tokenUseNum: number;
-  
   readonly location: EventLocation;
-
   readonly locationDetails: string;
-  
   readonly projectorStatus: ProjectorStatus;
-
   readonly techRequests: string;
-
   readonly locationURL: URL | null;
-
   readonly fundingStatus: FundingStatus;
-
   readonly requestedItems: string;
-
   readonly foodPickupTime: DateTime | null;
-
   readonly nonFoodRequests: string;
-
   readonly fundingSponsor: FundingSponsor;
-
   readonly additionalFinanceInfo: string;
-
   readonly TAPStatus: TapStatus;
-  
   readonly bookingStatus: BookingStatus;
 
-  constructor(parentCalendarID: string, hostedEventDatabaseID: string, formResponse: HostFormResponse) {
-    this.parentCalendarID = parentCalendarID;
+  constructor(
+		parentCalendarID: string, 
+		hostedEventDatabaseID: string, 
+		formResponse: HostFormResponse
+	) {
+		this.parentCalendarID = parentCalendarID;
     this.hostedEventDatabaseID = hostedEventDatabaseID;
     this.response = formResponse;
-    this.name = formResponse['Event name'];
-    this.description = formResponse['Event description'];
-    this.plainDescription = formResponse['Plain description'];
-    this.offCampusGuests = isOffCampusGuests(formResponse['Are you planning on inviting off campus guests?'])
-      ? formResponse['Are you planning on inviting off campus guests?']
-      : 'No';
-    this.type = isEventType(formResponse['What kind of event is this?'])
-      ? formResponse['What kind of event is this?']
-      : 'Other (See Comments)';
-    this.date = getEventInterval(formResponse);
-    this.dateTimeNotes = formResponse['Additional Date/Time Notes'];
-    this.projectedAttendance = parseInt(formResponse['Estimated Attendance?']) || -1;
-    this.checkinCode = formResponse['Check-in Code'];
-    this.organizations = filterOrgsResponse(formResponse);
-    this.logisticsBy = isLogisticsBy(formResponse['If this is a collab event, who will be handling the logistics?'])
-      ? formResponse['If this is a collab event, who will be handling the logistics?']
-      : 'ACM';
-    this.tokenPass = isTokenPass(formResponse['Which pass will this event be submitted under?'])
-      ? formResponse['Which pass will this event be submitted under?']
-      : 'First Pass';
-    if (!isTokenEventGroup(formResponse['Which team/community will be using their token?'])){
-      throw new TypeError("The team you listed your token under doesn't seem to exist, make sure it is one \
-        of the accepted orgs!");
-    }
-    this.tokenEventGroup = formResponse['Which team/community will be using their token?'];
-    this.tokenUseNum = parseInt(formResponse['What token number will you be using?']) || -1;
-    this.location = notionLocationTag[formResponse['Ideal Venue Choice']] || 'Other (See Details)';
-    if (formResponse['Where is your event taking place?'] === 'My event is on Zoom') {
-      this.location = 'Zoom (See Details)';
-    }
-    if (formResponse['Where is your event taking place?'] === 'My event is on Discord only') {
-      this.location = 'Discord (See Details)';
-    }
-    if (formResponse['Where is your event taking place?'] === 'My event is off campus') {
-      this.location = 'Off Campus';
-    }
-    this.locationDetails = formResponse['Other venue details?'];
-    this.projectorStatus = isProjectorStatus(formResponse['Will you need a projector and/or other tech?'])
-      ? formResponse['Will you need a projector and/or other tech?']
-      : 'No';
-    this.techRequests = formResponse['If you need tech or equipment, please specify here'];
-    // Add a check to ensure no ill-written URL's are included.
-    // Basically, try to fix classic shortenings of ACMURL's, and if there's still a URL parse error
-    // Just warn the console and set the URL as null.
-    //
-    // TODO Ask host form to validate URL input fields as URL's.
-    try {
-      if (formResponse['Event Link (ACMURL)'].startsWith('acmurl.com')) {
-        this.locationURL = new URL('https://' + formResponse['Event Link (ACMURL)']);
-      } else {
-        this.locationURL =
-        formResponse['Event Link (ACMURL)'] !== '' ? new URL(formResponse['Event Link (ACMURL)']) : null;
-      }
-    } catch (e) {
-      Logger.warn(`Event ${this.name} has erroneous location URL input! Setting as null.`, {
-        input: formResponse['Event Link (ACMURL)'],
-      });
-      this.locationURL = null;
-    }
-    this.fundingStatus = formResponse['Will your event require funding?'] === 'Yes'
-      ? 'Funding TODO'
-      : 'Funding Not Requested';
-    this.requestedItems = formResponse['What food do you need funding for?'];
-    this.foodPickupTime = getFoodPickupTime(formResponse);
-    this.nonFoodRequests = formResponse['Non-food system requests: Vendor website or menu'];
-    this.fundingSponsor = isFundingSponsor(formResponse['Is there a sponsor that will pay for this event?'])
-      ? formResponse['Is there a sponsor that will pay for this event?']
-      : 'No';
-    this.additionalFinanceInfo = formResponse['Any additional funding details?'];
-    this.TAPStatus = needsTAPForm(formResponse);
-    this.bookingStatus = needsBooking(formResponse);
+
+		const validated = HostFormResponseSchema.parse(formResponse);
+    Object.assign(this, validated);
   }
 
   /**
@@ -314,10 +263,10 @@ export default class NotionCalEvent implements INotionCalEvent {
         database_id: this.parentCalendarID,
       },
       properties: {
-        Name: {
+        'Name': {
           title: toNotionRichText(this.name),
         },
-        Type: {
+        'Type': {
           select: { name: this.type },
         },
         'Funding Status': {
@@ -343,7 +292,7 @@ export default class NotionCalEvent implements INotionCalEvent {
             },
           }
           : {}),
-        Location: {
+        'Location': {
           select: { name: this.location },
         },
         // Booking Time omitted.
@@ -359,7 +308,7 @@ export default class NotionCalEvent implements INotionCalEvent {
         'Booking Status': {
           select: { name: this.bookingStatus },
         },
-        Organizations: {
+        'Organizations': {
           multi_select: this.organizations.map((org) => {
             return { name: org };
           }),
@@ -468,7 +417,7 @@ export default class NotionCalEvent implements INotionCalEvent {
         // "PR Manager" omitted.
         //
         // We don't know who will manage this event yet.
-        Date: {
+        'Date': {
           date: {
             start: this.date.start.toISO(),
             end: this.date.end.toISO(),

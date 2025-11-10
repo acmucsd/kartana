@@ -262,3 +262,5 @@ database.properties
 # Meeting Pings Schema
 meetingPingsCalendarSchema.*
 meetingPingsGuestSchema.*
+
+/secrets
