@@ -105,28 +105,28 @@ export const HostFormResponseSchema = z.object({
   'Event name': z.string().min(1, 'Event name is required'),
   'Event description': z.string(),
 	'Plain description': z.string(),
-  'What kind of event is this?': z.enum(eventTypes).catch('Other (See Comments)'), 
+  'What kind of event is this?': z.enum(eventTypes, {error: (event)=>`Invalid event type: ${event}`}), 
   'Preferred date': z.string(),
   'Preferred start time': z.string(),
   'Preferred end time': z.string(),
   'Additional Date/Time Notes': z.string().optional().default(''),
-  'Estimated Attendance?': z.coerce.number().int().positive().catch(-1),
+  'Estimated Attendance?': z.coerce.number().int('Attendance must be a whole number').positive('Attendance must be positive'),
   'Check-in Code': z.string(),
   'Which of the following organizations are involved in this event?': z.string().transform((val): StudentOrg[] => val.split(', ').filter(org => org in studentOrgs) as StudentOrg[]),
-  'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy).catch('ACM'), 
-  'Which pass will this event be submitted under?': z.enum(tokenPasses).catch('First Pass'), 
-  'Which team/community will be using their token?': z.enum(tokenEventGroups, {error: "The team you listed your token under doesn't seem to exist"}), 
+  'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy, {error: (L)=>`Invalid logistics handler: ${L}`}), 
+  'Which pass will this event be submitted under?': z.enum(tokenPasses, {error: (R)=>`Invalid response for which pass: ${R}`}), 
+  'Which team/community will be using their token?': z.enum(tokenEventGroups, {error: (R)=>`The team you listed your token under doesn't seem to exist: ${R}`}), 
   'Where is your event taking place?': z.string(),
   'Ideal Venue Choice': z.string(),
   'Other venue details?': z.string().optional().default(''),
-  'Will you need a projector and/or other tech?': z.enum(projectorStatuses).catch('No'),
+  'Will you need a projector and/or other tech?': z.enum(projectorStatuses, {error: (R)=>`Invalid response for whether you need projector/tech: ${R}`}),
   'If you need tech or equipment, please specify here': z.string().optional().default(''),
   'Event Link (ACMURL)': z.string().optional().default(''),
   'Will your event require funding?': z.string(),
   'What food do you need funding for?': z.string().optional().default(''),
   'Food Pickup Time': z.string().optional(),
   'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
-  'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor).catch('No'),
+  'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor, {error: (R)=>`Invalid funding sponsor: ${R}`}),
   'Any additional funding details?': z.string().optional().default(''),
 }).transform((data) => ({
   name: data['Event name'],
@@ -201,6 +201,8 @@ export default class NotionCalEvent implements INotionCalEvent {
   // right after uploading the calendar event page, since they are directly linked.
   readonly hostedEventDatabaseID: string;
 
+	// Valid
+
   readonly name: string;
   readonly description: string;
   readonly plainDescription: string;
@@ -238,8 +240,25 @@ export default class NotionCalEvent implements INotionCalEvent {
     this.hostedEventDatabaseID = hostedEventDatabaseID;
     this.response = formResponse;
 
-		const validated = HostFormResponseSchema.parse(formResponse);
-    Object.assign(this, validated);
+		try {
+			const validated = HostFormResponseSchema.parse(formResponse);
+			Object.assign(this, validated);
+		} catch (error) {
+			if (error instanceof z.ZodError) {
+				let errorString = `Event creation failed for ${formResponse['Event name']} submitted by ${formResponse['Email Address']}: \n`
+				error.issues.forEach(issue => {
+					errorString += `  ${issue.path.join('.')}: ${issue.message} \n`;
+				});
+
+				throw new Error(errorString);
+			} else {
+				let errorString = `Event creation failed for event ${formResponse['Event name']} submitted by ${formResponse['Email Address']}: \n`
+				error += `Error: ${error.message}`
+
+				throw new Error(errorString);
+			}
+		}
+
   }
 
   /**
