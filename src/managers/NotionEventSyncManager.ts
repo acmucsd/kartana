@@ -59,7 +59,7 @@ export default class {
           // (or restarts).
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Notion database changed!')
-            .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
+            .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0,4095))
             .setFooter("I will not run the pipeline again until y'all confirm the Notion database changes.")
             .setColor('DARK_RED');
           await eventChannel.send({
@@ -75,7 +75,7 @@ export default class {
           client.flags.validGoogleSchema = false;
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Google Sheets table columns changed!')
-            .setDescription(`Changes found in table:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
+            .setDescription(`Changes found in table:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0,4095))
             .setFooter("I will not run the pipeline again until y'all confirm the Google Sheets table changes.")
             .setColor('DARK_RED');
           await eventChannel.send({

@@ -264,3 +264,7 @@ meetingPingsCalendarSchema.*
 meetingPingsGuestSchema.*
 
 /secrets
+
+# Debug output files
+output_databaseProperties.json
+output_notionCalSchema.json
