@@ -105,7 +105,7 @@ function parseLocationURL(urlString: string, eventName: string): URL | null {
 export const HostFormResponseSchema = z.object({
 	'Event name': z.string().min(1, 'Event name is required'),
 	'Event description': z.string().min(1, 'Event description is required'),
-	'What kind of event is this?': z.string().min(1, 'Event type is required'), 
+	'What kind of event is this?': z.enum(eventTypes).catch('Other (See Comments)'), 
 	'Preferred date': z.string(),
 	'Preferred start time': z.string(),
 	'Preferred end time': z.string(),
