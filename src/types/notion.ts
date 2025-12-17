@@ -38,18 +38,18 @@ export interface NotionCalEvent {
   readonly bookingStatus: BookingStatus;
 }
 
-const offCampusGuests = extractNames(notionCalSchema['Off Campus Guests'].select.options);
-const eventTypes = extractNames(notionCalSchema.Type.select.options);
-const studentOrgs = extractNames(notionCalSchema.Organizations.multi_select.options);
-const logisticsBy = extractNames(notionCalSchema['Logistics By'].select.options);
-const tokenEventGroups = extractNames(notionCalSchema['Token Event Group'].select.options);
-const tokenPasses = extractNames(notionCalSchema['Token Pass'].select.options);
-const eventLocations = extractNames(notionCalSchema.Location.select.options);
-const projectorStatuses = extractNames(notionCalSchema['Projector?'].select.options);
-const fundingStatuses = extractNames(notionCalSchema['Funding Status'].select.options);
-const fundingSponsor = extractNames(notionCalSchema['Sponsor?'].select.options);
-const tapStatuses = extractNames(notionCalSchema['TAP Status'].select.options);
-const bookingStatuses = extractNames(notionCalSchema['Booking Status'].select.options);
+export const offCampusGuests = extractNames(notionCalSchema['Off Campus Guests'].select.options);
+export const eventTypes = extractNames(notionCalSchema.Type.select.options);
+export const studentOrgs = extractNames(notionCalSchema.Organizations.multi_select.options);
+export const logisticsBy = extractNames(notionCalSchema['Logistics By'].select.options);
+export const tokenEventGroups = extractNames(notionCalSchema['Token Event Group'].select.options);
+export const tokenPasses = extractNames(notionCalSchema['Token Pass'].select.options);
+export const eventLocations = extractNames(notionCalSchema.Location.select.options);
+export const projectorStatuses = extractNames(notionCalSchema['Projector?'].select.options);
+export const fundingStatuses = extractNames(notionCalSchema['Funding Status'].select.options);
+export const fundingSponsor = extractNames(notionCalSchema['Sponsor?'].select.options);
+export const tapStatuses = extractNames(notionCalSchema['TAP Status'].select.options);
+export const bookingStatuses = extractNames(notionCalSchema['Booking Status'].select.options);
 
 // A Notion User.
 export type NotionUser = GetUserResponse;

@@ -262,3 +262,9 @@ database.properties
 # Meeting Pings Schema
 meetingPingsCalendarSchema.*
 meetingPingsGuestSchema.*
+
+/secrets
+
+# Debug output files
+output_databaseProperties.json
+output_notionCalSchema.json
