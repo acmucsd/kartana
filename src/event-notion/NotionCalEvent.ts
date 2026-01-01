@@ -126,7 +126,7 @@ export const HostFormResponseSchema = z.object({
 	'What food do you need funding for?': z.string().optional().default(''),
 	'Food Pickup Time': z.string().optional(),
 	'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
-	'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor, {errorMap: (event)=>({message: `Invalid sponsor status: ${event}`})}),
+	'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor).catch("No"),
 	'Any additional funding details?': z.string().optional().default(''),
 	'Plain description': z.string().min(1, 'Plain description is required'),
 	'Are you planning on inviting off campus guests?': z.enum(offCampusGuests, {errorMap: (event)=>({message: `Invalid off campus guest status: ${event}`})}),
