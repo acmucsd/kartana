@@ -223,6 +223,9 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 		return;
 	}
 
+	// Seperate array containing all the indices of the erroneous events
+	let badEventIndices: number[] = [];
+
 	// Sync our events to Notion calendar.
 	//
 	// This is kinda jank, but it works.
@@ -239,7 +242,8 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 				error,
 				eventName: newEvent['Event name'],
 			});
-			newEventRows.splice(index, 1);
+			badEventIndices.push(index);
+
 			// Report error in Discord as well.
 			const errorEmbed = new MessageEmbed()
 				.setTitle('⚠️ Error importing event!')
@@ -252,6 +256,11 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 			return [];
 		}
 	});
+
+	// Remove all bad events from newEventRows array
+	for (const badIndex of badEventIndices.reverse()) {
+		newEventRows.splice(badIndex, 1);
+	}
 
 	// Then take all our events that we've converted and not only
 	// upload them to notion, but ALSO make sure the Google spreadsheet
