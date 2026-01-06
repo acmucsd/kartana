@@ -20,7 +20,16 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Run deploy script on server
+      - name: Run deployment commands on server
         run: |
-          ssh ubuntu@${{ secrets.SSH_HOST }} \
-            "sudo /opt/deploy_kartana.sh"
+          ssh ubuntu@${{ secrets.SSH_HOST }} << 'EOF'
+            set -e
+            cd /opt/kartana
+            sudo chown -R ubuntu .
+            sudo git pull
+            sudo yarn install
+            sudo yarn build
+            sudo chown -R bot:bot .
+            sudo systemctl restart kartana
+            echo "Kartana should have started now"
+          EOF
