@@ -4,6 +4,7 @@ import { DateTime, Interval } from 'luxon';
 import {
 	BookingStatus,
 	EventLocation,
+	eventLocationType,
 	EventType,
 	eventTypes,
 	fundingSponsor,
@@ -103,8 +104,11 @@ function parseLocationURL(urlString: string, eventName: string): URL | null {
  * Zod schema validating input (HostFormResponse) and mapping to output (INotionCalEvent) 
  */
 export const HostFormResponseSchema = z.object({
+	// Section 1
 	'Event name': z.string().min(1, 'Event name is required'),
 	'Event description': z.string().min(1, 'Event description is required'),
+	'Plain description': z.string().min(1, 'Plain description is required'),
+	'Are you planning on inviting off campus guests?': z.enum(offCampusGuests, {errorMap: (event)=>({message: `Invalid off campus guest status: ${event}`})}),
 	'What kind of event is this?': z.enum(eventTypes).catch('Other (See Comments)'), 
 	'Preferred date': z.string(),
 	'Preferred start time': z.string(),
@@ -116,20 +120,55 @@ export const HostFormResponseSchema = z.object({
 	'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy, {errorMap: (event)=>({message: `Invalid logistics handler: ${event}`})}), 
 	'Which pass will this event be submitted under?': z.enum(tokenPasses, {errorMap: (event)=>({message: `Invalid pass: ${event}`})}), 
 	'Which team/community will be using their token?': z.enum(tokenEventGroups, {errorMap: (event)=>({message: `Invalid token team/community: ${event}`})}), 
-	'Where is your event taking place?': z.string(),
-	'Ideal Venue Choice': z.string(),
+	'What token number will you be using?': z.coerce.number().int('Token number must be a whole number').nonnegative('Token number cannot be negative'),
+	// Section 2
+	'Where is your event taking place?': z.nativeEnum(eventLocationType, {errorMap: (event)=>({message: `Invalid event location: ${event}`})}),
+	// Section 3 - Conditional based on venue
+	'Ideal Venue Choice': z.string().optional().default(''),
 	'Other venue details?': z.string().optional().default(''),
-	'Will you need a projector and/or other tech?': z.enum(projectorStatuses, {errorMap: (event)=>({message: `Invalid tech requirement: ${event}`})}),
+	'Will you need a projector and/or other tech?': z.enum(projectorStatuses).catch('No'),
 	'If you need tech or equipment, please specify here': z.string().optional().default(''),
+	// Section 4 - Conditional based on venue
 	'Event Link (ACMURL)': z.string().optional().default(''),
+	// Section 5
 	'Will your event require funding?': z.string(),
+	// Section 6
 	'What food do you need funding for?': z.string().optional().default(''),
 	'Food Pickup Time': z.string().optional(),
 	'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
 	'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor).catch("No"),
 	'Any additional funding details?': z.string().optional().default(''),
-	'Plain description': z.string().min(1, 'Plain description is required'),
-	'Are you planning on inviting off campus guests?': z.enum(offCampusGuests, {errorMap: (event)=>({message: `Invalid off campus guest status: ${event}`})}),
+}).superRefine((data, ctx) => {
+	const venue = data['Where is your event taking place?'];
+	
+	// Venue is "I need a venue on campus": validate Section 3
+	if (venue === eventLocationType.NEED_VENUE) {
+		if (!data['Ideal Venue Choice']) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: 'Ideal Venue Choice is required when you need a venue on campus',
+				path: ['Ideal Venue Choice'],
+			});
+		}
+		if (!data['Will you need a projector and/or other tech?']) { // not really necessary since this value already defaults to 'No' if empty anyways
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: 'Tech requirements must be specified when you need a venue on campus',
+				path: ['Will you need a projector and/or other tech?'],
+			});
+		}
+	}
+	
+	// Venue is "My event is online": validate Section 4
+	if (venue === eventLocationType.ONLINE) {
+		if (!data['Event Link (ACMURL)']) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: 'Event Link is required for online events',
+				path: ['Event Link (ACMURL)'],
+			});
+		}
+	}
 }).transform((data) => ({
 	name: data['Event name'],
 	description: data['Event description'],
@@ -163,7 +202,7 @@ export const HostFormResponseSchema = z.object({
 	foodPickupTime: data['Food Pickup Time'] 
 		? DateTime.fromFormat(`${data['Preferred date']} ${data['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a')
 		: null,
-	nonFoodRequests: data['Non-food system requests: Vendor website or menu'],
+	nonFoodRequests: data['Non-food system requests: Vendor website or menu'].slice(0,2000), // Notion field text limit
 	fundingSponsor: data['Is there a sponsor that will pay for this event?'],
 	additionalFinanceInfo: data['Any additional funding details?'],
 	TAPStatus: {
