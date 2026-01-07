@@ -202,7 +202,7 @@ export const HostFormResponseSchema = z.object({
 	foodPickupTime: data['Food Pickup Time'] 
 		? DateTime.fromFormat(`${data['Preferred date']} ${data['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a')
 		: null,
-	nonFoodRequests: data['Non-food system requests: Vendor website or menu'],
+	nonFoodRequests: data['Non-food system requests: Vendor website or menu'].slice(0,2000), // Notion field text limit
 	fundingSponsor: data['Is there a sponsor that will pay for this event?'],
 	additionalFinanceInfo: data['Any additional funding details?'],
 	TAPStatus: {
