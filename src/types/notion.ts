@@ -50,6 +50,12 @@ export const fundingStatuses = extractNames(notionCalSchema['Funding Status'].se
 export const fundingSponsor = extractNames(notionCalSchema['Sponsor?'].select.options);
 export const tapStatuses = extractNames(notionCalSchema['TAP Status'].select.options);
 export const bookingStatuses = extractNames(notionCalSchema['Booking Status'].select.options);
+export enum eventLocationType {
+	NEED_VENUE = "I need a venue on campus",
+	HAS_VENUE = "My event is on campus but I can take care of the booking",
+	OFF_CAMPUS = "My event is off campus",
+	ONLINE = "My event is online",
+}
 
 // A Notion User.
 export type NotionUser = GetUserResponse;
