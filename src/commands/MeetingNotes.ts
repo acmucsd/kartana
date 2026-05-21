@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node"; 
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, MessageEmbed } from 'discord.js';
 import { DateTime } from 'luxon';
@@ -53,6 +54,7 @@ export default class MeetingNotes extends Command {
       const shortURL = await addACMURL(shortlink, longlink, linkTitle, config);
       return shortURL;
     } catch (e) {
+      Sentry.captureException(e);
       // We might error out if an ACMURL already exists with the provided shortlink.
       // We'll attempt to handle that by updating the ACMURL.
       const errorUUID: UUIDv4 = newUUID();
@@ -68,6 +70,7 @@ export default class MeetingNotes extends Command {
           );
           return newURL;
         } catch (e2) {
+          Sentry.captureException(e2);
           const updateError = e2 as any;
           // If by any chance there's an error when updating the ACMURL, log it and return.
           Logger.error(`Error whilst updating short URL on YOURLS API: ${updateError.message}`, {

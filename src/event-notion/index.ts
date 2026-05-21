@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node"; 
 import { Client } from '@notionhq/client';
 import Logger from '../utils/Logger';
 import { notionCalSchema, googleSheetSchema } from '../assets';
@@ -236,6 +237,7 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 			const event = new NotionCalEvent(databaseId, config.settings.notionHostedEventsID, newEvent);
 			return event;
 		} catch (error) {
+      Sentry.captureException(error);
 			// If there was a TypeError (doubtful, but possible), we'll want to report it
 			// to deal with the issue.
 			Logger.error(`Could not convert event ${newEvent['Event Title']}: ${error}`, {
@@ -284,6 +286,7 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 					embeds: [successEmbed],
 				});
 			} catch (error) {
+        Sentry.captureException(error);
 				// If we can't create the event, notify everone. Skip over the
 				// "tick the checkbox" part, since we didn't actually import the event.
 				Logger.error(`Error creating event "${event.name}: ${error}"`, {
