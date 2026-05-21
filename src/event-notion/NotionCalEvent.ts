@@ -4,9 +4,11 @@ import { DateTime, Interval } from 'luxon';
 import {
   BookingStatus,
   EventLocation,
-  eventLocationType,
+  EventLocationType,
   EventType,
   eventTypes,
+  EventVenueChoice,
+  eventVenueChoices,
   fundingSponsor,
   FundingSponsor,
   FundingStatus,
@@ -99,7 +101,6 @@ function parseLocationURL(urlString: string, eventName: string): URL | null {
   }
 }
 
-
 /**
  * Zod schema validating input (HostFormResponse) and mapping to output (INotionCalEvent) 
  */
@@ -122,9 +123,9 @@ export const HostFormResponseSchema = z.object({
   'Which team/community will be using their token?': z.enum(tokenEventGroups, { errorMap: (event)=>({ message: `Invalid token team/community: ${event}` }) }), 
   'What token number will you be using?': z.coerce.number().int('Token number must be a whole number').nonnegative('Token number cannot be negative'),
   // Section 2
-  'Where is your event taking place?': z.nativeEnum(eventLocationType, { errorMap: (event)=>({ message: `Invalid event location: ${event}` }) }),
+  'Where is your event taking place?': z.nativeEnum(EventLocationType, { errorMap: (event)=>({ message: `Invalid event location: ${event}` }) }),
   // Section 3 - Conditional based on venue
-  'Ideal Venue Choice': z.string().optional().default(''),
+  'Ideal Venue Choice': z.enum(eventVenueChoices as [EventVenueChoice, ...EventVenueChoice[]], { errorMap: (event)=>({ message: `Invalid venue choice: ${event}` }) }).catch('Other'), //z.string().optional().default(''),
   'Other venue details?': z.string().optional().default(''),
   'Will you need a projector and/or other tech?': z.enum(projectorStatuses).catch('No'),
   'If you need tech or equipment, please specify here': z.string().optional().default(''),
@@ -142,7 +143,7 @@ export const HostFormResponseSchema = z.object({
   const venue = data['Where is your event taking place?'];
 	
   // Venue is "I need a venue on campus": validate Section 3
-  if (venue === eventLocationType.NEED_VENUE) {
+  if (venue === EventLocationType.NEED_VENUE) {
     if (!data['Ideal Venue Choice']) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -160,7 +161,7 @@ export const HostFormResponseSchema = z.object({
   }
 	
   // Venue is "My event is online": validate Section 4
-  if (venue === eventLocationType.ONLINE) {
+  if (venue === EventLocationType.ONLINE) {
     if (!data['Event Link (ACMURL)']) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -185,12 +186,11 @@ export const HostFormResponseSchema = z.object({
   tokenEventGroup: data['Which team/community will be using their token?'],
   tokenUseNum: data['What token number will you be using?'],
   location: {
-    'My event is on Zoom': 					'Zoom (See Details)', 
-    'My event is on Discord only': 	'Discord (See Details)',
-    'My event is off campus': 			'Off Campus',
-  }[data['Where is your event taking place?']] // zoom/discord/off-campus
-						?? notionLocationTag[data['Ideal Venue Choice']] // actual venue 
-						?? 'Other (See Details)',
+    [EventLocationType.ONLINE]:     'Online', 
+    [EventLocationType.OFF_CAMPUS]: 'Off Campus',
+    [EventLocationType.NEED_VENUE]: notionLocationTag[data['Ideal Venue Choice']!],
+    [EventLocationType.HAS_VENUE]:  'Other (See Details)',
+  }[data['Where is your event taking place?']],
   locationDetails: data['Other venue details?'],
   projectorStatus: data['Will you need a projector and/or other tech?'],
   techRequests: data['If you need tech or equipment, please specify here'],
@@ -206,12 +206,12 @@ export const HostFormResponseSchema = z.object({
   fundingSponsor: data['Is there a sponsor that will pay for this event?'],
   additionalFinanceInfo: data['Any additional funding details?'],
   TAPStatus: {
-    'My event is on Zoom': 					'TAP N/A',
-    'My event is on Discord only': 	'TAP N/A',
-    'My event is off campus': 			'TAP N/A',
-  }[data['Where is your event taking place?']] // No TAP needed for online/off-campus
-						?? 'TAP TODO',
-  bookingStatus: data['Where is your event taking place?'] === 'I need a venue on campus'
+    [EventLocationType.ONLINE]:     'TAP N/A', // No TAP needed for online/off-campus
+    [EventLocationType.OFF_CAMPUS]: 'TAP N/A',
+    [EventLocationType.NEED_VENUE]: 'TAP TODO',
+    [EventLocationType.HAS_VENUE]:  'TAP TODO',
+  }[data['Where is your event taking place?']], 
+  bookingStatus: data['Where is your event taking place?'] === EventLocationType.NEED_VENUE
     ? 'Booking TODO' 
     : 'Booking N/A',
 }) as INotionCalEvent);
@@ -244,59 +244,33 @@ export default class NotionCalEvent implements INotionCalEvent {
 
   // Valid
 
-  readonly name: string;
-
-  readonly description: string;
-
-  readonly plainDescription: string;
-
-  readonly offCampusGuests: OffCampusGuests;
-
-  readonly type: EventType;
-
-  readonly date: Interval;
-
-  readonly dateTimeNotes: string;
-
-  readonly projectedAttendance: number;
-
-  readonly checkinCode: string;
-
-  readonly organizations: StudentOrg[];
-
-  readonly logisticsBy: LogisticsBy;
-
-  readonly tokenEventGroup: TokenEventGroup;
-
-  readonly tokenPass: TokenPass;
-
-  readonly tokenUseNum: number;
-
-  readonly location: EventLocation;
-
-  readonly locationDetails: string;
-
-  readonly projectorStatus: ProjectorStatus;
-
-  readonly techRequests: string;
-
-  readonly locationURL: URL | null;
-
-  readonly fundingStatus: FundingStatus;
-
-  readonly requestedItems: string;
-
-  readonly foodPickupTime: DateTime | null;
-
-  readonly nonFoodRequests: string;
-
-  readonly fundingSponsor: FundingSponsor;
-
-  readonly additionalFinanceInfo: string;
-
-  readonly TAPStatus: TapStatus;
-
-  readonly bookingStatus: BookingStatus;
+  readonly name!: string;
+  readonly description!: string;
+  readonly plainDescription!: string;
+  readonly offCampusGuests!: OffCampusGuests;
+  readonly type!: EventType;
+  readonly date!: Interval;
+  readonly dateTimeNotes!: string;
+  readonly projectedAttendance!: number;
+  readonly checkinCode!: string;
+  readonly organizations!: StudentOrg[];
+  readonly logisticsBy!: LogisticsBy;
+  readonly tokenEventGroup!: TokenEventGroup;
+  readonly tokenPass!: TokenPass;
+  readonly tokenUseNum!: number;
+  readonly location!: EventLocation;
+  readonly locationDetails!: string;
+  readonly projectorStatus!: ProjectorStatus;
+  readonly techRequests!: string;
+  readonly locationURL!: URL | null;
+  readonly fundingStatus!: FundingStatus;
+  readonly requestedItems!: string;
+  readonly foodPickupTime!: DateTime | null;
+  readonly nonFoodRequests!: string;
+  readonly fundingSponsor!: FundingSponsor;
+  readonly additionalFinanceInfo!: string;
+  readonly TAPStatus!: TapStatus;
+  readonly bookingStatus!: BookingStatus;
 
   constructor(
     parentCalendarID: string, 
@@ -310,6 +284,7 @@ export default class NotionCalEvent implements INotionCalEvent {
     try {
       const validated = HostFormResponseSchema.parse(formResponse);
       Object.assign(this, validated);
+      (this as unknown as INotionCalEvent);
     } catch (error) {
       if (error instanceof z.ZodError) {
         let errorString = `Event creation failed for ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;

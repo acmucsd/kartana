@@ -206,7 +206,7 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 
 		// If the host form row has not been imported yet (checkbox not ticked) and it has ANY
 		// non-empty values...
-		if (checkboxRow['Imported to Notion'] === 'FALSE' && formResponse['Event name'] !== '') {
+		if (checkboxRow['Imported to Notion'] === 'FALSE' && formResponse['Event Title'] !== '') {
 			// Keep track of the GoogleSpreadsheetRow in newEventRows and keep it in our filtered array.
 			newEventRows.push(eventRow);
 			return true;
@@ -238,16 +238,16 @@ export const 	syncHostFormToNotionCalendar = async (config: EventNotionPipelineC
 		} catch (error) {
 			// If there was a TypeError (doubtful, but possible), we'll want to report it
 			// to deal with the issue.
-			Logger.error(`Could not convert event ${newEvent['Event name']}: ${error}`, {
+			Logger.error(`Could not convert event ${newEvent['Event Title']}: ${error}`, {
 				error,
-				eventName: newEvent['Event name'],
+				eventName: newEvent['Event Title'],
 			});
 			badEventIndices.push(index);
 
 			// Report error in Discord as well.
 			const errorEmbed = new MessageEmbed()
 				.setTitle('⚠️ Error importing event!')
-				.setDescription(`**Event name:** ${newEvent['Event name']}\n**Error:** \`${error.message}\``)
+				.setDescription(`**Event name:** ${newEvent['Event Title']}\n**Error:** \`${error.message}\``)
 				.setColor('DARK_RED');
 			channel.send({
 				content: `*Paging <@&${config.settings.maintainerID}>!*`,

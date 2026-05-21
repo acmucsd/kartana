@@ -50,7 +50,7 @@ export const fundingStatuses = extractNames(notionCalSchema['Funding Status'].se
 export const fundingSponsor = extractNames(notionCalSchema['Sponsor?'].select.options);
 export const tapStatuses = extractNames(notionCalSchema['TAP Status'].select.options);
 export const bookingStatuses = extractNames(notionCalSchema['Booking Status'].select.options);
-export enum eventLocationType {
+export enum EventLocationType {
 	NEED_VENUE = "I need a venue on campus",
 	HAS_VENUE = "My event is on campus but I can take care of the booking",
 	OFF_CAMPUS = "My event is off campus",
@@ -166,6 +166,8 @@ export const notionLocationTag = {
   'Off Campus': 'Off Campus',
   'Other': 'Other (See Details)',
 };
+export type EventVenueChoice = keyof typeof notionLocationTag;
+export const eventVenueChoices = Object.keys(notionLocationTag) as EventVenueChoice[];
 
 export type ProjectorStatus = typeof projectorStatuses[number];
 
