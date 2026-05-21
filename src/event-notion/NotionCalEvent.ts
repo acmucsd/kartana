@@ -189,7 +189,7 @@ export const HostFormResponseSchema = z.object({
     [EventLocationType.ONLINE]:     'Online', 
     [EventLocationType.OFF_CAMPUS]: 'Off Campus',
     [EventLocationType.NEED_VENUE]: notionLocationTag[data['Ideal Venue Choice']!],
-    [EventLocationType.HAS_VENUE]:  'Other (See Details)', // placeholder, misleading because details is not filled out for this option
+    [EventLocationType.HAS_VENUE]:  'Other (See Details)',
   }[data['Where is your event taking place?']],
   locationDetails: data['Other venue details?'],
   projectorStatus: data['Will you need a projector and/or other tech?'],
@@ -206,11 +206,11 @@ export const HostFormResponseSchema = z.object({
   fundingSponsor: data['Is there a sponsor that will pay for this event?'],
   additionalFinanceInfo: data['Any additional funding details?'],
   TAPStatus: {
-    [EventLocationType.ONLINE]:     'TAP N/A', 
+    [EventLocationType.ONLINE]:     'TAP N/A', // No TAP needed for online/off-campus
     [EventLocationType.OFF_CAMPUS]: 'TAP N/A',
     [EventLocationType.NEED_VENUE]: 'TAP TODO',
-    [EventLocationType.HAS_VENUE]:  'TAP N/A',
-  }[data['Where is your event taking place?']], // No TAP needed for online/off-campus
+    [EventLocationType.HAS_VENUE]:  'TAP TODO',
+  }[data['Where is your event taking place?']], 
   bookingStatus: data['Where is your event taking place?'] === EventLocationType.NEED_VENUE
     ? 'Booking TODO' 
     : 'Booking N/A',
