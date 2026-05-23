@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node"; 
 import { Client } from '@notionhq/client/build/src';
 import { CreatePageParameters, PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { DateTime, Interval } from 'luxon';
@@ -145,14 +144,12 @@ export const HostFormResponseSchema = z.object({
 	
   // Venue is "I need a venue on campus": validate Section 3
   if (venue === EventLocationType.NEED_VENUE) {
-    if (data['Ideal Venue Choice']=="Other") { // ideal venue choice defaults to 'Other' when missing
-      if (data['Other venue details?']=='') { // either ideal venue choice is missing but you want a venue on campus, or you selected other but left no details
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Ideal Venue Choice details are missing',
-          path: ['Ideal Venue Choice / Other venue details'],
-        });
-      }
+    if (!data['Ideal Venue Choice']) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Ideal Venue Choice is required when you need a venue on campus',
+        path: ['Ideal Venue Choice'],
+      });
     }
     if (!data['Will you need a projector and/or other tech?']) { // not really necessary since this value already defaults to 'No' if empty anyways
       ctx.addIssue({
@@ -289,8 +286,6 @@ export default class NotionCalEvent implements INotionCalEvent {
       Object.assign(this, validated);
       (this as unknown as INotionCalEvent);
     } catch (error) {
-      Sentry.captureException(error);
-
       if (error instanceof z.ZodError) {
         let errorString = `Event creation failed for ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;
         error.issues.forEach(issue => {
@@ -300,7 +295,7 @@ export default class NotionCalEvent implements INotionCalEvent {
         throw new Error(errorString);
       } else {
         let errorString = `Event creation failed for event ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;
-        errorString += `Error: ${error.message}`;
+        error += `Error: ${error.message}`;
 
         throw new Error(errorString);
       }
