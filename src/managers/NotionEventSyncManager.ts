@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node"; 
 import { Service } from 'typedi';
 import schedule from 'node-schedule';
 import { BotClient } from '../types';
@@ -46,7 +45,6 @@ export default class {
       client.flags.validGoogleSchema = true;
       client.flags.validNotionSchema = true;
     } catch (e) {
-      Sentry.captureException(e);
       // If we got an error, one of our schemas is mismatched! We want to call that out
       // on Discord, ping both Events Team and the Kartana developer and deal with it later on.
       if (e instanceof NotionSchemaMismatchError) {
@@ -111,7 +109,6 @@ export default class {
       // as good.
       client.flags.validNotionSchema = true;
     } catch (e) {
-      Sentry.captureException(e);
       // If we got an error, our schemas are mismatched! We want to call that out
       // on Discord, ping both Events Team and the Kartana developer and deal with it later on.
       if (e instanceof NotionSchemaMismatchError) {
@@ -159,7 +156,6 @@ export default class {
       });
       return url;
     } catch (err) {
-      Sentry.captureException(err);
       Logger.error(`Error generating new meeting note: ${err}`);
       const errorEmbed = new MessageEmbed()
         .setTitle('⚠️ Error with Notion Meeting Notes!')
