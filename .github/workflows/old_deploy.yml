@@ -1,7 +1,6 @@
-name: Deploy on merge to main
+name: Deploy on merge to main (Old)
 
-on: 
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   deploy:
