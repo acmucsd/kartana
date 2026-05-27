@@ -1,3 +1,5 @@
+# this is unused, dockerizing kartana might not be worth the hassle
+
 FROM node:22-alpine
 
 WORKDIR /app
