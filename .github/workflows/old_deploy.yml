@@ -1,0 +1,33 @@
+name: Deploy on merge to main
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Run deployment commands on server
+        run: |
+          ssh ubuntu@${{ secrets.SSH_HOST }} << 'EOF'
+            set -e
+            cd /opt/kartana
+            sudo chown -R ubuntu .
+            sudo git pull
+            sudo yarn install
+            sudo yarn build
+            sudo chown -R bot:bot .
+            sudo systemctl restart kartana
+            echo "Kartana should have started now"
+          EOF
