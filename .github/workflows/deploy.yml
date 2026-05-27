@@ -27,7 +27,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: "."
+          context: "./kartana"
           platforms: linux/arm64
           push: true
           tags: acmucsd/kartana:${{ env.GIT_HASH }},acmucsd/kartana:latest
