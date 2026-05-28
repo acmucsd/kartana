@@ -983,6 +983,7 @@ export const notionCalSchema = {
           'color': 'default',
           'description': null,
         },
+
       ],
     },
   },
