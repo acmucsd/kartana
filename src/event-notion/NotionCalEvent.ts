@@ -120,7 +120,10 @@ export const HostFormResponseSchema = z.object({
   'Additional Date/Time Notes': z.string().optional().default(''),
   'Estimated Attendance?': z.coerce.number().int('Attendance must be a whole number').positive('Attendance must be positive'),
   'Check-in Code': z.string().min(1, 'Check-in code is required, else put N/A'),
-  'Which of the following organizations are involved in this event?': z.string().transform((val): StudentOrg[] => val.split(',').map(org => org.trim()).filter(org => (studentOrgs).includes(org as StudentOrg)) as StudentOrg[]),
+  'Which of the following organizations are involved in this event?': z.preprocess(
+    (val) => (val as string).split(',').map(org => org.trim()),
+    z.array(z.enum(studentOrgs).catch('Other' as StudentOrg))
+  ),
   'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy, { errorMap: (event)=>({ message: `Invalid logistics handler: ${event}` }) }), 
   'Which pass will this event be submitted under?': z.enum(tokenPasses, { errorMap: (event)=>({ message: `Invalid pass: ${event}` }) }), 
   'Which team/community will be using their token?': z.enum(tokenEventGroups, { errorMap: (event)=>({ message: `Invalid token team/community: ${event}` }) }), 
