@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node"; 
 import { Service } from 'typedi';
 import schedule from 'node-schedule';
 import { BotClient } from '../types';
@@ -174,7 +173,6 @@ export default class {
       const oneHourFromNow = now.plus({ hours: 1 });
       this.sendMeetingPings(client, oneHourFromNow);
     } catch (err) {
-      Sentry.captureException(err);
       // We'll report if there's an API error to deal with the issue.
       Logger.error('Error with Google Calendar API: ' + err);
       const errorEmbed = new MessageEmbed()
@@ -204,7 +202,6 @@ export default class {
         this.calendarList.push(entry.calendarID);
         Logger.info(`Successfully imported calendar ${entry.name}`);
       } catch (err) {
-        Sentry.captureException(err);
         // We'll report if there's an API error to deal with the issue.
         Logger.error(`Error importing calendar ${entry.name}: ${err}`);
         const errorEmbed = new MessageEmbed()
@@ -264,7 +261,6 @@ export default class {
         },
       });
     } catch (err) {
-      Sentry.captureException(err);
       // We'll report if there's an API error to deal with the issue.
       Logger.error(`Error importing scheduled message calendar}: ${err}`);
       const errorEmbed = new MessageEmbed()

@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node"; 
 import { Client } from '@notionhq/client/build/src';
 import { CreatePageParameters, PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { DateTime, Interval } from 'luxon';
@@ -289,7 +288,6 @@ export default class NotionCalEvent implements INotionCalEvent {
       Object.assign(this, validated);
       (this as unknown as INotionCalEvent);
     } catch (error) {
-      Sentry.captureException(error);
 
       if (error instanceof z.ZodError) {
         let errorString = `Event creation failed for ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;
