@@ -104,7 +104,10 @@ function parseLocationURL(urlString: string, eventName: string): URL | null {
 /**
  * Zod schema validating input (HostFormResponse) and mapping to output (INotionCalEvent) 
  */
-export const HostFormResponseSchema = z.object({
+export const HostFormResponseSchema = z.object({ 
+
+  // ----------------- STEP 1: Validate Input -----------------
+
   // Section 1
   'Event Title': z.string().min(1, 'Event title is required'),
   'Event description': z.string().min(1, 'Event description is required'),
@@ -117,7 +120,10 @@ export const HostFormResponseSchema = z.object({
   'Additional Date/Time Notes': z.string().optional().default(''),
   'Estimated Attendance?': z.coerce.number().int('Attendance must be a whole number').positive('Attendance must be positive'),
   'Check-in Code': z.string().min(1, 'Check-in code is required, else put N/A'),
-  'Which of the following organizations are involved in this event?': z.string().transform((val): StudentOrg[] => val.split(', ').filter(org => org in studentOrgs) as StudentOrg[]),
+  'Which of the following organizations are involved in this event?': z.preprocess(
+    (val) => (val as string).split(',').map(org => org.trim()),
+    z.array(z.enum(studentOrgs).catch('Other' as StudentOrg))
+  ),
   'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy, { errorMap: (event)=>({ message: `Invalid logistics handler: ${event}` }) }), 
   'Which pass will this event be submitted under?': z.enum(tokenPasses, { errorMap: (event)=>({ message: `Invalid pass: ${event}` }) }), 
   'Which team/community will be using their token?': z.enum(tokenEventGroups, { errorMap: (event)=>({ message: `Invalid token team/community: ${event}` }) }), 
@@ -139,8 +145,12 @@ export const HostFormResponseSchema = z.object({
   'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
   'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor).catch('No'),
   'Any additional funding details?': z.string().optional().default(''),
-}).superRefine((data, ctx) => {
+}).superRefine((data, ctx) => { 
+  
+  // ----------------- STEP 2: Manual Validation of Complex Input -----------------
+  
   const venue = data['Where is your event taking place?'];
+
 	
   // Venue is "I need a venue on campus": validate Section 3
   if (venue === EventLocationType.NEED_VENUE) {
@@ -173,6 +183,9 @@ export const HostFormResponseSchema = z.object({
     }
   }
 }).transform((data) => ({
+
+  // ----------------- STEP 3: Map input to output -----------------
+
   name: data['Event Title'],
   description: data['Event description'],
   plainDescription: data['Plain description'],
@@ -285,21 +298,18 @@ export default class NotionCalEvent implements INotionCalEvent {
 
     try {
       const validated = HostFormResponseSchema.parse(formResponse);
+  
       Object.assign(this, validated);
       (this as unknown as INotionCalEvent);
     } catch (error) {
-
+      let errorString = `Event creation failed for ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;
       if (error instanceof z.ZodError) {
-        let errorString = `Event creation failed for ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;
         error.issues.forEach(issue => {
           errorString += `	${issue.path.join('.')}: ${issue.message} \n`;
         });
-
         throw new Error(errorString);
       } else {
-        let errorString = `Event creation failed for event ${formResponse['Event Title']} submitted by ${formResponse['Email Address']}: \n`;
-        errorString += `Error: ${error.message}`;
-
+        errorString += `Error: ${(error as Error).message}`;
         throw new Error(errorString);
       }
     }
