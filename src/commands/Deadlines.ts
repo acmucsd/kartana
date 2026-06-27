@@ -4,8 +4,8 @@ import Command from '../Command';
 import { BotClient } from '../types';
 
 /**
- * Manually syncs the Event Host Form with the Notion Events calendar. 
- * 
+ * Manually syncs the Event Host Form with the Notion Events calendar.
+ *
  * Doesn't disrupt the cronjob that runs every 30 minutes.
  */
 export default class Deadlines extends Command {
@@ -14,15 +14,19 @@ export default class Deadlines extends Command {
       .setName('deadlines')
       .setDescription('Pings for any upcoming TAP deadlines and key reminders manually.');
 
-    super(client, {
-      name: 'deadlines',
-      boardRequired: true,
-      enabled: true,
-      description: 'Pings for any upcoming TAP deadlines and key reminders manually.',
-      category: 'Utility',
-      usage: client.settings.prefix.concat('deadlines'),
-      requiredPermissions: ['SEND_MESSAGES'],
-    }, definition);
+    super(
+      client,
+      {
+        name: 'deadlines',
+        boardRequired: true,
+        enabled: true,
+        description: 'Pings for any upcoming TAP deadlines and key reminders manually.',
+        category: 'Utility',
+        usage: client.settings.prefix.concat('deadlines'),
+        requiredPermissions: ['SEND_MESSAGES'],
+      },
+      definition,
+    );
   }
 
   public async run(interaction: CommandInteraction): Promise<void> {

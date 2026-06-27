@@ -6,7 +6,6 @@
 
 import { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints';
 
-/* eslint-disable max-len */
 export const notionHostedEventDescription: BlockObjectRequest[] = [
   {
     type: 'heading_1',
@@ -495,8 +494,7 @@ export const notionHostedEventDescription: BlockObjectRequest[] = [
         {
           type: 'text',
           text: {
-            content:
-              'Add pictures of your event showing the attendance for AS purposes!',
+            content: 'Add pictures of your event showing the attendance for AS purposes!',
             link: null,
           },
           annotations: {

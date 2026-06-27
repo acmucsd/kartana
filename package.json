@@ -9,10 +9,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node build/src/index.js",
-    "lint": "eslint ./ --ext .ts",
+    "lint": "prettier --check . && eslint ./ --ext .ts",
     "dev": "tsc && node build/src/index.js",
     "hot": "nodemon -e ts --exec \"yarn dev\"",
-    "lint:fix": "eslint ./ --ext .ts --fix"
+    "lint:fix": "prettier --write . && eslint ./ --ext .ts --fix"
   },
   "dependencies": {
     "@discordjs/builders": "^0.12.0",
@@ -54,6 +54,7 @@
     "eslint": "^8.29.0",
     "eslint-config-airbnb-typescript": "^14.0.1",
     "eslint-plugin-import": "^2.25.2",
-    "nodemon": "^2.0.14"
+    "nodemon": "^2.0.14",
+    "prettier": "^3.9.0"
   }
 }
