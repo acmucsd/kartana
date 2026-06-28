@@ -1,6 +1,6 @@
 import { Client } from '@notionhq/client';
 import Logger from '../utils/Logger';
-import { notionCalSchema, googleSheetSchema } from '../assets';
+import { notionCalSchema, googleSheetSchema, notionHostedEvent } from '../assets';
 import { GetDatabaseResponse, PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { diff } from 'json-diff-ts';
 import { groupBy, isEqual } from 'lodash';
@@ -10,6 +10,7 @@ import { GoogleSpreadsheet, GoogleSpreadsheetRow, ServiceAccountCredentials } fr
 import { ColorResolvable, MessageEmbed, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 import { MeetingPingsSchema } from '../meeting-pings';
+import NotionPeefReminderState, { PeefReminderMilestones } from './NotionPeefReminderState';
 
 /**
  * Logs into Notion.
@@ -38,6 +39,21 @@ export const validateNotionDatabase = (database: GetDatabaseResponse) => {
   const databaseDiff = diff(notionCalSchemaFiltered, databasePropsFiltered);
   if (databaseDiff.length !== 0) {
     Logger.error('Notion Calendar schema is mismatched! Halting!', {
+      type: 'error',
+      diff: databaseDiff,
+    });
+    throw new NotionSchemaMismatchError(databaseDiff);
+  }
+};
+
+/**
+ * Validates the Hosted Events Notion database schema used for PEEF reminders.
+ * @param database Hosted Events Notion database response.
+ */
+export const validateNotionHostedEventDatabase = (database: GetDatabaseResponse) => {
+  const databaseDiff = diff(notionHostedEvent, database.properties);
+  if (databaseDiff.length !== 0) {
+    Logger.error('Notion Hosted Events schema is mismatched! Halting!', {
       type: 'error',
       diff: databaseDiff,
     });
@@ -737,6 +753,215 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
 };
 
 /**
+ * Pings event hosts for pending PEEFs and pings Finance Team when a PEEF is completed.
+ *
+ * This includes:
+ * - Ping hosts once event has concluded by at least 1 hour and PEEF is not written.
+ * - Ping hosts once again the Saturday morning before the PEEF is due (Sunday) if PEEF is still not written.
+ * - Ping Finance Team immediately once PEEF is marked complete.
+ */
+export const pingForPEEFReminders = async (config: EventNotionPipelineConfig) => {
+  Logger.info('Setting up PEEF reminder checks...');
+  const notion = await getNotionAPI(config.settings.notionIntegrationToken);
+
+  const databaseId = config.settings.notionHostedEventsID;
+  const database = await notion.databases.retrieve({ database_id: databaseId });
+  validateNotionHostedEventDatabase(database);
+
+  const getPageTitle = (event: PageObjectResponse): string => {
+    if (event.properties.Name.type !== 'title') {
+      return '(Untitled Event)';
+    }
+
+    const title = event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_text, '').trim();
+    return title || '(Untitled Event)';
+  };
+
+  const queryAllEvents = async (): Promise<PageObjectResponse[]> => {
+    const events: PageObjectResponse[] = [];
+    let cursor: string | undefined;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await notion.databases.query({
+        database_id: databaseId,
+        start_cursor: cursor,
+      });
+
+      response.results.forEach((result) => {
+        if ('properties' in result) {
+          events.push(result as PageObjectResponse);
+        }
+      });
+
+      hasMore = response.has_more;
+      cursor = response.next_cursor ?? undefined;
+    }
+
+    return events;
+  };
+
+  const getHostMentionsAndNames = (event: PageObjectResponse, meetingPingsSchema: MeetingPingsSchema) => {
+    if (!('Host(s)' in event.properties) || event.properties['Host(s)'].type !== 'people') {
+      return { mentions: [], names: [] };
+    }
+
+    const mentions = new Set<string>();
+    const names: string[] = [];
+
+    const hostedBy = event.properties['Host(s)'] as {
+      people: Array<{ person: { email: string }; name: string }>;
+    };
+
+    hostedBy.people.forEach((person) => {
+      if (person.name) {
+        names.push(person.name);
+      }
+
+      if (person.person.email) {
+        const discordID = meetingPingsSchema.getGuest(person.person.email);
+        if (discordID) {
+          mentions.add(`<@${discordID}>`);
+        }
+      }
+    });
+
+    Logger.debug(`Mentions for event "${getPageTitle(event)}": ${Array.from(mentions).join(', ')}`);
+    Logger.debug(`Names for event "${getPageTitle(event)}": ${names.join(', ')}`);
+
+    return { mentions: Array.from(mentions), names };
+  };
+
+  const sendPeefReminder = async (
+    event: PageObjectResponse,
+    meetingPingsSchema: MeetingPingsSchema,
+    title: string,
+    message: string,
+  ) => {
+    const hosts = getHostMentionsAndNames(event, meetingPingsSchema);
+    const eventName = getPageTitle(event);
+    const hostLine = hosts.names.length > 0 ? hosts.names.join(', ') : 'No hosts assigned';
+
+    const embed = new MessageEmbed()
+      .setTitle(title)
+      .setDescription(`${message}\n\n- **Event:** [${eventName}](${event.url})\n- **Hosts:** ${hostLine}`)
+      .setColor('ORANGE');
+
+    await config.channel.send({
+      content: hosts.mentions.length > 0 ? hosts.mentions.join(' ') : undefined,
+      embeds: [embed],
+    });
+  };
+
+  const sendPeefCompletionAlert = async (event: PageObjectResponse) => {
+    const eventName = getPageTitle(event);
+    const embed = new MessageEmbed()
+      .setTitle('PEEF Completed')
+      .setDescription(`Finance Team, the PEEF is marked complete for [${eventName}](${event.url}).`)
+      .setColor('GREEN');
+
+    await config.channel.send({
+      content: `<@&${config.settings.fundingTeamID}>`,
+      embeds: [embed],
+    });
+  };
+
+  const allEvents = await queryAllEvents();
+  if (allEvents.length === 0) {
+    Logger.info('No events found while checking PEEF reminders.');
+    return;
+  }
+
+  const now = DateTime.now().setZone('America/Los_Angeles');
+  const nowISO = now.toISO() || now.toString();
+  const peefReminderState = new NotionPeefReminderState();
+  const meetingPingsSchema = new MeetingPingsSchema();
+
+  await Promise.all(
+    allEvents.map(async (event) => {
+      // skip pages that do not have a usable event date.
+      if (event.properties.Date.type !== 'date') {
+        return;
+      }
+
+      const eventDate = event.properties.Date.date;
+      if (!eventDate?.start) {
+        return;
+      }
+
+      const eventDateTime = DateTime.fromISO(eventDate.start, { zone: 'America/Los_Angeles' });
+      if (!eventDateTime.isValid) {
+        return;
+      }
+
+      if (!('PEEF Written' in event.properties) || event.properties['PEEF Written'].type !== 'checkbox') {
+        return;
+      }
+
+      const peefWritten = event.properties['PEEF Written'].checkbox;
+      const dueSunday = eventDateTime.endOf('week').endOf('day');
+      const saturdayReminderAt = dueSunday.minus({ days: 1 }).startOf('day').plus({ hours: 9 });
+      const postEventReminderAt = eventDateTime.plus({ hours: 1 });
+
+      const eventState: PeefReminderMilestones = peefReminderState.get(event.id);
+
+      // initialize state so existing completed events don't trigger a completion alert on the first run
+      if (eventState.wasPeefWritten === undefined) {
+        eventState.wasPeefWritten = peefWritten;
+        peefReminderState.set(event.id, eventState);
+      }
+
+      // only alert finance when peef goes from not written to written and no previous alert has been sent for this event
+      if (peefWritten) {
+        if (eventState.wasPeefWritten === false && !eventState.completionAlertSentAt) {
+          await sendPeefCompletionAlert(event);
+          eventState.completionAlertSentAt = nowISO;
+        }
+        eventState.wasPeefWritten = true;
+        peefReminderState.set(event.id, eventState);
+        return;
+      }
+
+      eventState.wasPeefWritten = false;
+      // persist state for overdue events in case they get marked as completed later
+      if (now >= dueSunday) {
+        peefReminderState.set(event.id, eventState);
+        return;
+      }
+
+      // send initial reminder after the event has concluded, but before the saturday reminder window
+      if (!eventState.postEventReminderSentAt && now >= postEventReminderAt && now < saturdayReminderAt) {
+        Logger.info(`Sending post-event PEEF reminder for event "${getPageTitle(event)}"`);
+
+        await sendPeefReminder(
+          event,
+          meetingPingsSchema,
+          '📝 PEEF Reminder',
+          'Your event has concluded. Please fill out the PEEF as soon as possible.',
+        );
+        eventState.postEventReminderSentAt = nowISO;
+      } else if (!eventState.preDeadlineReminderSentAt && now >= saturdayReminderAt) {
+        // send pre-deadline reminder on Saturday morning before the PEEF is due on Sunday
+        Logger.info(`Sending pre-deadline PEEF reminder for event "${getPageTitle(event)}"`);
+
+        await sendPeefReminder(
+          event,
+          meetingPingsSchema,
+          '⏰ PEEF Reminder (Due Sunday)',
+          `PEEF is due by ${dueSunday.toLocaleString(DateTime.DATETIME_FULL)}. Please submit it soon.`,
+        );
+        eventState.preDeadlineReminderSentAt = nowISO;
+      }
+
+      // update peef reminder state for this event
+      peefReminderState.set(event.id, eventState);
+    }),
+  );
+
+  Logger.info('Finished checking PEEF reminders.');
+};
+
+/**
  * Pings for any deadlines and reminders that the Teams might need for any sort of event-related task.
  *
  * This includes:
@@ -756,7 +981,6 @@ export const pingForDeadlinesAndReminders = async (config: EventNotionPipelineCo
 
   const databaseId = config.settings.notionCalendarID;
   const database = await notion.databases.retrieve({ database_id: databaseId });
-
   // Validate the Notion Calendar.
   Logger.debug('Validating schemas for data sources...');
   Logger.debug('Validating Notion database schema...');

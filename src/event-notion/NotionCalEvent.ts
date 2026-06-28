@@ -97,6 +97,14 @@ function parseLocationURL(urlString: string, eventName: string): URL | null {
   }
 }
 
+const asEnumValues = <T extends string>(values: readonly T[]): [T, ...T[]] => {
+  if (values.length === 0) {
+    throw new Error('Cannot build zod enum from an empty array.');
+  }
+
+  return [...values] as [T, ...T[]];
+};
+
 /**
  * Zod schema validating input (HostFormResponse) and mapping to output (INotionCalEvent)
  */
@@ -108,12 +116,12 @@ export const HostFormResponseSchema = z
     'Event Title': z.string().min(1, 'Event title is required'),
     'Event description': z.string().min(1, 'Event description is required'),
     'Plain description': z.string().min(1, 'Plain description is required'),
-    'Are you planning on inviting off campus guests?': z.enum(offCampusGuests, {
+    'Are you planning on inviting off campus guests?': z.enum(asEnumValues(offCampusGuests), {
       errorMap: (event) => ({
         message: `Invalid off campus guest status: ${event}`,
       }),
     }),
-    'What kind of event is this?': z.enum(eventTypes).catch('Other (See Comments)'),
+    'What kind of event is this?': z.enum(asEnumValues(eventTypes)).catch('Other (See Comments)'),
     'Preferred date': z.string(),
     'Preferred start time': z.string(),
     'Preferred end time': z.string(),
@@ -125,17 +133,17 @@ export const HostFormResponseSchema = z
     'Check-in Code': z.string().min(1, 'Check-in code is required, else put N/A'),
     'Which of the following organizations are involved in this event?': z.preprocess(
       (val) => (val as string).split(',').map((org) => org.trim()),
-      z.array(z.enum(studentOrgs).catch('Other' as StudentOrg)),
+      z.array(z.enum(asEnumValues(studentOrgs)).catch('Other' as StudentOrg)),
     ),
-    'If this is a collab event, who will be handling the logistics?': z.enum(logisticsBy, {
+    'If this is a collab event, who will be handling the logistics?': z.enum(asEnumValues(logisticsBy), {
       errorMap: (event) => ({
         message: `Invalid logistics handler: ${event}`,
       }),
     }),
-    'Which pass will this event be submitted under?': z.enum(tokenPasses, {
+    'Which pass will this event be submitted under?': z.enum(asEnumValues(tokenPasses), {
       errorMap: (event) => ({ message: `Invalid pass: ${event}` }),
     }),
-    'Which team/community will be using their token?': z.enum(tokenEventGroups, {
+    'Which team/community will be using their token?': z.enum(asEnumValues(tokenEventGroups), {
       errorMap: (event) => ({
         message: `Invalid token team/community: ${event}`,
       }),
@@ -155,7 +163,7 @@ export const HostFormResponseSchema = z
       })
       .catch('Other'), //z.string().optional().default(''),
     'Other venue details?': z.string().optional().default(''),
-    'Will you need a projector and/or other tech?': z.enum(projectorStatuses).catch('No'),
+    'Will you need a projector and/or other tech?': z.enum(asEnumValues(projectorStatuses)).catch('No'),
     'If you need tech or equipment, please specify here': z.string().optional().default(''),
     // Section 4 - Conditional based on venue
     'Event Link (ACMURL)': z.string().optional().default(''),
@@ -165,7 +173,7 @@ export const HostFormResponseSchema = z
     'What food do you need funding for?': z.string().optional().default(''),
     'Food Pickup Time': z.string().optional(),
     'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
-    'Is there a sponsor that will pay for this event?': z.enum(fundingSponsor).catch('No'),
+    'Is there a sponsor that will pay for this event?': z.enum(asEnumValues(fundingSponsor)).catch('No'),
     'Any additional funding details?': z.string().optional().default(''),
   })
   .superRefine((data, ctx) => {

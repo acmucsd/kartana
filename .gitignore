@@ -263,6 +263,9 @@ database.properties
 meetingPingsCalendarSchema.*
 meetingPingsGuestSchema.*
 
+# Peef Pings State
+peefReminderState.*
+
 /secrets
 
 # Debug output files
