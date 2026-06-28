@@ -826,9 +826,6 @@ export const pingForPEEFReminders = async (config: EventNotionPipelineConfig) =>
       }
     });
 
-    Logger.debug(`Mentions for event "${getPageTitle(event)}": ${Array.from(mentions).join(', ')}`);
-    Logger.debug(`Names for event "${getPageTitle(event)}": ${names.join(', ')}`);
-
     return { mentions: Array.from(mentions), names };
   };
 

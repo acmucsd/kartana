@@ -33,7 +33,7 @@ export default class NotionPeefReminderState {
    * @returns Persisted milestone data, or an empty object if this event has never been seen.
    */
   public get(eventId: string): PeefReminderMilestones {
-    return this.state[eventId] || {};
+    return { ...(this.state[eventId] || {}) };
   }
 
   /**
@@ -51,7 +51,7 @@ export default class NotionPeefReminderState {
       return;
     }
 
-    this.state[eventId] = milestones;
+    this.state[eventId] = { ...milestones };
 
     try {
       fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2));
