@@ -49,11 +49,7 @@ export default class {
           this.initializeCommands(client);
         } else {
           // Import our Command file.
-          const commandImport = await import(join(
-            __dirname,
-            '../../',
-            `${commands}/${cmd.replace('ts', 'js')}`,
-          ));
+          const commandImport = await import(join(__dirname, '../../', `${commands}/${cmd.replace('ts', 'js')}`));
 
           // Get the default export.
           const LoadedCommand = commandImport.default;
@@ -76,15 +72,11 @@ export default class {
         Logger.info('Loading Slash Commands on Discord Gateway...', {
           eventType: 'slashCommandLoading',
         });
-        await restAPI.put(
-          Routes.applicationCommands(client.settings.clientID),
-          { body: slashCommands }, 
-        );
+        await restAPI.put(Routes.applicationCommands(client.settings.clientID), { body: slashCommands });
         // Adding the ID for our Discord Guild allows new slash commands to load faster than adding it globally.
-        await restAPI.put(
-          Routes.applicationGuildCommands(client.settings.clientID, client.settings.discordGuildID),
-          { body: slashCommands },
-        );
+        await restAPI.put(Routes.applicationGuildCommands(client.settings.clientID, client.settings.discordGuildID), {
+          body: slashCommands,
+        });
         Logger.info('Loaded Slash Commands on Discord Gateway!', {
           eventType: 'slashCommandLoaded',
         });
@@ -107,11 +99,7 @@ export default class {
       // For every Event file...
       files.forEach(async (evt) => {
         // Import our Event file.
-        const eventImport = await import(join(
-          __dirname,
-          '../../',
-          `${events}/${evt.replace('ts', 'js')}`,
-        ));
+        const eventImport = await import(join(__dirname, '../../', `${events}/${evt.replace('ts', 'js')}`));
 
         // Get the default export.
         const LoadedEvent = eventImport.default;
@@ -125,10 +113,7 @@ export default class {
         // We lowercase the first letter, since that's how events are written down in Discord.js,
         // and use the abstract `run` method we implemented in the file as the callback for our
         // event.
-        client.on(
-          eventName.charAt(0).toLowerCase() + eventName.slice(1),
-          (...args: string[]) => event.run(...args),
-        );
+        client.on(eventName.charAt(0).toLowerCase() + eventName.slice(1), (...args: string[]) => event.run(...args));
       });
     });
   }

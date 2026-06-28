@@ -4,7 +4,7 @@
  */
 export class NotionSchemaMismatchError extends Error {
   public diff: Object;
-  
+
   /**
    * Constructs the error.
    * @param diff The difference between our own schema and the Notion calendar schema as returned by Lodash.

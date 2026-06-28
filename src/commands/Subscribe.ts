@@ -59,7 +59,6 @@ export default class Subscribe extends Command {
           new MessageButton().setCustomId('Cancel').setLabel('Cancel').setStyle('DANGER'),
         );
         const message = (await interaction.editReply({
-          // eslint-disable-next-line max-len
           content: `<@${schemaStoredUserID}> is already subscribed to calendar invites for **${email}**!\nDo you want to update it to <@${userID}>?`,
           components: [row],
         })) as Message;

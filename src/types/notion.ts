@@ -3,7 +3,7 @@ import { notionCalSchema } from '../assets';
 import { DateTime, Interval } from 'luxon';
 
 function extractNames<T extends readonly { name: string }[]>(arr: T) {
-  return arr.map(o => o.name) as {
+  return arr.map((o) => o.name) as {
     readonly [K in keyof T]: T[K] extends { name: infer N } ? N : never;
   };
 }
@@ -51,16 +51,16 @@ export const fundingSponsor = extractNames(notionCalSchema['Sponsor?'].select.op
 export const tapStatuses = extractNames(notionCalSchema['TAP Status'].select.options);
 export const bookingStatuses = extractNames(notionCalSchema['Booking Status'].select.options);
 export enum EventLocationType {
-	NEED_VENUE = "I need a venue on campus",
-	HAS_VENUE = "My event is on campus but I can take care of the booking",
-	OFF_CAMPUS = "My event is off campus",
-	ONLINE = "My event is online",
+  NEED_VENUE = 'I need a venue on campus',
+  HAS_VENUE = 'My event is on campus but I can take care of the booking',
+  OFF_CAMPUS = 'My event is off campus',
+  ONLINE = 'My event is online',
 }
 
 // A Notion User.
 export type NotionUser = GetUserResponse;
 
-export type OffCampusGuests = typeof offCampusGuests[number];
+export type OffCampusGuests = (typeof offCampusGuests)[number];
 
 export const isOffCampusGuests = (possibleOffCampusGuests: string): possibleOffCampusGuests is OffCampusGuests => {
   return offCampusGuests.includes(possibleOffCampusGuests as OffCampusGuests);
@@ -69,7 +69,7 @@ export const isOffCampusGuests = (possibleOffCampusGuests: string): possibleOffC
 /**
  * The Type of NotionEvent held.
  */
-export type EventType = typeof eventTypes[number];
+export type EventType = (typeof eventTypes)[number];
 
 /**
  * User-defined Type Guard for the EventType.
@@ -84,7 +84,7 @@ export const isEventType = (type: string): type is EventType => {
 /**
  * Any student organizations ACM collaborates with or has Events hosted with.
  */
-export type StudentOrg = typeof studentOrgs[number];
+export type StudentOrg = (typeof studentOrgs)[number];
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -96,7 +96,7 @@ export const isStudentOrg = (org: string): org is StudentOrg => {
   return studentOrgs.includes(org as StudentOrg);
 };
 
-export type LogisticsBy = typeof logisticsBy[number];
+export type LogisticsBy = (typeof logisticsBy)[number];
 
 export const isLogisticsBy = (by: string): by is LogisticsBy => {
   return logisticsBy.includes(by as LogisticsBy);
@@ -105,7 +105,7 @@ export const isLogisticsBy = (by: string): by is LogisticsBy => {
 /**
  * Any student organizations ACM collaborates with or has Events hosted with.
  */
-export type TokenEventGroup = typeof tokenEventGroups[number];
+export type TokenEventGroup = (typeof tokenEventGroups)[number];
 
 /**
  * User-defined Type Guard for StudentOrg.
@@ -117,7 +117,7 @@ export const isTokenEventGroup = (group: string): group is TokenEventGroup => {
   return tokenEventGroups.includes(group as TokenEventGroup);
 };
 
-export type TokenPass = typeof tokenPasses[number];
+export type TokenPass = (typeof tokenPasses)[number];
 
 export const isTokenPass = (pass: string): pass is TokenPass => {
   return tokenPasses.includes(pass as TokenPass);
@@ -126,7 +126,7 @@ export const isTokenPass = (pass: string): pass is TokenPass => {
 // The location for a NotionEvent.
 //
 // This is limited to the values available in the Notion Calendar.
-export type EventLocation = typeof eventLocations[number];
+export type EventLocation = (typeof eventLocations)[number];
 
 /**
  * Converter from the Host Form's locations to the Notion Calendar
@@ -164,36 +164,36 @@ export const notionLocationTag = {
   'Warren Bear': 'Warren Bear',
   'Warren Mall': 'Warren Mall',
   'Off Campus': 'Off Campus',
-  'Other': 'Other (See Details)',
+  Other: 'Other (See Details)',
 };
 export type EventVenueChoice = keyof typeof notionLocationTag;
 export const eventVenueChoices = Object.keys(notionLocationTag) as EventVenueChoice[];
 
-export type ProjectorStatus = typeof projectorStatuses[number];
+export type ProjectorStatus = (typeof projectorStatuses)[number];
 
 export const isProjectorStatus = (status: string): status is ProjectorStatus => {
   return projectorStatuses.includes(status as ProjectorStatus);
 };
 
-export type FundingStatus = typeof fundingStatuses[number];
+export type FundingStatus = (typeof fundingStatuses)[number];
 
 export const isFundingStatus = (status: string): status is FundingStatus => {
   return fundingStatuses.includes(status as FundingStatus);
 };
 
-export type FundingSponsor = typeof fundingSponsor[number];
+export type FundingSponsor = (typeof fundingSponsor)[number];
 
 export const isFundingSponsor = (sponsor: string): sponsor is FundingSponsor => {
   return fundingSponsor.includes(sponsor as FundingSponsor);
 };
 
-export type TapStatus = typeof tapStatuses[number];
+export type TapStatus = (typeof tapStatuses)[number];
 
 export const isTapStatuses = (status: string): status is TapStatus => {
   return tapStatuses.includes(status as TapStatus);
 };
 
-export type BookingStatus = typeof bookingStatuses[number];
+export type BookingStatus = (typeof bookingStatuses)[number];
 
 export const isBookingStatus = (status: string): status is BookingStatus => {
   return bookingStatuses.includes(status as BookingStatus);

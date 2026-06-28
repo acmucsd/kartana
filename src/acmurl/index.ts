@@ -1,8 +1,8 @@
 import got from 'got';
 
 export type ACMURLConfig = {
-  username: string,
-  password: string
+  username: string;
+  password: string;
 };
 
 /**
@@ -15,19 +15,24 @@ export type ACMURLConfig = {
  * @returns The new shortened ACMURL.
  */
 export async function addACMURL(
-  shortlink: string, longlink: string, title: string, config: ACMURLConfig,
+  shortlink: string,
+  longlink: string,
+  title: string,
+  config: ACMURLConfig,
 ): Promise<string> {
-  const acmurlAPIResponse = await got.post('https://acmurl.com/yourls-api.php', {
-    form: {
-      username: config.username,
-      password: config.password,
-      action: 'shorturl',
-      keyword: shortlink,
-      url: longlink,
-      format: 'json',
-      title,
-    },
-  }).json() as any;
+  const acmurlAPIResponse = (await got
+    .post('https://acmurl.com/yourls-api.php', {
+      form: {
+        username: config.username,
+        password: config.password,
+        action: 'shorturl',
+        keyword: shortlink,
+        url: longlink,
+        format: 'json',
+        title,
+      },
+    })
+    .json()) as any;
 
   if (acmurlAPIResponse.status === 'fail') {
     throw new Error(acmurlAPIResponse.code);
@@ -42,15 +47,17 @@ export async function addACMURL(
  * @returns the link that `acmurl.com/shortlink` points to.
  */
 export async function expandACMURL(shortlink: string, config: ACMURLConfig): Promise<string> {
-  const acmurlAPIResponse = await got.post('https://acmurl.com/yourls-api.php', {
-    form: {
-      username: config.username,
-      password: config.password,
-      action: 'expand',
-      shorturl: shortlink,
-      format: 'json',
-    },
-  }).json() as any;
+  const acmurlAPIResponse = (await got
+    .post('https://acmurl.com/yourls-api.php', {
+      form: {
+        username: config.username,
+        password: config.password,
+        action: 'expand',
+        shorturl: shortlink,
+        format: 'json',
+      },
+    })
+    .json()) as any;
   return acmurlAPIResponse !== undefined ? acmurlAPIResponse.longurl : undefined;
 }
 
@@ -62,7 +69,10 @@ export async function expandACMURL(shortlink: string, config: ACMURLConfig): Pro
  * @private
  */
 export async function updateACMURL(
-  shortlink: string, longlink: string, title: string, config: ACMURLConfig,
+  shortlink: string,
+  longlink: string,
+  title: string,
+  config: ACMURLConfig,
 ): Promise<void> {
   await got.post('https://acmurl.com/yourls-api.php', {
     form: {
@@ -86,7 +96,10 @@ export async function updateACMURL(
  * @returns Tuple of old URL on YOURLS and new ACMURL.
  */
 export async function handleExistingACMURL(
-  shortlink: string, longlink: string, title: string, config: ACMURLConfig,
+  shortlink: string,
+  longlink: string,
+  title: string,
+  config: ACMURLConfig,
 ): Promise<[string, string]> {
   // get the old URL
   const previousURL = await expandACMURL(shortlink, config);

@@ -1,41 +1,56 @@
 extends:
-  - "eslint:recommended"
-  - "airbnb-typescript/base"
+  - 'eslint:recommended'
+  - 'airbnb-typescript/base'
 parserOptions:
   project: './tsconfig.json'
-ignorePatterns: 'build/*'
+ignorePatterns:
+  - 'build/*'
+  - '*.js'
 env:
   browser: true
   node: true
   jest: true
 plugins:
-  - "import"
+  - 'import'
 rules:
-  "@typescript-eslint/no-unused-vars":
-    - "error"
-    - argsIgnorePattern: "type|_*"
-  class-methods-use-this: "off"
+  '@typescript-eslint/indent': 'off'
+  '@typescript-eslint/naming-convention':
+    - 'error'
+    - selector: 'variable'
+      format:
+        - 'camelCase'
+        - 'PascalCase'
+        - 'UPPER_CASE'
+      leadingUnderscore: 'allow'
+    - selector: 'function'
+      format:
+        - 'camelCase'
+        - 'PascalCase'
+    - selector: 'typeLike'
+      format:
+        - 'PascalCase'
+  '@typescript-eslint/no-unused-vars':
+    - 'error'
+    - argsIgnorePattern: 'type|_*'
+      varsIgnorePattern: '_*'
+  class-methods-use-this: 'off'
   consistent-return: off
-  func-names: "off"
-  global-require: "off"
-  import/no-cycle: "off"
-  import/prefer-default-export: "off"
-  max-classes-per-file: "off"
-  max-len:
-    - "error"
-    - code: 120
+  func-names: 'off'
+  global-require: 'off'
+  import/no-cycle: 'off'
+  import/prefer-default-export: 'off'
+  max-classes-per-file: 'off'
   no-bitwise:
-    - "error"
+    - 'error'
     - allow:
-        - "^"
-  no-param-reassign: "off"
-  no-unused-vars: "off"
+        - '^'
+  no-param-reassign: 'off'
+  no-unused-vars: 'off'
   object-curly-newline:
-    - "error"
+    - 'error'
     - consistent: true
 overrides:
-- files:
-    - "tests/*.test.ts"
-  rules:
-    no-await-in-loop: "off"
-
+  - files:
+      - 'tests/*.test.ts'
+    rules:
+      no-await-in-loop: 'off'

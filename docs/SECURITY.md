@@ -13,15 +13,15 @@ that has access to the sheet. In order to do this, you'll need to:
 3. Select an existing project or create a new one (and then select it)
 4. Enable the Sheets API for the above project
 5. Create a service account for the project
-  a. In the sidebar on the left, select "APIs & Services > Credentials"
-  b. Click the blue `+ CREATE CREDENTIALS` button and select the `Service account` option
-  c. Enter name, description, and click `CREATE`
-  d. You can skip permissions and click `CONTINUE`
-  e. Click the `+ CREATE KEY` button
-  f. Select the `JSON` key type option for exporting credentials
-  g. Click the `Create` button
-  h. Your browser will download the credentials JSON file. **BE CAREFUL! THIS IS THE ONLY COPY YOU'RE GETTING!**
-  i. click `DONE`
+   a. In the sidebar on the left, select "APIs & Services > Credentials"
+   b. Click the blue `+ CREATE CREDENTIALS` button and select the `Service account` option
+   c. Enter name, description, and click `CREATE`
+   d. You can skip permissions and click `CONTINUE`
+   e. Click the `+ CREATE KEY` button
+   f. Select the `JSON` key type option for exporting credentials
+   g. Click the `Create` button
+   h. Your browser will download the credentials JSON file. **BE CAREFUL! THIS IS THE ONLY COPY YOU'RE GETTING!**
+   i. click `DONE`
 6. Find the service account's email address (available in the JSON key file you downloaded)
 7. Share the Host Form Response doc with your service account using the email from step 6
 8. Add the service account email and path to the above JSON file in the `.env` file (use `.env.example` as reference)

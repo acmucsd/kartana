@@ -59,12 +59,12 @@ export default class {
           // (or restarts).
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Notion database changed!')
-            .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0,4095))
+            .setDescription(
+              `Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0, 4095),
+            )
             .setFooter("I will not run the pipeline again until y'all confirm the Notion database changes.")
             .setColor('DARK_RED');
           await eventChannel.send({
-            // No point in making this line shorter.
-            // eslint-disable-next-line max-len
             content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
             embeds: [errorEmbed],
           });
@@ -75,12 +75,12 @@ export default class {
           client.flags.validGoogleSchema = false;
           const errorEmbed = new MessageEmbed()
             .setTitle('🚫 Google Sheets table columns changed!')
-            .setDescription(`Changes found in table:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0,4095))
+            .setDescription(
+              `Changes found in table:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0, 4095),
+            )
             .setFooter("I will not run the pipeline again until y'all confirm the Google Sheets table changes.")
             .setColor('DARK_RED');
           await eventChannel.send({
-            // No point in making this line shorter.
-            // eslint-disable-next-line max-len
             content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
             embeds: [errorEmbed],
           });
@@ -129,8 +129,6 @@ export default class {
             )
             .setColor('DARK_RED');
           await eventChannel.send({
-            // No point in making this line shorter.
-            // eslint-disable-next-line max-len
             content: `Paging <@&${process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID}> and <@${process.env.DISCORD_MAINTAINER_MENTION_ID}>!`,
             embeds: [errorEmbed],
           });
