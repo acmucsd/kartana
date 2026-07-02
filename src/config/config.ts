@@ -30,6 +30,7 @@ export default {
     events: 'src/events',
   },
   notionIntegrationToken: '',
+  dataDir: 'data',
   notionCalendarID: '',
   notionMeetingNotesID: '',
   notionHostedEventsID: '',

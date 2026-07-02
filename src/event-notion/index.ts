@@ -581,7 +581,7 @@ export const pingForTAPDeadlines = async (notion: Client, databaseId: string, co
 
     Object.values(cur.dates).forEach((curPing) => {
       let propDate = dateTimeNow.plus({ days: curPing.days });
-      let mps = new MeetingPingsSchema();
+      let mps = new MeetingPingsSchema(config.settings.dataDir);
 
       // Gets specific list of events that meet this ping's criteria of (date, correct org [TAP, PR, etc] status)
       let curDatePings = allEvents.filter((event) => {
@@ -716,7 +716,7 @@ export const pingForKeys = async (notion: Client, databaseId: string, config: Ev
   let curEmbedPeoplePing = new Array<string>();
 
   Object.entries(eventsByLocation).forEach(([location, events]) => {
-    let mps = new MeetingPingsSchema();
+    let mps = new MeetingPingsSchema(config.settings.dataDir);
     let needed = keyCardLocs.includes(location) ? 'card' : 'code';
     keyPingDescription += `_${location} needs a key ${needed} for these events:_\n`;
     events.forEach((event) => {
@@ -871,8 +871,8 @@ export const pingForPEEFReminders = async (config: EventNotionPipelineConfig) =>
 
   const now = DateTime.now().setZone('America/Los_Angeles');
   const nowISO = now.toISO() || now.toString();
-  const peefReminderState = new NotionPeefReminderState();
-  const meetingPingsSchema = new MeetingPingsSchema();
+  const peefReminderState = new NotionPeefReminderState(config.settings.dataDir);
+  const meetingPingsSchema = new MeetingPingsSchema(config.settings.dataDir);
 
   await Promise.all(
     allEvents.map(async (event) => {

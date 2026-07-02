@@ -195,7 +195,7 @@ export default class {
   public async initializeMeetingPings(client: BotClient): Promise<void> {
     await this.refreshAuth(client);
     this.calendarList = [];
-    this.meetingPingsSchema = new MeetingPingsSchema();
+    this.meetingPingsSchema = new MeetingPingsSchema(client.settings.dataDir);
     for (const entry of this.meetingPingsSchema.calendarList) {
       try {
         await this.calendar.calendarList.insert({ requestBody: { id: entry.calendarID } });

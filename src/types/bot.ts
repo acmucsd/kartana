@@ -111,6 +111,11 @@ export interface BotSettings {
    */
   notionIntegrationToken: string;
 
+  /**
+   * Directory where runtime state files are stored.
+   */
+  dataDir: string;
+
   // Database IDs for pages we want to automatically create and retrieve on Notion.
   notionCalendarID: string;
   notionMeetingNotesID: string;

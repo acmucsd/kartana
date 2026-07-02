@@ -1,7 +1,8 @@
 import fs from 'fs';
+import path from 'path';
 import Logger from '../utils/Logger';
 
-const DEFAULT_PEEF_REMINDER_STATE_PATH = 'peefReminderState.json';
+const DEFAULT_PEEF_REMINDER_STATE_FILE_NAME = 'peefReminderState.json';
 
 export interface PeefReminderMilestones {
   postEventReminderSentAt?: string;
@@ -22,7 +23,10 @@ type PeefReminderState = Record<string, PeefReminderMilestones>;
 export default class NotionPeefReminderState {
   private state: PeefReminderState;
 
-  constructor(private readonly filePath = DEFAULT_PEEF_REMINDER_STATE_PATH) {
+  private readonly filePath: string;
+
+  constructor(dataDir: string) {
+    this.filePath = path.join(dataDir, DEFAULT_PEEF_REMINDER_STATE_FILE_NAME);
     this.state = this.load();
   }
 

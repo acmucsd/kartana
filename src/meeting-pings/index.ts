@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import path from 'path';
 import { calendar_v3 } from 'googleapis';
 
-const GUEST_SCHEMA_FILE_PATH = 'meetingPingsGuestSchema.json';
-const CALENDAR_SCHEMA_FILE_PATH = 'meetingPingsCalendarSchema.json';
+const GUEST_SCHEMA_FILE_NAME = 'meetingPingsGuestSchema.json';
+const CALENDAR_SCHEMA_FILE_NAME = 'meetingPingsCalendarSchema.json';
 /**
  * DiscordInfo is a representation of all the information a Google Calendar needs to be paired with.
  */
@@ -26,15 +27,19 @@ interface GuestInfo {
 }
 
 export class MeetingPingsSchema {
+  private readonly guestSchemaFilePath: string;
+
+  private readonly calendarSchemaFilePath: string;
+
   // Maps a Google Calendar ID to the ID of the Discord channel to send notifications to.
   private calendarMapping: Map<string, DiscordInfo>;
 
   // Maps a calendar guest's email to their Discord user ID so we can ping them.
-  // Information is persistently stored in meetingPingsGuestSchema.json.
+  // Information is persistently stored in meetingPingsGuestSchema.json
   private guestMapping: Map<string, string>;
 
   // A list of all Google Calendars and associated information with them.
-  // Information is persistently stored in meetingPingsCalendarSchema.json.
+  // Information is persistently stored in meetingPingsCalendarSchema.json
   public calendarList: CalendarInfo[];
 
   /**
@@ -91,14 +96,13 @@ export class MeetingPingsSchema {
 
   /**
    * Initializes this.calendarList and this.calendarMapping based on the contents
-   * of meetingPingsCalendarSchema.json.
    */
   private initializeCalendarMapping(): void {
     this.calendarMapping = new Map<string, DiscordInfo>();
     this.calendarList = [];
     try {
-      if (existsSync(CALENDAR_SCHEMA_FILE_PATH)) {
-        const content = readFileSync(CALENDAR_SCHEMA_FILE_PATH, { encoding: 'utf-8' });
+      if (existsSync(this.calendarSchemaFilePath)) {
+        const content = readFileSync(this.calendarSchemaFilePath, { encoding: 'utf-8' });
         this.calendarList = JSON.parse(content) as CalendarInfo[];
         this.calendarList.forEach((calendarInfo) => {
           this.calendarMapping[calendarInfo.calendarID] = {
@@ -108,7 +112,7 @@ export class MeetingPingsSchema {
         });
       } else {
         // Create the file as a blank file if it doesn't exist.
-        writeFileSync(CALENDAR_SCHEMA_FILE_PATH, '[]');
+        writeFileSync(this.calendarSchemaFilePath, '[]');
       }
     } catch (err) {
       throw new Error(`Error while initializing calendar mapping: ${err.message}`);
@@ -116,20 +120,20 @@ export class MeetingPingsSchema {
   }
 
   /**
-   * Initializes this.guestMapping based on the contents of meetingPingsGuestSchema.json.
+   * Initializes this.guestMapping based on the contents of meetingPingsGuestSchema.json
    */
   private initializeGuestMapping(): void {
     this.guestMapping = new Map<string, string>();
     try {
-      if (existsSync(GUEST_SCHEMA_FILE_PATH)) {
-        const content = readFileSync(GUEST_SCHEMA_FILE_PATH, { encoding: 'utf-8' });
+      if (existsSync(this.guestSchemaFilePath)) {
+        const content = readFileSync(this.guestSchemaFilePath, { encoding: 'utf-8' });
         const guestInfoList = JSON.parse(content) as GuestInfo[];
         guestInfoList.forEach((guestInfo) => {
           this.guestMapping[guestInfo.email] = guestInfo.discordID;
         });
       } else {
         // Create the file as a blank file if it doesn't exist.
-        writeFileSync(GUEST_SCHEMA_FILE_PATH, '[]');
+        writeFileSync(this.guestSchemaFilePath, '[]');
       }
     } catch (err) {
       throw new Error(`Error while initializing calendar mapping: ${err.message}`);
@@ -149,7 +153,7 @@ export class MeetingPingsSchema {
 
   /**
    * Adds a new guest/updates their Discord user ID in this.guestMapping.
-   * Also saves the new information to meetingPingsGuestSchema.json.
+   * Also saves the new information to meetingPingsGuestSchema.json
    */
   public subscribeNewGuest(guestEmail: string, guestDiscordID: string): void {
     this.guestMapping[guestEmail] = guestDiscordID;
@@ -157,10 +161,12 @@ export class MeetingPingsSchema {
     Object.keys(this.guestMapping).forEach((email) => {
       writeContents.push({ email, discordID: this.guestMapping[email] });
     });
-    writeFileSync(GUEST_SCHEMA_FILE_PATH, JSON.stringify(writeContents, null, 2));
+    writeFileSync(this.guestSchemaFilePath, JSON.stringify(writeContents, null, 2));
   }
 
-  constructor() {
+  constructor(dataDir: string) {
+    this.guestSchemaFilePath = path.join(dataDir, GUEST_SCHEMA_FILE_NAME);
+    this.calendarSchemaFilePath = path.join(dataDir, CALENDAR_SCHEMA_FILE_NAME);
     this.initializeCalendarMapping();
     this.initializeGuestMapping();
   }

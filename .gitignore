@@ -259,12 +259,8 @@ gapi-service-account-creds.json
 database.properties
 
 .DS_Store
-# Meeting Pings Schema
-meetingPingsCalendarSchema.*
-meetingPingsGuestSchema.*
-
-# Peef Pings State
-peefReminderState.*
+# Runtime data files
+data/
 
 /secrets
 
