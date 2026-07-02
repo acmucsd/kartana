@@ -682,21 +682,6 @@ export const notionCalSchema = {
       ],
     },
   },
-  'Hosted Events Sheet': {
-    id: 'ICQM',
-    name: 'Hosted Events Sheet',
-    description: null,
-    type: 'relation',
-    relation: {
-      database_id: '2b914391-5b12-81e6-bfa3-c4c639ad77a3',
-      data_source_id: '2b914391-5b12-8131-9c5b-000b1eacc404',
-      type: 'dual_property',
-      dual_property: {
-        synced_property_name: 'Calendar Event',
-        synced_property_id: 'QZWa',
-      },
-    },
-  },
   'Recording Requests': {
     id: 'LYO%3D',
     name: 'Recording Requests',
@@ -719,6 +704,21 @@ export const notionCalSchema = {
     description: null,
     type: 'files',
     files: {},
+  },
+  'Hosted Events Sheet': {
+    id: 'SXzi',
+    name: 'Hosted Events Sheet',
+    description: null,
+    type: 'relation',
+    relation: {
+      database_id: 'd26e4598-91dc-4222-895e-559b15d7cd19',
+      data_source_id: '8123c750-41b1-4ac5-b4bf-90f2d2471a8f',
+      type: 'dual_property',
+      dual_property: {
+        synced_property_name: 'Calendar Event',
+        synced_property_id: 'scC%7B',
+      },
+    },
   },
   'Event Coordinator': {
     id: 'TC0%24',
@@ -984,7 +984,7 @@ export const notionCalSchema = {
           description: null,
         },
         {
-          id: '0e47aa5a-b6b2-47a2-a071-3faf811e940f',
+          id: 'Aw:a',
           name: 'Other',
           color: 'brown',
           description: null,
@@ -1765,4 +1765,4 @@ export const notionCalSchema = {
     type: 'title',
     title: {},
   },
-};
+} as const;
