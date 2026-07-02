@@ -173,7 +173,7 @@ export default class {
    * @param client The original client, for access to the configuration.
    */
   public initializeNotionSync(client: BotClient): void {
-    this.googleSheetKeyFile = readFileSync(client.settings.googleSheetsKeyFile);
+    this.googleSheetKeyFile = JSON.parse(client.settings.googleSheetsKeyFile);
     this.notionEventSyncJob = schedule.scheduleJob('*/30 * * * *', async () => {
       Logger.info('Running notion event pipeline sync cron job!');
       this.runNotionPipeline(client);
