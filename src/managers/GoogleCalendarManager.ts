@@ -39,7 +39,7 @@ export default class {
    */
   private async refreshAuth(client: BotClient): Promise<void> {
     const auth = new google.auth.GoogleAuth({
-      keyFilename: client.settings.googleSheetsKeyFile,
+      credentials: JSON.parse(client.settings.googleSheetsKeyFile),
       scopes: ['https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/calendar'],
     });
     const authClient = await auth.getClient();
