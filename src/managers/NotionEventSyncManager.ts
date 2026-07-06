@@ -2,7 +2,7 @@ import { Service } from 'typedi';
 import schedule from 'node-schedule';
 import { BotClient } from '../types';
 import Logger from '../utils/Logger';
-import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders } from '../event-notion';
+import { syncHostFormToNotionCalendar, pingForDeadlinesAndReminders, pingForPEEFReminders } from '../event-notion';
 import { readFileSync } from 'fs';
 import { MessageEmbed, TextChannel } from 'discord.js';
 import { GoogleSheetsSchemaMismatchError, NotionSchemaMismatchError } from '../types';
@@ -25,7 +25,31 @@ export default class {
    */
   public deadlineReminderPingJob: schedule.Job;
 
+  /**
+   * Cronjob to run PEEF host reminders and finance completion pings.
+   */
+  public peefReminderPingJob: schedule.Job;
+
   public googleSheetKeyFile: Buffer;
+
+  private async handleNotionSchemaMismatch(client: BotClient, eventChannel: TextChannel, diff: unknown): Promise<void> {
+    if (!client.flags.validNotionSchema) {
+      return;
+    }
+
+    client.flags.validNotionSchema = false;
+
+    const errorEmbed = new MessageEmbed()
+      .setTitle('🚫 Notion database changed!')
+      .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(diff, null, 2)}\n\`\`\``.slice(0, 4095))
+      .setFooter("I won't run any Notion-related pipelines again until the Notion database changes are confirmed.")
+      .setColor('DARK_RED');
+
+    await eventChannel.send({
+      content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
+      embeds: [errorEmbed],
+    });
+  }
 
   /**
    * Imports new events on the Events Host Form to the private board Notion Events calendar.
@@ -48,27 +72,7 @@ export default class {
       // If we got an error, one of our schemas is mismatched! We want to call that out
       // on Discord, ping both Events Team and the Kartana developer and deal with it later on.
       if (e instanceof NotionSchemaMismatchError) {
-        // If not yet marked as invalid, don't deal with any of the logic.
-        if (client.flags.validNotionSchema) {
-          // Mark it off as invalid. We'll validate it later when we run through one pipeline run
-          // with no thrown Errors.
-          client.flags.validNotionSchema = false;
-
-          // Send the error out on Discord. If we're in this "if", it means we've
-          // not sent it before, so we'll only send once total between schema changes
-          // (or restarts).
-          const errorEmbed = new MessageEmbed()
-            .setTitle('🚫 Notion database changed!')
-            .setDescription(
-              `Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``.slice(0, 4095),
-            )
-            .setFooter("I will not run the pipeline again until y'all confirm the Notion database changes.")
-            .setColor('DARK_RED');
-          await eventChannel.send({
-            content: `Paging <@&${client.settings.logisticsTeamID}> and <@&${client.settings.maintainerID}>!`,
-            embeds: [errorEmbed],
-          });
-        }
+        await this.handleNotionSchemaMismatch(client, eventChannel, e.diff);
       } else if (e instanceof GoogleSheetsSchemaMismatchError) {
         // Similarly for this if statement, except this outputs an embed for the Google Sheets table error.
         if (client.flags.validGoogleSchema) {
@@ -112,27 +116,28 @@ export default class {
       // If we got an error, our schemas are mismatched! We want to call that out
       // on Discord, ping both Events Team and the Kartana developer and deal with it later on.
       if (e instanceof NotionSchemaMismatchError) {
-        // If not yet marked as invalid, don't deal with any of the logic.
-        if (client.flags.validNotionSchema) {
-          // Mark it off as invalid. We'll validate it later when we run through one pipeline run
-          // with no thrown Errors.
-          client.flags.validNotionSchema = false;
+        await this.handleNotionSchemaMismatch(client, eventChannel, e.diff);
+      }
+    }
+  }
 
-          // Send the error out on Discord. If we're in this "if", it means we've
-          // not sent it before, so we'll only send once total between schema changes
-          // (or restarts).
-          const errorEmbed = new MessageEmbed()
-            .setTitle('🚫 Notion database changed!')
-            .setDescription(`Changes found in database:\n\`\`\`json\n${JSON.stringify(e.diff, null, 2)}\n\`\`\``)
-            .setFooter(
-              "I won't run any Notion-related pipelines again until the Notion database changes are confirmed.",
-            )
-            .setColor('DARK_RED');
-          await eventChannel.send({
-            content: `Paging <@&${process.env.DISCORD_LOGISTICS_TEAM_MENTION_ID}> and <@${process.env.DISCORD_MAINTAINER_MENTION_ID}>!`,
-            embeds: [errorEmbed],
-          });
-        }
+  /**
+   * Checks and pings for any pending PEEF reminders and completions.
+   * @param client The original client, for access to the configuration
+   */
+  public async runPEEFReminders(client: BotClient): Promise<void> {
+    const eventChannel = client.channels.cache.get(client.settings.discordEventPipelineChannelID) as TextChannel;
+    try {
+      await pingForPEEFReminders({
+        settings: client.settings,
+        channel: eventChannel,
+        googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
+      });
+
+      client.flags.validNotionSchema = true;
+    } catch (e) {
+      if (e instanceof NotionSchemaMismatchError) {
+        await this.handleNotionSchemaMismatch(client, eventChannel, e.diff);
       }
     }
   }
@@ -181,6 +186,10 @@ export default class {
     this.deadlineReminderPingJob = schedule.scheduleJob('0 10 * * *', async () => {
       Logger.info('Running TAP deadline pings cron job!');
       this.runDeadlinesAndReminders(client);
+    });
+    this.peefReminderPingJob = schedule.scheduleJob('* * * * *', async () => {
+      Logger.info('Running PEEF reminders cron job!');
+      this.runPEEFReminders(client);
     });
   }
 }

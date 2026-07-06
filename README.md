@@ -52,6 +52,11 @@ as `.env`. Check the comments in the file for details. If you need any help
 acquiring the credentials in the `.env.example` file, consult the `SECURITY.md`
 file for details, along with the other docs for any specific pipeline to configure.
 
+Runtime state files are stored in a data directory configured by `BOT_DATA_DIR`.
+If omitted, Kartana defaults to `./data`.
+
+For Docker deployments, set `BOT_DATA_DIR=/data` and mount `/data` as a volume.
+
 Kartana can be run using:
 
 ```sh

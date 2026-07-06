@@ -1,5 +1,6 @@
 import { Collection, Client as DiscordClient } from 'discord.js';
 import { Service } from 'typedi';
+import { mkdirSync } from 'fs';
 import Logger from './utils/Logger';
 import { BotSettings, BotClient, BotInitializationError } from './types';
 import Command from './Command';
@@ -141,6 +142,7 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.token = process.env.BOT_TOKEN;
     this.settings.prefix = process.env.BOT_PREFIX;
     this.settings.notionIntegrationToken = process.env.NOTION_INTEGRATION_TOKEN;
+    this.settings.dataDir = process.env.BOT_DATA_DIR || this.settings.dataDir;
     this.settings.notionCalendarID = process.env.NOTION_CALENDAR_ID;
     this.settings.notionMeetingNotesID = process.env.NOTION_MEETING_NOTES_ID;
     this.settings.notionHostedEventsID = process.env.NOTION_HOSTED_EVENTS_ID;
@@ -158,6 +160,9 @@ export default class Client extends DiscordClient implements BotClient {
     this.settings.scheduledMessageGoogleCalendarID = process.env.SCHEDULED_MESSAGE_GOOGLE_CALENDAR_ID;
     this.settings.acmurl.username = process.env.ACMURL_USERNAME;
     this.settings.acmurl.password = process.env.ACMURL_PASSWORD;
+
+    mkdirSync(this.settings.dataDir, { recursive: true });
+
     this.initialize().then();
   }
 

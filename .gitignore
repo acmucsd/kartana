@@ -259,9 +259,8 @@ gapi-service-account-creds.json
 database.properties
 
 .DS_Store
-# Meeting Pings Schema
-meetingPingsCalendarSchema.*
-meetingPingsGuestSchema.*
+# Runtime data files
+data/
 
 /secrets
 
