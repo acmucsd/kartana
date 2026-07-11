@@ -8,6 +8,7 @@ import ActionManager from './managers/ActionManager';
 import NotionEventSyncManager from './managers/NotionEventSyncManager';
 import configuration from './config/config';
 import GoogleCalendarManager from './managers/GoogleCalendarManager';
+import DiscordRoleManager from './managers/DiscordRoleManager';
 
 /**
  * The class representing the Discord bot.
@@ -52,11 +53,13 @@ export default class Client extends DiscordClient implements BotClient {
    * @param actionManager An ActionManager class to run. Injected by TypeDI.
    * @param notionEventSyncManager A NotionEventSyncManager class to run. Injected by TypeDI.
    * @param googleCalendarManager A GoogleCalendarManager class to run. Injected by TypeDI.
+   * @param discordRoleManager A DiscordRoleManager class to run. Injected by TypeDI.
    */
   constructor(
     private actionManager: ActionManager,
     public notionEventSyncManager: NotionEventSyncManager,
     public googleCalendarManager: GoogleCalendarManager,
+    public discordRoleManager: DiscordRoleManager,
   ) {
     super(
       configuration.clientOptions || {
