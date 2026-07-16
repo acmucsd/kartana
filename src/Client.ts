@@ -9,6 +9,7 @@ import NotionEventSyncManager from './managers/NotionEventSyncManager';
 import configuration from './config/config';
 import GoogleCalendarManager from './managers/GoogleCalendarManager';
 import DiscordRoleManager from './managers/DiscordRoleManager';
+import InternalApiServer from './api/InternalApiServer';
 
 /**
  * The class representing the Discord bot.
@@ -184,6 +185,9 @@ export default class Client extends DiscordClient implements BotClient {
       await this.googleCalendarManager.initializeMeetingPings(this);
       await this.googleCalendarManager.initializeScheduledMessages(this);
       await this.login(configuration.token);
+
+      const api = new InternalApiServer(this);
+      api.start(Number(process.env.INTERNAL_API_PORT) || 3001);
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);
     }
