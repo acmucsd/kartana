@@ -29,6 +29,8 @@ import InternalApiServer from './api/InternalApiServer';
  * - Login to Discord API when done initializing everything.
  *
  * ActionManager does the heavy lifting, so read that as well.
+ *
+ * Also starts up the express server that serves our internal endpoints used in the executive portal.
  */
 @Service()
 export default class Client extends DiscordClient implements BotClient {
