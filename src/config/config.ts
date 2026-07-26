@@ -6,6 +6,7 @@ export default {
   clientOptions: {
     intents: [
       'GUILDS',
+      'GUILD_MEMBERS',
       'GUILD_INTEGRATIONS',
       'GUILD_WEBHOOKS',
       'GUILD_MESSAGES',
