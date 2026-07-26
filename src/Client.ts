@@ -8,6 +8,8 @@ import ActionManager from './managers/ActionManager';
 import NotionEventSyncManager from './managers/NotionEventSyncManager';
 import configuration from './config/config';
 import GoogleCalendarManager from './managers/GoogleCalendarManager';
+import DiscordRoleManager from './managers/DiscordRoleManager';
+import InternalApiServer from './api/InternalApiServer';
 
 /**
  * The class representing the Discord bot.
@@ -27,6 +29,8 @@ import GoogleCalendarManager from './managers/GoogleCalendarManager';
  * - Login to Discord API when done initializing everything.
  *
  * ActionManager does the heavy lifting, so read that as well.
+ *
+ * Also starts up the express server that serves our internal endpoints used in the executive portal.
  */
 @Service()
 export default class Client extends DiscordClient implements BotClient {
@@ -52,11 +56,13 @@ export default class Client extends DiscordClient implements BotClient {
    * @param actionManager An ActionManager class to run. Injected by TypeDI.
    * @param notionEventSyncManager A NotionEventSyncManager class to run. Injected by TypeDI.
    * @param googleCalendarManager A GoogleCalendarManager class to run. Injected by TypeDI.
+   * @param discordRoleManager A DiscordRoleManager class to run. Injected by TypeDI.
    */
   constructor(
     private actionManager: ActionManager,
     public notionEventSyncManager: NotionEventSyncManager,
     public googleCalendarManager: GoogleCalendarManager,
+    public discordRoleManager: DiscordRoleManager,
   ) {
     super(
       configuration.clientOptions || {
@@ -181,6 +187,9 @@ export default class Client extends DiscordClient implements BotClient {
       await this.googleCalendarManager.initializeMeetingPings(this);
       await this.googleCalendarManager.initializeScheduledMessages(this);
       await this.login(configuration.token);
+
+      const api = new InternalApiServer(this);
+      api.start(Number(process.env.INTERNAL_API_PORT) || 3001);
     } catch (e) {
       Logger.error(`Could not initialize bot: ${e}`);
     }

@@ -14,6 +14,7 @@ import Command from '../Command';
 import GoogleCalendarManager from '../managers/GoogleCalendarManager';
 import NotionEventSyncManager from '../managers/NotionEventSyncManager';
 import Logger from '../utils/Logger';
+import DiscordRoleManager from '../managers/DiscordRoleManager';
 
 /**
  * The options for a Command.
@@ -34,12 +35,14 @@ export interface CommandOptions {
    */
   enabled: boolean;
   /**
-   * Whether the "Board" role is required when running this Command.
+   * Whether the "Board","Executive","President" roles are required when running this Command.
    *
    * If required, any user without the role running the command will be warned they are
    * unable to. The incident will be logged as well.
    */
   boardRequired?: boolean;
+  execRequired?: boolean;
+  presidentRequired?: boolean;
   /**
    * A brief description of what the Command does.
    */
@@ -200,6 +203,7 @@ export interface BotClient extends Client {
 
   notionEventSyncManager: NotionEventSyncManager;
   googleCalendarManager: GoogleCalendarManager;
+  discordRoleManager: DiscordRoleManager;
 }
 
 /**

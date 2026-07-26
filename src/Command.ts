@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction } from 'discord.js';
 import { BotClient, CommandOptions, InteractionPayload } from './types';
 import Logger from './utils/Logger';
+import { DiscordRole } from './types/discordRoles';
 
 /**
  * Abstract class representing a Command in BreadBot.
@@ -45,6 +46,8 @@ export default abstract class Command {
       enabled: options.enabled,
       name: options.name,
       boardRequired: options.boardRequired || false,
+      execRequired: options.execRequired || false,
+      presidentRequired: options.presidentRequired || false,
       description: options.description || 'No information specified.',
       usage: options.usage || 'No usage specified.',
       category: options.category || 'Uncategorized',
@@ -68,9 +71,11 @@ export default abstract class Command {
       return false;
     }
 
+    // CHECK BOARD ROLE
+
     const isBoard = Array.isArray(memberRoles)
-      ? memberRoles.includes('Board')
-      : memberRoles.cache.some((r) => r.name === 'Board');
+      ? memberRoles.includes(DiscordRole.Board)
+      : memberRoles.cache.some((r) => r.name === DiscordRole.Board);
 
     if (this.conf.boardRequired && !isBoard) {
       interaction.reply('You must be a Board member to use this command!').then(() => {
@@ -79,6 +84,46 @@ export default abstract class Command {
           author: interaction.member?.toString(),
           requiredRole: 'Board',
         });
+      });
+      return false;
+    }
+
+    // CHECK EXEC ROLE
+
+    const isExec = Array.isArray(memberRoles)
+      ? memberRoles.includes(DiscordRole.Executive)
+      : memberRoles.cache.some((r) => r.name === DiscordRole.Executive);
+
+    if (this.conf.execRequired && !isExec) {
+      interaction.reply('You must be an Executive to use this command!').then(() => {
+        Logger.warn(
+          `Member ${interaction.member?.toString()} attempted to use an Executive command without permission!`,
+          {
+            eventType: 'rolesError',
+            author: interaction.member?.toString(),
+            requiredRole: 'Executive',
+          },
+        );
+      });
+      return false;
+    }
+
+    // CHECK PRESIDENT ROLE
+
+    const isPresident = Array.isArray(memberRoles)
+      ? memberRoles.includes(DiscordRole.President)
+      : memberRoles.cache.some((r) => r.name === DiscordRole.President);
+
+    if (this.conf.presidentRequired && !isPresident) {
+      interaction.reply('You must be an President to use this command!').then(() => {
+        Logger.warn(
+          `Member ${interaction.member?.toString()} attempted to use a President command without permission!`,
+          {
+            eventType: 'rolesError',
+            author: interaction.member?.toString(),
+            requiredRole: 'President',
+          },
+        );
       });
       return false;
     }
