@@ -68,6 +68,7 @@ export default class Client extends DiscordClient implements BotClient {
       configuration.clientOptions || {
         intents: [
           'GUILDS',
+          'GUILD_MEMBERS',
           'GUILD_INTEGRATIONS',
           'GUILD_WEBHOOKS',
           'GUILD_MESSAGES',
