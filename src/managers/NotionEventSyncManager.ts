@@ -8,6 +8,7 @@ import { MessageEmbed, TextChannel } from 'discord.js';
 import { GoogleSheetsSchemaMismatchError, NotionSchemaMismatchError } from '../types';
 import { generateNewNote } from '../notes-notion';
 import { DateTime } from 'luxon';
+import { ServiceAccountCredentials } from 'google-spreadsheet';
 
 /**
  * NotionEventSyncManager manages the automatic import of new events on the Events
@@ -30,7 +31,7 @@ export default class {
    */
   public peefReminderPingJob: schedule.Job;
 
-  public googleSheetKeyFile: Buffer;
+  public googleSheetKeyFile: ServiceAccountCredentials;
 
   private async handleNotionSchemaMismatch(client: BotClient, eventChannel: TextChannel, diff: unknown): Promise<void> {
     if (!client.flags.validNotionSchema) {
@@ -61,7 +62,7 @@ export default class {
       await syncHostFormToNotionCalendar({
         settings: client.settings,
         channel: eventChannel,
-        googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
+        googleSheetAPICredentials: this.googleSheetKeyFile,
       });
 
       // If the pipeline has run by now without throwing an Error, we must have
