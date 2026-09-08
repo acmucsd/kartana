@@ -1765,4 +1765,50 @@ export const notionCalSchema = {
     type: 'title',
     title: {},
   },
+  'FOR AS: How will you be paying for expenses for your event?': {
+    id: '%7Bg~V',
+    name: 'FOR AS: How will you be paying for expenses for your event?',
+    description: '',
+    type: 'select',
+    select: {
+      options: [
+        {
+          id: 'C_k]',
+          name: 'N/A',
+          color: 'blue',
+          description: null,
+        },
+        {
+          id: 'PIa:',
+          name: 'Pay Method TODO',
+          color: 'orange',
+          description: null,
+        },
+        {
+          id: 'cfd\\',
+          name: 'No expenses OR No reimbursement from PCBO needed',
+          color: 'default',
+          description: null,
+        },
+        {
+          id: 'GfcU',
+          name: 'University funding',
+          color: 'pink',
+          description: null,
+        },
+        {
+          id: 'U?O}',
+          name: 'Reimbursement through PCBO',
+          color: 'brown',
+          description: null,
+        },
+        {
+          id: 'Kcza',
+          name: 'University funding and reimbursement through PCBO',
+          color: 'green',
+          description: null,
+        },
+      ],
+    },
+  },
 } as const;
