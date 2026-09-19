@@ -5,7 +5,7 @@ import subscribeRoute from './routes/subscribe';
 import requireApiAuth from './middleware/requireApiAuth';
 
 export default class InternalApiServer {
-  constructor(private client: BotClient) { }
+  constructor(private client: BotClient) {}
 
   start(port: number) {
     const app = express();
