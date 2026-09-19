@@ -1,9 +1,11 @@
 import express from 'express';
 import { BotClient } from '../types';
 import assignRoute from './routes/assign';
+import subscribeRoute from './routes/subscribe';
+import requireApiAuth from './middleware/requireApiAuth';
 
 export default class InternalApiServer {
-  constructor(private client: BotClient) {}
+  constructor(private client: BotClient) { }
 
   start(port: number) {
     const app = express();
@@ -14,7 +16,9 @@ export default class InternalApiServer {
       res.json({ status: 'ok' });
     });
 
+    // Note: this endpoint should also probably be authenticated
     app.use('/assign', assignRoute(this.client));
+    app.use('/subscribe', requireApiAuth, subscribeRoute(this.client));
 
     app.listen(port, () => {
       console.log(`Internal API running on port ${port}`);
