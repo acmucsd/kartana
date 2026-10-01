@@ -103,17 +103,17 @@ export const notionHostedEvent = {
     },
   },
   'Calendar Event': {
-    id: 'QZWa',
+    id: 'scC%7B',
     name: 'Calendar Event',
     description: null,
     type: 'relation',
     relation: {
-      database_id: '2b114391-5b12-8196-b759-e5bf91f51489',
-      data_source_id: '2b114391-5b12-8117-9eee-000b3b31dbf6',
+      database_id: 'bb1c002f-5956-4e57-853a-173342bc13d9',
+      data_source_id: 'd8c4be69-7c10-4321-bed2-e7dcce5de0d8',
       type: 'dual_property',
       dual_property: {
         synced_property_name: 'Hosted Events Sheet',
-        synced_property_id: 'ICQM',
+        synced_property_id: 'SXzi',
       },
     },
   },
