@@ -104,7 +104,7 @@ export default class {
       await pingForDeadlinesAndReminders({
         settings: client.settings,
         channel: eventChannel,
-        googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
+        googleSheetAPICredentials: this.googleSheetKeyFile,
       });
 
       // If the pipeline has run by now without throwing an Error, we must have
@@ -132,7 +132,7 @@ export default class {
       await pingForPEEFReminders({
         settings: client.settings,
         channel: eventChannel,
-        googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
+        googleSheetAPICredentials: this.googleSheetKeyFile,
       });
 
       client.flags.validNotionSchema = true;
