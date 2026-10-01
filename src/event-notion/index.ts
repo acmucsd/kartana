@@ -756,9 +756,11 @@ hosting [${event.properties.Name.title.reduce((acc, curr) => acc + curr.plain_te
  * Pings event hosts for pending PEEFs and pings Finance Team when a PEEF is completed.
  *
  * This includes:
- * - Ping hosts once event has concluded by at least 1 hour and PEEF is not written.
+ * - Ping hosts the day after an event concludes and PEEF is not written.
  * - Ping hosts once again the Saturday morning before the PEEF is due (Sunday) if PEEF is still not written.
  * - Ping Finance Team immediately once PEEF is marked complete.
+ * In the future we can have it ping an hour after the event completes.
+ * But currently the Hosted Events schema doesn't have start/end time so we'll just do next-day for now.
  */
 export const pingForPEEFReminders = async (config: EventNotionPipelineConfig) => {
   Logger.info('Setting up PEEF reminder checks...');
@@ -898,7 +900,7 @@ export const pingForPEEFReminders = async (config: EventNotionPipelineConfig) =>
       const peefWritten = event.properties['PEEF Written'].checkbox;
       const dueSunday = eventDateTime.endOf('week').endOf('day');
       const saturdayReminderAt = dueSunday.minus({ days: 1 }).startOf('day').plus({ hours: 9 });
-      const postEventReminderAt = eventDateTime.plus({ hours: 1 });
+      const postEventReminderAt = eventDateTime.plus({ days: 1 });
 
       const eventState: PeefReminderMilestones = peefReminderState.get(event.id);
 
@@ -937,7 +939,7 @@ export const pingForPEEFReminders = async (config: EventNotionPipelineConfig) =>
           'Your event has concluded. Please fill out the PEEF as soon as possible.',
         );
         eventState.postEventReminderSentAt = nowISO;
-      } else if (!eventState.preDeadlineReminderSentAt && now >= saturdayReminderAt) {
+      } else if (!eventState.preDeadlineReminderSentAt && now >= saturdayReminderAt && now >= postEventReminderAt) {
         // send pre-deadline reminder on Saturday morning before the PEEF is due on Sunday
         Logger.info(`Sending pre-deadline PEEF reminder for event "${getPageTitle(event)}"`);
 
