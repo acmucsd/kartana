@@ -104,7 +104,7 @@ export default class {
       await pingForDeadlinesAndReminders({
         settings: client.settings,
         channel: eventChannel,
-        googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
+        googleSheetAPICredentials: this.googleSheetKeyFile,
       });
 
       // If the pipeline has run by now without throwing an Error, we must have
@@ -132,7 +132,7 @@ export default class {
       await pingForPEEFReminders({
         settings: client.settings,
         channel: eventChannel,
-        googleSheetAPICredentials: JSON.parse(this.googleSheetKeyFile.toString()),
+        googleSheetAPICredentials: this.googleSheetKeyFile,
       });
 
       client.flags.validNotionSchema = true;
@@ -188,7 +188,7 @@ export default class {
       Logger.info('Running TAP deadline pings cron job!');
       this.runDeadlinesAndReminders(client);
     });
-    this.peefReminderPingJob = schedule.scheduleJob('*/10 * * * *', async () => {
+    this.peefReminderPingJob = schedule.scheduleJob('*/30 * * * *', async () => {
       Logger.info('Running PEEF reminders cron job!');
       this.runPEEFReminders(client);
     });
