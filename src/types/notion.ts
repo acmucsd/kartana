@@ -29,6 +29,7 @@ export interface NotionCalEvent {
   readonly techRequests: string;
   readonly locationURL: URL | null;
   readonly fundingStatus: FundingStatus;
+  readonly foodOrder: string;
   readonly requestedItems: string;
   readonly foodPickupTime: DateTime | null;
   readonly nonFoodRequests: string;

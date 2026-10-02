@@ -171,6 +171,7 @@ export const HostFormResponseSchema = z
     'Will your event require funding?': z.string(),
     // Section 6
     'What food do you need funding for?': z.string().optional().default(''),
+    'Please specify the food order. See example below.': z.string().min(1, 'Food order is required'),
     'Food Pickup Time': z.string().optional(),
     'Non-food system requests: Vendor website or menu': z.string().optional().default(''),
     'Is there a sponsor that will pay for this event?': z.enum(asEnumValues(fundingSponsor)).catch('No'),
@@ -247,6 +248,7 @@ export const HostFormResponseSchema = z
         locationURL: parseLocationURL(data['Event Link (ACMURL)'], data['Event Title']),
         fundingStatus: data['Will your event require funding?'] === 'Yes' ? 'Funding TODO' : 'Funding Not Requested',
         requestedItems: data['What food do you need funding for?'],
+        foodOrder: data['Please specify the food order. See example below.'].slice(0, 2000),
         foodPickupTime: data['Food Pickup Time']
           ? DateTime.fromFormat(`${data['Preferred date']} ${data['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a')
           : null,
@@ -332,6 +334,8 @@ export default class NotionCalEvent implements INotionCalEvent {
   readonly fundingStatus!: FundingStatus;
 
   readonly requestedItems!: string;
+
+  readonly foodOrder!: string;
 
   readonly foodPickupTime!: DateTime | null;
 
@@ -555,6 +559,14 @@ export default class NotionCalEvent implements INotionCalEvent {
           ? {
               'Requested Items': {
                 rich_text: toNotionRichText(this.requestedItems),
+              },
+            }
+          : {}),
+
+        ...(this.foodOrder
+          ? {
+              'Food Order': {
+                rich_text: toNotionRichText(this.foodOrder),
               },
             }
           : {}),
