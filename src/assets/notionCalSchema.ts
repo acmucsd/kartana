@@ -689,6 +689,13 @@ export const notionCalSchema = {
     type: 'rich_text',
     rich_text: {},
   },
+  'Food Order': {
+    id: 'O%5D%7Dt',
+    name: 'Food Order',
+    description: null,
+    type: 'rich_text',
+    rich_text: {},
+  },
   'Token Use Number': {
     id: 'RZQQ',
     name: 'Token Use Number',
@@ -1722,49 +1729,6 @@ export const notionCalSchema = {
       ],
     },
   },
-  'Date/Time Notes': {
-    id: '~JH%3F',
-    name: 'Date/Time Notes',
-    description: null,
-    type: 'rich_text',
-    rich_text: {},
-  },
-  'Historian Onsite': {
-    id: '~%5CKw',
-    name: 'Historian Onsite',
-    description: null,
-    type: 'people',
-    people: {},
-  },
-  'Sponsor?': {
-    id: '~y%40%5D',
-    name: 'Sponsor?',
-    description: null,
-    type: 'select',
-    select: {
-      options: [
-        {
-          id: 'e46012df-0bdd-4aba-bee8-b7b901108601',
-          name: 'Yes',
-          color: 'green',
-          description: null,
-        },
-        {
-          id: '5da9aea8-4789-47a4-bf3d-5406e87318be',
-          name: 'No',
-          color: 'blue',
-          description: null,
-        },
-      ],
-    },
-  },
-  Name: {
-    id: 'title',
-    name: 'Name',
-    description: null,
-    type: 'title',
-    title: {},
-  },
   'FOR AS: How will you be paying for expenses for your event?': {
     id: '%7Bg~V',
     name: 'FOR AS: How will you be paying for expenses for your event?',
@@ -1811,4 +1775,47 @@ export const notionCalSchema = {
       ],
     },
   },
-} as const;
+  'Date/Time Notes': {
+    id: '~JH%3F',
+    name: 'Date/Time Notes',
+    description: null,
+    type: 'rich_text',
+    rich_text: {},
+  },
+  'Historian Onsite': {
+    id: '~%5CKw',
+    name: 'Historian Onsite',
+    description: null,
+    type: 'people',
+    people: {},
+  },
+  'Sponsor?': {
+    id: '~y%40%5D',
+    name: 'Sponsor?',
+    description: null,
+    type: 'select',
+    select: {
+      options: [
+        {
+          id: 'e46012df-0bdd-4aba-bee8-b7b901108601',
+          name: 'Yes',
+          color: 'green',
+          description: null,
+        },
+        {
+          id: '5da9aea8-4789-47a4-bf3d-5406e87318be',
+          name: 'No',
+          color: 'blue',
+          description: null,
+        },
+      ],
+    },
+  },
+  Name: {
+    id: 'title',
+    name: 'Name',
+    description: null,
+    type: 'title',
+    title: {},
+  },
+};
