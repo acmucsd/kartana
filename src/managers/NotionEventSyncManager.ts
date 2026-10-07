@@ -188,9 +188,11 @@ export default class {
       Logger.info('Running TAP deadline pings cron job!');
       this.runDeadlinesAndReminders(client);
     });
-    this.peefReminderPingJob = schedule.scheduleJob('*/10 * * * *', async () => {
-      Logger.info('Running PEEF reminders cron job!');
-      this.runPEEFReminders(client);
-    });
+
+    // we don't need this anymore
+    //this.peefReminderPingJob = schedule.scheduleJob('*/10 * * * *', async () => {
+    //  Logger.info('Running PEEF reminders cron job!');
+    //  this.runPEEFReminders(client);
+    //});
   }
 }

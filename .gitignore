@@ -256,7 +256,7 @@ build/
 gapi-service-account-creds.json
 
 # Notion Database properties
-database.properties
+*.properties
 
 .DS_Store
 # Runtime data files
