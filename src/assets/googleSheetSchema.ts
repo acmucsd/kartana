@@ -31,7 +31,7 @@ export const googleSheetSchema = [
   'Preferred start time',
   'Send the Itemized List Image',
   'Timestamp',
-  //'What food do you need funding for?', LEGACY HEADER THAT STILL EXISTS FOR OLD FORM SUBMISSIONS, BUT NO LONGER VALIDATED AGAINST. REMOVE THIS WHEN THEY MAKE A NEW FORM NEXT YEAR
+  'What food do you need funding for?', //LEGACY HEADER THAT STILL EXISTS FOR OLD FORM SUBMISSIONS, BUT NO LONGER VALIDATED AGAINST. REMOVE THIS WHEN THEY MAKE A NEW FORM NEXT YEAR
   'What kind of event is this?',
   'What token number will you be using?',
   'Where is your event taking place?',
