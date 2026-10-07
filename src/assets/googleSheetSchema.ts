@@ -12,10 +12,10 @@ export const googleSheetSchema = [
   'Check-in Code',
   'Email Address',
   'Estimated Attendance?',
-  'Event description',
-  'Event director(s)',
   'Event Link (ACMURL)',
   'Event Title',
+  'Event description',
+  'Event director(s)',
   'Food Pickup Time',
   'I understand that I will arrange someone to pickup the food or other items required for my event',
   'Ideal Venue Choice',
@@ -31,7 +31,7 @@ export const googleSheetSchema = [
   'Preferred start time',
   'Send the Itemized List Image',
   'Timestamp',
-  //'What food do you need funding for?', LEGACY HEADER THAT STILL EXISTS FOR OLD FORM SUBMISSIONS, BUT NO LONGER VALIDATED AGAINST. REMOVE THIS WHEN THEY MAKE A NEW FORM NEXT YEAR
+  'What food do you need funding for?', //LEGACY HEADER THAT STILL EXISTS FOR OLD FORM SUBMISSIONS, BUT NO LONGER VALIDATED AGAINST. REMOVE THIS WHEN THEY MAKE A NEW FORM NEXT YEAR
   'What kind of event is this?',
   'What token number will you be using?',
   'Where is your event taking place?',
