@@ -3,7 +3,7 @@ import { GuildMember, MessageEmbed, TextChannel } from 'discord.js';
 import { BotClient } from '../types';
 import Logger from '../utils/Logger';
 import { ACMCommunity, ACMPosition, ACMTeam } from '../types/acm';
-import { DiscordRole, ROLE_CHOICES } from '../types/discordRoles';
+import { DiscordRole, ROLE_CHOICES, AssignAndUnassignedRolesObject } from '../types/discordRoles';
 
 function resolveRoleIds(member: GuildMember, roleNames: string[]): { ids: string[]; missing: string[] } {
   const ids: string[] = [];
@@ -110,6 +110,38 @@ export default class {
     rolesToAssign.push(DiscordRole.Member);
 
     return rolesToAssign;
+  }
+
+  /**
+   * Simply retrieves the roles to be assigned and unassigned from a particular user.
+   *
+   * @param client The BotClient, for permission/hierarchy checks against the guild.
+   * @param member The GuildMember to assign roles to.
+   * @param team The team string provided by the command invoker.
+   * @param position The role/position string provided by the command invoker.
+   *
+   */
+  public getAssignedAndUnassignedRoles(
+    member: GuildMember,
+    team: ACMTeam,
+    position: ACMPosition,
+  ): AssignAndUnassignedRolesObject {
+    const previousManagedRoles = [
+      ...member.roles.cache.filter((r) => ROLE_CHOICES.includes(r.name as DiscordRole)).map((r) => r.name),
+    ];
+
+    const rolesToAssignRaw = this.buildRoleList(team, position);
+    if (!previousManagedRoles.includes(DiscordRole.Board) && rolesToAssignRaw.includes(DiscordRole.Board)) {
+      rolesToAssignRaw.push(DiscordRole.Matcha); // we assign matcha for newly onboarded members
+    }
+    const rolesToAssign = [...new Set(rolesToAssignRaw)];
+
+    const unassignedRoles = previousManagedRoles.filter((name) => !rolesToAssign.includes(name));
+
+    return {
+      assigned: rolesToAssign,
+      unAssigned: unassignedRoles,
+    };
   }
 
   /**
