@@ -17,7 +17,7 @@ export default class InternalApiServer {
     });
 
     // Note: this endpoint should also probably be authenticated
-    app.use('/assign', assignRoute(this.client));
+    app.use('/assign', requireApiAuth, assignRoute(this.client));
     app.use('/subscribe', requireApiAuth, subscribeRoute(this.client));
 
     app.listen(port, () => {
