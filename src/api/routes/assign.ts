@@ -36,5 +36,28 @@ export default function assignRoute(client: BotClient) {
     }
   });
 
+  router.get('/', async (req, res) => {
+    const { username, team, position } = req.body;
+
+    const guild = await client.guilds.fetch(client.settings.discordGuildID);
+    const results = await guild.members.fetch({ query: username, limit: 5 });
+    const member = results.find((m) => m.user.username === username);
+
+    if (!member) {
+      return res.json({
+        message: `No guild member found with username: ${username}`,
+        assigned: [''],
+        unAssigned: [''],
+      });
+    }
+    const { assigned, unAssigned } = client.discordRoleManager.getAssignedAndUnassignedRoles(member, team, position);
+
+    return res.json({
+      message: `The following roles will be modified for ${member.displayName}.`,
+      assigned: assigned,
+      unAssigned: unAssigned,
+    });
+  });
+
   return router;
 }
