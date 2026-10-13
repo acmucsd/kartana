@@ -45,13 +45,17 @@ export default function assignRoute(client: BotClient) {
 
     if (!member) {
       return res.json({
-        summary: `No guild member found with username: ${username}`,
+        message: `No guild member found with username: ${username}`,
+        assigned: [''],
+        unAssigned: [''],
       });
     }
-    const rolesToAssignSummary = client.discordRoleManager.buildRoleList(team, position);
+    const { assigned, unAssigned } = client.discordRoleManager.getAssignedAndUnassignedRoles(member, team, position);
 
     return res.json({
-      summary: `The following roles will be assigned to ${member.displayName}: ${rolesToAssignSummary}`,
+      message: `The following roles will be modified for ${member.displayName}.`,
+      assigned: assigned,
+      unAssigned: unAssigned,
     });
   });
 

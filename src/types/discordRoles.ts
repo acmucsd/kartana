@@ -31,4 +31,10 @@ export enum DiscordRole {
   Design = 'Design',
   Matcha = 'Matcha',
 }
+
+export interface AssignAndUnassignedRolesObject {
+  assigned: String[];
+  unAssigned: String[];
+}
+
 export const ROLE_CHOICES = Object.values(DiscordRole);
