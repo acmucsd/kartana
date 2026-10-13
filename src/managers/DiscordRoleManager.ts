@@ -28,7 +28,7 @@ export default class {
    * @param position The role/position string provided by the command invoker.
    * @returns An array of role names to add to the member.
    */
-  private buildRoleList(team: ACMTeam, position: ACMPosition): string[] {
+  public buildRoleList(team: ACMTeam, position: ACMPosition): string[] {
     const rolesToAssign: string[] = [];
 
     const community: ACMCommunity =
