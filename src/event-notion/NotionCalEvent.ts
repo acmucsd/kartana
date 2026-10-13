@@ -174,7 +174,7 @@ const hostFormShape = {
   // Section 6
   'What food do you need funding for?': z.string().optional().default(''), //LEGACY HEADER THAT STILL EXISTS FOR OLD FORM SUBMISSIONS, BUT NO LONGER VALIDATED AGAINST. REMOVE THIS WHEN THEY MAKE A NEW FORM NEXT YEAR
   'Send the Itemized List Image': z.string().optional().default(''),
-  'Please provide an itemized list of foods, tax, and the total. See example below such that it matches the image you will be providing in the previous question':
+  'Please provide an itemized list of foods, tax, and the total (make sure the order is not delivery, does not include tip, or any discounts applied). See example below such that it matches the image you will be providing in the previous question':
     z.string().optional().default(''),
   'Food Pickup Time': z.string().optional().default(''),
   'I understand that I will arrange someone to pickup the food or other items required for my event': z

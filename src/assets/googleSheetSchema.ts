@@ -2,7 +2,7 @@
  * The schema of the Host Form response Google Sheet.
  *
  * This is just an ordered copy of the header values of the
- * Host Form Response Google Sheet as of Friday, 1 Oct 2026 04:32:00 PST,
+ * Host Form Response Google Sheet as of Friday, 13 Oct 2026 15:03:00 PST,
  * sorted alphabetically (by code point, so uppercase sorts before lowercase).
  */
 export const googleSheetSchema = [
@@ -12,10 +12,10 @@ export const googleSheetSchema = [
   'Check-in Code',
   'Email Address',
   'Estimated Attendance?',
-  'Event Link (ACMURL)',
-  'Event Title',
   'Event description',
   'Event director(s)',
+  'Event Link (ACMURL)',
+  'Event Title',
   'Food Pickup Time',
   'I understand that I will arrange someone to pickup the food or other items required for my event',
   'Ideal Venue Choice',
@@ -25,7 +25,7 @@ export const googleSheetSchema = [
   'Non-food system requests: Vendor website or menu',
   'Other venue details?',
   'Plain description',
-  'Please provide an itemized list of foods, tax, and the total. See example below such that it matches the image you will be providing in the previous question',
+  'Please provide an itemized list of foods, tax, and the total (make sure the order is not delivery, does not include tip, or any discounts applied). See example below such that it matches the image you will be providing in the previous question',
   'Preferred date',
   'Preferred end time',
   'Preferred start time',

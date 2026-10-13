@@ -68,9 +68,11 @@ export const validateNotionHostedEventDatabase = (database: GetDatabaseResponse)
  * @param headers The headers from the Host Form response sheet.
  */
 export const validateGoogleSheetsSchema = (headers: string[]) => {
-  if (!isEqual(headers.sort(), [...googleSheetSchema].sort())) {
+  const sortedHeaders = headers.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  const sortedSchema = [...googleSheetSchema].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  if (!isEqual(sortedHeaders, sortedSchema)) {
     // sorting because reordering columns shouldn't be able to break this
-    const schemaDiff = diff(googleSheetSchema, headers);
+    const schemaDiff = diff(sortedSchema, sortedHeaders);
     Logger.error('Google Sheets schema is mismatched! Halting!', {
       type: 'error',
       diff: schemaDiff,
