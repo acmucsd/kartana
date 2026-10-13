@@ -24,14 +24,14 @@ export default class {
   /**
    * Cronjob to run TAP Deadline Pings every day at 10 AM.
    */
-  public deadlineReminderPingJob: schedule.Job;
+  public deadlineReminderPingJob!: schedule.Job;
 
   /**
    * Cronjob to run PEEF host reminders and finance completion pings.
    */
-  public peefReminderPingJob: schedule.Job;
+  public peefReminderPingJob!: schedule.Job;
 
-  public googleSheetKeyFile: ServiceAccountCredentials;
+  public googleSheetKeyFile!: ServiceAccountCredentials;
 
   private async handleNotionSchemaMismatch(client: BotClient, eventChannel: TextChannel, diff: unknown): Promise<void> {
     if (!client.flags.validNotionSchema) {

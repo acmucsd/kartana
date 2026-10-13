@@ -30,7 +30,7 @@ dotenv.config();
   });
 
   const headers = (res.data.values?.[0] || []).filter(Boolean);
-  const sorted = [...headers].sort();
+  const sorted = [...headers].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
   console.log('Done querying! Saving to file...');
   require('fs').writeFileSync('sheet.properties', JSON.stringify(sorted, null, 2));
