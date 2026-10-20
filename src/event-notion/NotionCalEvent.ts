@@ -293,7 +293,7 @@ export const HostFormResponseSchema = z
         fundingStatus: data['Will your event require funding?'] === 'Yes' ? 'Funding TODO' : 'Funding Not Requested',
         requestedItems: data[
           'Please provide an itemized list of foods, tax, and the total. See example below such that it matches the image you will be providing in the previous question'
-        ].slice(0, 2000),
+        ]?.slice(0, 2000),
         foodOrder: '',
         foodPickupTime: data['Food Pickup Time']
           ? DateTime.fromFormat(`${data['Preferred date']} ${data['Food Pickup Time']}`, 'M/d/yyyy h:mm:ss a')
