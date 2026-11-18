@@ -96,6 +96,28 @@ function parseLocationURL(urlString: string, eventName: string): URL | null {
     return null;
   }
 }
+/**
+ * Parses date and times from user inputted string. Does not validate.
+ * Google Forms: date "10/29/2026", time "5:30:00 PM"
+ *
+ * @param urlString The URL string that the user inputs
+ * @param eventName Name of the event, not relevant to URL but is just used for clearer error handling
+ * @returns The URL object constructed from the user's input URL
+ */
+function parseEventDateTime(dateStr: string, timeStr: string): Date | null {
+  const d = dateStr.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const t = timeStr.trim().match(/^(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)$/i);
+  if (!d || !t) return null;
+
+  const [month, day, year] = [Number(d[1]), Number(d[2]), Number(d[3])];
+  let hours = Number(t[1]) % 12;
+  if (t[4].toUpperCase() === 'PM') hours += 12;
+
+  const result = new Date(year, month - 1, day, hours, Number(t[2]));
+  // Reject overflow like 02/31/2026 rolling into March
+  if (result.getMonth() !== month - 1 || result.getDate() !== day) return null;
+  return result;
+}
 
 const asEnumValues = <T extends string>(values: readonly T[]): [T, ...T[]] => {
   if (values.length === 0) {
@@ -123,6 +145,7 @@ const hostFormShape = {
     }),
   }),
   'Event director(s)': z.string().min(1, 'Event directors is required'),
+  'Discord names(Event director(s))': z.string().min(1, 'Event director discords are required'),
   'What kind of event is this?': z.enum(asEnumValues(eventTypes)).catch('Other (See Comments)'),
   'Preferred date': z.string(),
   'Preferred start time': z.string(),
@@ -191,6 +214,45 @@ const hostFormShape = {
 export const HostFormResponseSchema = z
   .object(hostFormShape)
   // ----------------- STEP 2: Manual Validation of Complex Input -----------------
+  .superRefine((data, ctx) => {
+    // Validating date and times
+    const start = parseEventDateTime(data['Preferred date'], data['Preferred start time']);
+    const end = parseEventDateTime(data['Preferred date'], data['Preferred end time']);
+
+    if (!start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['Preferred start time'],
+        message: 'Invalid preferred date or start time',
+      });
+    }
+    if (!end) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['Preferred end time'],
+        message: 'Invalid preferred end time',
+      });
+    }
+    if (!start || !end) return;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    if (start < startOfToday) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['Preferred date'],
+        message: 'Event start cannot be before today',
+      });
+    }
+    if (end < start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['Preferred end time'],
+        message: 'End time cannot be before start time',
+      });
+    }
+  })
   .superRefine((data, ctx) => {
     // Validating "venue"
     const venue = data['Where is your event taking place?'];
@@ -292,7 +354,7 @@ export const HostFormResponseSchema = z
         locationURL: parseLocationURL(data['Event Link (ACMURL)'], data['Event Title']),
         fundingStatus: data['Will your event require funding?'] === 'Yes' ? 'Funding TODO' : 'Funding Not Requested',
         requestedItems: data[
-          'Please provide an itemized list of foods, tax, and the total. See example below such that it matches the image you will be providing in the previous question'
+          'Please provide an itemized list of foods, tax, and the total (make sure the order is not delivery, does not include tip, or any discounts applied). See example below such that it matches the image you will be providing in the previous question'
         ]?.slice(0, 2000),
         foodOrder: '',
         foodPickupTime: data['Food Pickup Time']
