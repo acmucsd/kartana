@@ -10,6 +10,7 @@ import configuration from './config/config';
 import GoogleCalendarManager from './managers/GoogleCalendarManager';
 import DiscordRoleManager from './managers/DiscordRoleManager';
 import InternalApiServer from './api/InternalApiServer';
+import { pingACMURL } from './acmurl';
 
 /**
  * The class representing the Discord bot.
@@ -187,6 +188,12 @@ export default class Client extends DiscordClient implements BotClient {
       this.notionEventSyncManager.initializeNotionSync(this);
       await this.googleCalendarManager.initializeMeetingPings(this);
       await this.googleCalendarManager.initializeScheduledMessages(this);
+
+      await pingACMURL(this, {
+        username: this.settings.acmurl.username,
+        password: this.settings.acmurl.password,
+      });
+
       await this.login(configuration.token);
 
       const api = new InternalApiServer(this);
