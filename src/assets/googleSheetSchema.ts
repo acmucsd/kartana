@@ -2,7 +2,7 @@
  * The schema of the Host Form response Google Sheet.
  *
  * This is just an ordered copy of the header values of the
- * Host Form Response Google Sheet as of Friday, 13 Oct 2026 15:03:00 PST,
+ * Host Form Response Google Sheet as of Wed, 18 Nov 2026 15:03:00 PST,
  * sorted alphabetically (by code point, so uppercase sorts before lowercase).
  */
 export const googleSheetSchema = [
@@ -10,6 +10,7 @@ export const googleSheetSchema = [
   'Any additional funding details?',
   'Are you planning on inviting off campus guests?',
   'Check-in Code',
+  'Discord names(Event director(s))',
   'Email Address',
   'Estimated Attendance?',
   'Event description',
