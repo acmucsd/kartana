@@ -328,6 +328,8 @@ export const HostFormResponseSchema = z
   .transform(
     (data) =>
       ({
+        hostedBy: data['Event director(s)'],
+        hostDiscords: data['Discord names(Event director(s))'],
         name: data['Event Title'],
         description: data['Event description'],
         plainDescription: data['Plain description'],
@@ -400,6 +402,10 @@ export default class NotionCalEvent implements INotionCalEvent {
   readonly hostedEventDatabaseID: string;
 
   // Valid
+
+  readonly hostedBy!: string;
+
+  readonly hostDiscords!: string;
 
   readonly name!: string;
 
@@ -600,10 +606,13 @@ export default class NotionCalEvent implements INotionCalEvent {
         //
         // We don't know how to set this yet.
 
-        // "Hosted by" omitted.
-        //
-        // This COULD be done if everyone had their names set on Notion,
-        // but it'll be difficult to find them otherwise.
+        'Hosted By?': {
+          rich_text: toNotionRichText(this.hostedBy),
+        },
+
+        Discord: {
+          rich_text: toNotionRichText(this.hostDiscords),
+        },
 
         ...(this.locationDetails
           ? {

@@ -3,7 +3,7 @@
  *
  * This effectively is a copy of the `database.properties` JSON object
  * extracted from a copy of the ACM UCSD Notion Calendar as of
- * Tue, 6 Oct 2026 15:37:00 PST.
+ * Fri, 20 Nov 2026 21:51:00 PST.
  */
 export const notionCalSchema = {
   'Funding Status': {
@@ -705,6 +705,13 @@ export const notionCalSchema = {
       format: 'number',
     },
   },
+  Discord: {
+    id: 'Ra%7Cv',
+    name: 'Discord',
+    description: null,
+    type: 'rich_text',
+    rich_text: {},
+  },
   'Invoice (Food)': {
     id: 'ReRE',
     name: 'Invoice (Food)',
@@ -720,6 +727,7 @@ export const notionCalSchema = {
     relation: {
       database_id: 'd26e4598-91dc-4222-895e-559b15d7cd19',
       data_source_id: '8123c750-41b1-4ac5-b4bf-90f2d2471a8f',
+      limit: null,
       type: 'dual_property',
       dual_property: {
         synced_property_name: 'Calendar Event',
@@ -1328,8 +1336,8 @@ export const notionCalSchema = {
     id: 'nUi%3A',
     name: 'Hosted by',
     description: null,
-    type: 'people',
-    people: {},
+    type: 'rich_text',
+    rich_text: {},
   },
   'Location Details': {
     id: 'o%7DWn',
