@@ -606,7 +606,7 @@ export default class NotionCalEvent implements INotionCalEvent {
         //
         // We don't know how to set this yet.
 
-        'Hosted By?': {
+        'Hosted by': {
           rich_text: toNotionRichText(this.hostedBy),
         },
 
