@@ -1,4 +1,8 @@
 import got from 'got';
+import schedule from 'node-schedule';
+import { BotClient } from '../types';
+import Logger from '../utils/Logger';
+import { MessageEmbed, TextChannel } from 'discord.js';
 
 export type ACMURLConfig = {
   username: string;
@@ -106,4 +110,40 @@ export async function handleExistingACMURL(
   // Add the new one.
   await updateACMURL(shortlink, longlink, title, config);
   return [previousURL, `https://acmurl.com/${shortlink}`];
+}
+
+/**
+ * Pings the ACMURL service to ensure that it is up and alerts Dev team if it is down
+ */
+export async function pingACMURL(client: BotClient, config: ACMURLConfig): Promise<void> {
+  const pingACMURLJob: schedule.Job = schedule.scheduleJob('*/1 * * * *', async () => {
+    try {
+      const healthCheck = (await got
+        .post('https://acmurl.com/yourls-api.php', {
+          form: {
+            username: config.username,
+            password: config.password,
+            action: 'db-stats',
+            format: 'json',
+          },
+        })
+        .json()) as any;
+
+      if (healthCheck.statusCode === 200 && healthCheck['db-stats']) {
+        Logger.info('ACMURL Service is up and healthy! Yay!');
+      }
+    } catch (err) {
+      // Report if there's an API error to deal with the issue.
+      Logger.error('ACMURL Service is down! Pinging the maintainers!');
+      const errorEmbed = new MessageEmbed()
+        .setTitle('⚠️ Error with ACMURL service!')
+        .setDescription('ACMURL service is down! Please restart the service!')
+        .setColor('DARK_RED');
+      const channel = client.channels.cache.get(client.settings.botErrorChannelID) as TextChannel;
+      channel.send({
+        content: `*Paging <@&${client.settings.maintainerID}>!*`,
+        embeds: [errorEmbed],
+      });
+    }
+  });
 }
